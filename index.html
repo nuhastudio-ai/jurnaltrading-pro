@@ -364,7 +364,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .toast.info{background:var(--c-blue-d);border-color:var(--c-blue2);color:#60a5fa;}
 /* CLOUD LOADER OVERLAY */
 .cloud-loader{position:fixed;inset:0;background:rgba(7,12,24,.96);z-index:10000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;backdrop-filter:blur(10px);transition:opacity .4s;}
-.cloud-loader.hidden{opacity:0;pointer-events:none;}
+.cloud-loader.hidden{display:none;opacity:0;pointer-events:none;}
 .cloud-spinner{width:56px;height:56px;border:3px solid rgba(79,142,247,.18);border-top-color:var(--c-blue);border-radius:50%;animation:spin 1s linear infinite;}
 @keyframes spin{to{transform:rotate(360deg);}}
 .cloud-loader-icon{font-size:40px;animation:float 2.5s ease-in-out infinite;}
@@ -992,8 +992,8 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 // ══════════════════════════════════════════════════════════
 //  KONFIGURASI CLOUD — ISI SESUAI DEPLOYMENT GAS ANDA
 // ══════════════════════════════════════════════════════════
-const GAS_URL   = 'https://script.google.com/macros/s/AKfycbw5XMGydEm4lc6RO22nPIK2RHpmbLoC070VKtjh1p1U4YDvQUBCERFEXGtxPRWkjqo/exec'; // ← Tempel URL dari GAS deployment
-const SHEET_ID  = '1LiA3hIK8Y3FRJLNcf68hZd5ru0rrjU1Aq51p28siiHc';          // ← Sheet ID (untuk referensi)
+const GAS_URL   = 'YOUR_GAS_WEB_APP_URL_HERE'; // ← Tempel URL dari GAS deployment
+const SHEET_ID  = 'YOUR_SHEET_ID_HERE';          // ← Sheet ID (untuk referensi)
 
 // ══════════════════════════════════════════════════════════
 //  STATE APLIKASI (default; akan di-override dari cloud)
@@ -1077,7 +1077,7 @@ function hideLoader() {
 const fmt=n=>Math.round(Math.abs(n)).toLocaleString('id');
 const fmtRp=n=>(n>=0?'':'- ')+'Rp '+fmt(n);
 const fmtPct=n=>n.toFixed(2)+'%';
-const getPair=name=>APP.pairs.find(p=>p.name===name)||APP.pairs[0];
+const getPair=name=>{const p=APP.pairs.find(p=>p.name===name);return p||(APP.pairs[0]??{name:'N/A',type:'forex',mult:100000,pip:0.0001,color:'chip-blue',desc:''});}
 const getAkun=name=>APP.akuns.find(a=>a.name===name);
 const g=(id,val)=>document.getElementById(id).textContent=val;
 
@@ -1269,6 +1269,7 @@ function saveTrade(){
     setup:document.getElementById('fm-setup').value,
     note:document.getElementById('fm-note').value,
   };
+  const wasEditId = APP.editTradeId; // capture BEFORE reset
   if(APP.editTradeId!==null){
     const idx=APP.trades.findIndex(t=>t.id===APP.editTradeId);
     if(idx>-1)APP.trades[idx]={...APP.trades[idx],...data};
@@ -1281,9 +1282,9 @@ function saveTrade(){
   }
   closeModal('tradeModal');updateAll();
   if(document.getElementById('page-journal').classList.contains('active'))renderJournal();
-  // Sync ke cloud
-  const tradeToSync = APP.editTradeId!==null
-    ? APP.trades.find(t=>t.id===APP.editTradeId)
+  // Sync ke cloud — gunakan wasEditId (sebelum modal close reset)
+  const tradeToSync = wasEditId!==null
+    ? APP.trades.find(t=>t.id===wasEditId)
     : APP.trades[0];
   cloudSync('saveTrade', {trade: tradeToSync||data});
 }
@@ -1792,12 +1793,12 @@ function resetAllData(){if(!confirm('HAPUS SEMUA DATA? Tidak bisa dibatalkan!'))
  * lalu render semua komponen.
  */
 function applyCloudData(data) {
-  if (data.trades       && Array.isArray(data.trades))       APP.trades       = data.trades;
-  if (data.pairs        && Array.isArray(data.pairs))        APP.pairs        = data.pairs;
-  if (data.setups       && Array.isArray(data.setups))       APP.setups       = data.setups;
-  if (data.akuns        && Array.isArray(data.akuns))        APP.akuns        = data.akuns;
-  if (data.kurs         && parseInt(data.kurs) > 0)          APP.kurs         = parseInt(data.kurs);
-  if (data.kursHistory  && Array.isArray(data.kursHistory))  APP.kursHistory  = data.kursHistory;
+  if (data.trades       && Array.isArray(data.trades))                          APP.trades       = data.trades;
+  if (data.pairs        && Array.isArray(data.pairs)   && data.pairs.length)    APP.pairs        = data.pairs;
+  if (data.setups       && Array.isArray(data.setups)  && data.setups.length)   APP.setups       = data.setups;
+  if (data.akuns        && Array.isArray(data.akuns)   && data.akuns.length)    APP.akuns        = data.akuns;
+  if (data.kurs         && parseInt(data.kurs) > 0)                             APP.kurs         = parseInt(data.kurs);
+  if (data.kursHistory  && Array.isArray(data.kursHistory))                     APP.kursHistory  = data.kursHistory;
 
   // Pastikan pnlRp selalu terhitung
   APP.trades.forEach(t => { if (!t.pnlRp) t.pnlRp = Math.round(t.pnlUSD * APP.kurs); });
