@@ -392,7 +392,317 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .kpi:nth-child(7){animation-delay:.28s;}.kpi:nth-child(8){animation-delay:.32s;}
 @media(max-width:1100px){.g8{grid-template-columns:repeat(4,1fr);}}
 @media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr;}.g8{grid-template-columns:repeat(2,1fr);}}
-@media(max-width:600px){.topbar-inner{padding:0 12px;}.main{padding:10px 12px;}.g8{grid-template-columns:repeat(2,1fr);}.brand-name{display:none;}}
+
+/* ═══════════════════════════════════════════════════════════════
+   FIBONACCI / GOLDEN RATIO SPACING SYSTEM  φ = 1.618
+   Sequence: 3 · 5 · 8 · 13 · 21 · 34 · 55 · 89 · 144
+═══════════════════════════════════════════════════════════════ */
+:root {
+  --f1: 3px;   --f2: 5px;   --f3: 8px;   --f4: 13px;
+  --f5: 21px;  --f6: 34px;  --f7: 55px;  --f8: 89px;
+  --phi: 1.618;
+  --mob-nav-h: 56px;   /* ≈ fib(10) = 55 */
+  --mob-top-h: 50px;   /* golden-derived topbar */
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV — hidden on desktop
+═══════════════════════════════════════════════════════════════ */
+.mobile-bottom-nav { display: none; }
+
+/* ═══════════════════════════════════════════════════════════════
+   MOBILE BREAKPOINT  ≤ 768px
+═══════════════════════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* ── ROOT / BODY ─────────────────────────────────────── */
+  html, body { height: 100%; overflow: hidden; }
+  .app { height: 100dvh; display: flex; flex-direction: column; }
+
+  /* ── TOPBAR ──────────────────────────────────────────── */
+  .topbar-inner {
+    height: var(--mob-top-h);
+    padding: 0 var(--f4);          /* 13px side — golden spacing */
+    gap: var(--f3);                /* 8px gap */
+  }
+  .brand-name { display: none; }
+  .brand-icon { width: 30px; height: 30px; font-size: 14px; }
+
+  /* kurs pill — compact */
+  .topbar-kurs {
+    margin-left: var(--f3);        /* 8px */
+    padding: var(--f2) var(--f3);  /* 5×8 — near-golden rect */
+    gap: var(--f2);
+  }
+  .topbar-kurs-lbl { display: none; }
+  .topbar-kurs-val { font-size: 11px; }
+
+  /* live pill — hide, replace by cloud pill */
+  .live-pill { display: none; }
+
+  /* clock — smaller */
+  .clock-box {
+    font-size: 10px;
+    padding: var(--f2) var(--f3);  /* 5×8 */
+    letter-spacing: 0;
+  }
+
+  /* nav-right gap */
+  .nav-right { gap: var(--f3); }  /* 8px */
+
+  /* + Trade btn */
+  .btn-gold { padding: var(--f2) var(--f4); font-size: 11px; } /* 5×13 */
+
+  /* cloud pill */
+  .cloud-pill { font-size: 9px; padding: var(--f2) var(--f3); }
+
+  /* ── SUBBAR ──────────────────────────────────────────── */
+  #mainSubbar .subbar {
+    padding: 0 var(--f4);          /* 13px */
+    height: auto;
+    min-height: 40px;
+  }
+  .ctrl-row {
+    gap: var(--f3);                /* 8px */
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding: var(--f3) 0;         /* 8px top/bottom */
+    -webkit-overflow-scrolling: touch;
+  }
+  .ctrl-row::-webkit-scrollbar { display: none; }
+
+  /* hide export btn from subbar on mobile (accessible via ⋮ or journal) */
+  .ctrl-row > div[style*="margin-left:auto"] { display: none !important; }
+
+  /* ── SIDEBAR ─────────────────────────────────────────── */
+  .sidebar { display: none !important; }
+
+  /* ── BODY WRAP ───────────────────────────────────────── */
+  .body-wrap { flex: 1; overflow: hidden; min-height: 0; }
+
+  /* ── CONTENT AREA ────────────────────────────────────── */
+  .content-area {
+    flex: 1;
+    width: 100%;
+    overflow-y: auto;
+    overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
+    /* bottom padding: mob nav + fib gap (56+8=64) */
+    padding-bottom: calc(var(--mob-nav-h) + var(--f3));
+  }
+
+  /* ── MAIN PADDING (golden ratio-derived) ─────────────── */
+  /* horizontal 13px, vertical 13px, gap 13px → all fib(7) */
+  .main {
+    padding: var(--f4) var(--f4);  /* 13px all sides */
+    gap: var(--f4);                /* 13px between sections */
+  }
+
+  /* ── KPI GRID — 2×4 on mobile ───────────────────────── */
+  .g8 {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: var(--f3) !important;     /* 8px */
+  }
+  .kpi {
+    padding: var(--f4) var(--f3); /* 13×8 — φ proportion */
+    border-radius: var(--r8);
+  }
+  .kpi-val { font-size: 15px; }
+  .kpi-lbl { font-size: 9px; }
+  .kpi-sub { font-size: 9px; }
+
+  /* ── GENERAL GRIDS ───────────────────────────────────── */
+  .g2, .g3, .g4 {
+    grid-template-columns: 1fr !important;
+    gap: var(--f4) !important;     /* 13px */
+  }
+
+  /* win/loss + equity inline grid → column stack */
+  [style*="grid-template-columns:260px"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: var(--f4) !important;     /* 13px */
+  }
+
+  /* ── PANELS ──────────────────────────────────────────── */
+  .panel { border-radius: var(--r12); }
+  .panel-hd {
+    padding: var(--f3) var(--f4); /* 8×13 */
+    flex-wrap: wrap;
+    gap: var(--f3);
+    min-height: 40px;
+  }
+  .panel-title { font-size: 10px; }
+  .panel-bd { padding: var(--f3) var(--f4); } /* 8×13 */
+
+  /* ── CHART HEIGHTS ───────────────────────────────────── */
+  /* Ratios: 160 ÷ 1.618 ≈ 99, 200 ÷ 1.618 ≈ 123, 220 ÷ 1.618 ≈ 136 */
+  .chart-wrap.h240 { height: 160px; }
+  .chart-wrap.h280 { height: 180px; }
+  .chart-wrap.h200 { height: 144px; } /* fib(12) = 144 */
+
+  /* ── WIN/LOSS SVG ────────────────────────────────────── */
+  .wl-svg { width: 130px; height: 130px; }
+  .wl-pct { font-size: 22px; }
+
+  /* ── SETTINGS ────────────────────────────────────────── */
+  .settings-tabbar { height: auto !important; }
+  .settings-tabbar-inner { gap: 0; }
+  .settings-tab { font-size: 10px; padding: 0 var(--f4); }
+  .settings-page-wrap { padding: var(--f4); } /* 13px */
+
+  /* ── JOURNAL FILTER ──────────────────────────────────── */
+  .jfilter-bar {
+    padding: var(--f3) var(--f4); /* 8×13 */
+    gap: var(--f3);
+  }
+
+  /* ── MODAL ───────────────────────────────────────────── */
+  .modal {
+    width: min(calc(100vw - var(--f5)), 640px) !important; /* -21px sides */
+    max-height: 85dvh !important;
+    border-radius: var(--r16) !important;
+    padding: var(--f4) !important; /* 13px */
+  }
+  .form-grid {
+    grid-template-columns: 1fr !important;
+    gap: var(--f3);                /* 8px */
+  }
+
+  /* ── FOOTER ──────────────────────────────────────────── */
+  .footer { display: none; }
+
+  /* ── TOAST ───────────────────────────────────────────── */
+  .toast {
+    top: auto;
+    bottom: calc(var(--mob-nav-h) + var(--f4)); /* above nav + 13px */
+    right: var(--f4);              /* 13px */
+    left: var(--f4);
+    text-align: center;
+    font-size: 11px;
+  }
+
+  /* ── STATS TABLE ─────────────────────────────────────── */
+  .stats-tbl td { padding: var(--f2) var(--f3); font-size: 11px; } /* 5×8 */
+
+  /* ── REKAP TABLE ─────────────────────────────────────── */
+  #rekapBody { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .rekap-hd, .rekap-cell { font-size: 10px; padding: var(--f2) var(--f3); }
+
+  /* ── HARI GRID ───────────────────────────────────────── */
+  .hari-grid { overflow-x: auto; }
+  .hari-hd, .hari-cell { font-size: 10px; padding: var(--f2) var(--f2); }
+
+  /* ── CALENDAR ────────────────────────────────────────── */
+  .cal-day { min-height: 36px; padding: var(--f2); }
+
+  /* ── STREAK DOTS ─────────────────────────────────────── */
+  .streak-dot { width: 13px; height: 13px; } /* fib(7) = 13 */
+
+  /* ── METRIC CARDS ────────────────────────────────────── */
+  .metric-card { padding: var(--f3) var(--f4); } /* 8×13 */
+  .mc-val { font-size: 15px; }
+
+  /* ── DATA TABLE ──────────────────────────────────────── */
+  .data-tbl { font-size: 10.5px; }
+  .data-tbl thead th { padding: var(--f2) var(--f3); font-size: 9px; }
+  .data-tbl tbody td { padding: var(--f3) var(--f3); }
+
+  /* ── PAGE SIZE SELECTOR ──────────────────────────────── */
+  .pagination {
+    padding: var(--f3) var(--f4); /* 8×13 */
+    flex-wrap: wrap;
+    gap: var(--f3);
+  }
+
+  /* ── MOBILE BOTTOM NAV ───────────────────────────────── */
+  .mobile-bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: var(--mob-nav-h);      /* 56px ≈ fib 55 */
+    background: var(--bg1);
+    border-top: 1px solid var(--bdr);
+    z-index: 500;
+    box-shadow: 0 calc(-1 * var(--f2)) var(--f5) rgba(0,0,0,.55); /* 0 -5 21 */
+    /* safe area for phones with home indicator */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .mobile-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--f1);                /* 3px — fib */
+    cursor: pointer;
+    transition: all .2s cubic-bezier(.4,0,.2,1);
+    padding: var(--f2) 0;         /* 5px */
+    border: none;
+    background: transparent;
+    color: var(--txt2);
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* active indicator — golden width bar at top */
+  .mobile-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: var(--f7);              /* 55px fib */
+    height: var(--f1);            /* 3px fib */
+    background: linear-gradient(90deg, var(--c-blue), var(--c-cyan));
+    border-radius: 0 0 var(--f2) var(--f2); /* 5px bottom radius */
+  }
+
+  .mobile-nav-item.active {
+    color: var(--c-blue);
+  }
+
+  .mobile-nav-item:active {
+    transform: scale(0.92);
+    background: rgba(79,142,247,.07);
+    border-radius: var(--r8);
+  }
+
+  .mobile-nav-icon {
+    font-size: var(--f4);          /* 13px ≈ emoji 13px */
+    line-height: 1;
+    /* scale up emoji slightly for clarity */
+    transform: scale(1.38);        /* ≈ φ × 0.85 */
+    margin-bottom: var(--f1);      /* 3px */
+    transition: transform .2s;
+  }
+
+  .mobile-nav-item.active .mobile-nav-icon {
+    filter: drop-shadow(0 0 var(--f2) rgba(79,142,247,.6));
+  }
+
+  .mobile-nav-label {
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: .4px;
+    text-transform: uppercase;
+    font-family: var(--fn);
+    line-height: 1;
+  }
+}
+
+/* ── EXTRA SMALL (≤ 380px) ───────────────────────────────── */
+@media (max-width: 380px) {
+  .topbar-kurs { display: none; }
+  .clock-box { display: none; }
+  .cloud-pill { font-size: 8px; padding: var(--f1) var(--f2); }
+  .kpi-val { font-size: 13px; }
+  .main { padding: var(--f3) var(--f3); gap: var(--f3); }
+}
 </style>
 </head>
 <body>
@@ -452,6 +762,30 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   </div>
 </div>
 </div><!-- end .header-wrap -->
+
+<!-- MOBILE BOTTOM NAV (visible only on ≤768px) -->
+<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi utama">
+  <div class="mobile-nav-item active" id="mbn-dashboard" role="button" tabindex="0"
+       onclick="switchPage('dashboard',this)" aria-label="Dashboard">
+    <span class="mobile-nav-icon" aria-hidden="true">🏠</span>
+    <span class="mobile-nav-label">Dashboard</span>
+  </div>
+  <div class="mobile-nav-item" id="mbn-analysis" role="button" tabindex="0"
+       onclick="switchPage('analysis',this)" aria-label="Analisis">
+    <span class="mobile-nav-icon" aria-hidden="true">📈</span>
+    <span class="mobile-nav-label">Analisis</span>
+  </div>
+  <div class="mobile-nav-item" id="mbn-journal" role="button" tabindex="0"
+       onclick="switchPage('journal',this)" aria-label="Jurnal">
+    <span class="mobile-nav-icon" aria-hidden="true">📋</span>
+    <span class="mobile-nav-label">Jurnal</span>
+  </div>
+  <div class="mobile-nav-item" id="mbn-settings" role="button" tabindex="0"
+       onclick="switchPage('settings',this)" aria-label="Settings">
+    <span class="mobile-nav-icon" aria-hidden="true">⚙️</span>
+    <span class="mobile-nav-label">Settings</span>
+  </div>
+</nav>
 
 <!-- BODY WRAP -->
 <div class="body-wrap">
@@ -1175,8 +1509,16 @@ function onPairTypeChange(){
 function switchPage(page,el){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.mobile-nav-item').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  el.classList.add('active');
+  // Activate sidebar item for this page (handles keyboard shortcut calls)
+  const sItem=document.querySelector(`.sidebar-item[onclick*="'${page}'"]`);
+  if(sItem)sItem.classList.add('active');
+  // Activate mobile nav item for this page
+  const mItem=document.getElementById('mbn-'+page);
+  if(mItem)mItem.classList.add('active');
+  // Also activate the passed element (handles all callers)
+  if(el&&!el.classList.contains('sidebar-item')&&!el.classList.contains('mobile-nav-item'))el.classList.add('active');
   // Toggle subbar vs settings tabbar
   const isSettings=page==='settings';
   document.getElementById('mainSubbar').style.display=isSettings?'none':'block';
