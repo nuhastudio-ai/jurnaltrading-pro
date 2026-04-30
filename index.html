@@ -1605,7 +1605,7 @@ function openEditModal(id){
   document.getElementById('tradeModalTitle').textContent='✏️ Edit Trade #'+id;
   populateTradeForm();
   document.getElementById('fm-akun').value=t.akun;
-  document.getElementById('fm-date').value=t.date.slice(0,16);
+  document.getElementById('fm-date').value=dateToInputVal(t.date);
   document.getElementById('fm-pair').value=t.pair;
   document.getElementById('fm-dir').value=t.dir;
   document.getElementById('fm-lot').value=t.lot;
@@ -1662,8 +1662,10 @@ function saveTrade(){
     data.id=newId;
     showToast('✅ Trade baru ditambahkan!');
   }
-  closeModal('tradeModal');updateAll();
-  if(document.getElementById('page-journal').classList.contains('active'))renderJournal();
+  APP.editTradeId=null; // reset agar add trade berikutnya tidak menimpa data lama
+  closeModal('tradeModal');
+  updateAll();
+  renderJournal(); // selalu render ulang jurnal agar perubahan langsung tampil
   // Sync ke cloud — gunakan wasEditId (sebelum modal close reset)
   const tradeToSync = wasEditId!==null
     ? APP.trades.find(t=>t.id===wasEditId)
@@ -1987,7 +1989,7 @@ function renderJournal(){
     return`<tr class="${sel?'row-sel':''}">
     <td><input type="checkbox" ${sel?'checked':''} onchange="toggleJSelect(${t.id},this)"></td>
     <td class="td-m v-muted">${t.id}</td>
-    <td style="color:var(--txt1);white-space:nowrap;font-size:10.5px;">${t.date.slice(0,16)}</td>
+    <td style="color:var(--txt1);white-space:nowrap;font-size:10.5px;">${formatDateDisplay(t.date)}</td>
     <td style="font-size:10.5px;color:#a5b4fc;">${t.akun}</td>
     <td><span class="chip ${p.color}">${t.pair}</span></td>
     <td class="td-c"><span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span></td>
@@ -2033,7 +2035,7 @@ function viewDetail(id){
   const p=getPair(t.pair);const col=t.pnlRp>=0?'var(--c-green2)':'var(--c-red2)';
   document.getElementById('detailContent').innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${t.date.slice(0,16)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<span style="color:var(--c-cyan)">${t.setup}</span>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['Exit / TP',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
+  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<span style="color:var(--c-cyan)">${t.setup}</span>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['Exit / TP',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
   </div>
   <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--r8);padding:11px 13px;margin-bottom:12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Catatan</div><div style="font-size:12px;color:var(--txt1);">${t.note||'Tidak ada catatan.'}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="openEditModal(${t.id});closeModal('detailModal')">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="closeModal('detailModal')">Tutup</button></div>`;
@@ -2271,6 +2273,50 @@ function importCSV(input){
 
 
 // ══════════════════════════════════════════════════════════
+//  DATE NORMALIZER — pastikan t.date selalu dalam format ISO
+//  "YYYY-MM-DDTHH:MM" yang kompatibel dengan datetime-local input
+// ══════════════════════════════════════════════════════════
+
+/**
+ * Normalkan berbagai format tanggal ke "YYYY-MM-DDTHH:MM".
+ * Diperlukan karena Google Sheets kadang mengirim tanggal sebagai:
+ *   - Date object yang di-String() → "Mon Jan 15 2024 08:30:00 GMT+0700..."
+ *   - ISO string "2024-01-15T08:30"
+ *   - String tanpa jam "2024-01-15"
+ */
+function normalizeDate(dateStr) {
+  if (!dateStr || dateStr === 'undefined') return '';
+  // Sudah format ISO YYYY-MM-DD... → kembalikan langsung
+  if (/^\d{4}-\d{2}-\d{2}/.test(String(dateStr))) return String(dateStr);
+  // Parse sebagai Date object, lalu format ulang ke local time
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Format tanggal ISO ke string tampilan "DD Mon YYYY HH:MM"
+ * untuk ditampilkan di modal detail & tabel jurnal.
+ */
+function formatDateDisplay(dateStr) {
+  const d = new Date(normalizeDate(dateStr));
+  if (isNaN(d.getTime())) return dateStr || '—';
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const pad = n => String(n).padStart(2, '0');
+  return `${pad(d.getDate())} ${months[d.getMonth()]} ${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Format tanggal ISO ke "YYYY-MM-DDTHH:MM" yang diterima oleh
+ * input[type=datetime-local].
+ */
+function dateToInputVal(dateStr) {
+  const n = normalizeDate(dateStr);
+  return n ? n.slice(0, 16) : '';
+}
+
+// ══════════════════════════════════════════════════════════
 //  CLOUD-FIRST INIT (menggantikan localStorage)
 // ══════════════════════════════════════════════════════════
 
@@ -2286,8 +2332,11 @@ function applyCloudData(data) {
   if (data.kurs         && parseInt(data.kurs) > 0)                             APP.kurs         = parseInt(data.kurs);
   if (data.kursHistory  && Array.isArray(data.kursHistory))                     APP.kursHistory  = data.kursHistory;
 
-  // Pastikan pnlRp selalu terhitung
-  APP.trades.forEach(t => { if (!t.pnlRp) t.pnlRp = Math.round(t.pnlUSD * APP.kurs); });
+  // Normalisasi tanggal & pastikan pnlRp selalu terhitung
+  APP.trades.forEach(t => {
+    t.date  = normalizeDate(t.date);
+    if (!t.pnlRp) t.pnlRp = Math.round(t.pnlUSD * APP.kurs);
+  });
 }
 
 /**

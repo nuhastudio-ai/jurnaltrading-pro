@@ -116,6 +116,23 @@ function initSheets() {
 }
 
 /**
+ * Format nilai tanggal dari Google Sheets ke string ISO "YYYY-MM-DDTHH:mm".
+ * Google Sheets mengembalikan sel tanggal sebagai Date object (bukan string),
+ * sehingga String() langsung akan menghasilkan format yang tidak bisa dibaca
+ * oleh datetime-local input maupun slice(0,10) di frontend.
+ */
+function formatDateForApp(val) {
+  if (!val || val === '') return '';
+  if (val instanceof Date) {
+    // Gunakan timezone script, bukan UTC, agar jam lokal tetap benar
+    return Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm");
+  }
+  const s = String(val).trim();
+  if (!s || s === 'undefined') return '';
+  return s;
+}
+
+/**
  * Konversi rows spreadsheet → array of objects.
  */
 function sheetToObjects(sh) {
@@ -151,7 +168,7 @@ function getAllData() {
   const jSh = ss.getSheetByName(SH.JURNAL);
   const trades = sheetToObjects(jSh).map(r => ({
     id     : parseInt(r['ID'])             || 0,
-    date   : String(r['Tanggal'])          || '',
+    date   : formatDateForApp(r['Tanggal']),
     akun   : String(r['Akun'])             || '',
     pair   : String(r['Pair'])             || '',
     dir    : String(r['Arah'])             || 'BUY',
