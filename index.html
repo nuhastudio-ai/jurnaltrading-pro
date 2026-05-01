@@ -928,7 +928,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div id="rekapBody" style="overflow-x:auto;"></div>
     </div>
     <!-- STATS + TOP PAIRS + METRICS -->
-    <div style="display:grid;grid-template-columns:35fr 65fr;gap:14px;">
+    <div class="g2">
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div class="panel">
           <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Statistik Trading</div></div>
@@ -1171,7 +1171,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
             <div class="s-row"><div class="s-info"><div class="s-lbl">Max Daily Loss (Rp)</div><div class="s-hint">Batas loss per hari</div></div><div class="s-ctrl"><input type="number" class="s-in" id="maxDailyLoss" value="500000" style="width:130px;"></div></div>
             <div class="s-row"><div class="s-info"><div class="s-lbl">Max Loss per Trade (Rp)</div><div class="s-hint">Loss maksimum per trade</div></div><div class="s-ctrl"><input type="number" class="s-in" id="maxTradeLoss" value="200000" style="width:130px;"></div></div>
             <div class="s-row"><div class="s-info"><div class="s-lbl">Max Trades per Hari</div><div class="s-hint">Batas jumlah trade/hari</div></div><div class="s-ctrl"><input type="number" class="s-in" id="maxTrades" value="10" style="width:90px;"></div></div>
-            <div style="margin-top:14px;text-align:right;"><button class="btn btn-primary btn-sm" onclick="showToast('✅ Risk rules disimpan!')">Simpan Rules</button></div>
+            <div style="margin-top:14px;text-align:right;"><button class="btn btn-primary btn-sm" onclick="saveRiskRules()">💾 Simpan Rules</button></div>
           </div>
         </div>
       </div>
@@ -1377,6 +1377,7 @@ const APP={
     {name:'BACKTEST v5.m',broker:'Demo Account',modal:800000,type:'demo',status:true},
   ],
   trades:[],
+  risk:{ maxDailyLoss:500000, maxTradeLoss:200000, maxTrades:10 },
   editTradeId:null,editPairIdx:null,editAkunIdx:null,
   jSortKey:'id',jSortAsc:false,jPage:1,jPageSize:15,jSelected:new Set(),
   rekapMode:'day',equityMode:'day',charts:{}
@@ -2397,6 +2398,7 @@ function applyCloudData(data) {
   if (data.akuns        && Array.isArray(data.akuns)   && data.akuns.length)    APP.akuns        = data.akuns;
   if (data.kurs         && parseInt(data.kurs) > 0)                             APP.kurs         = parseInt(data.kurs);
   if (data.kursHistory  && Array.isArray(data.kursHistory))                     APP.kursHistory  = data.kursHistory;
+  if (data.risk         && typeof data.risk === 'object')                        APP.risk         = { ...APP.risk, ...data.risk };
 
   // Normalisasi tanggal & pastikan pnlRp selalu terhitung
   APP.trades.forEach(t => {
@@ -2412,6 +2414,11 @@ function applyCloudData(data) {
 function renderSettings() {
   document.getElementById('kursDisplay').textContent = 'Rp ' + APP.kurs.toLocaleString('id');
   document.getElementById('kursInput').value = APP.kurs;
+  // Risk Management Rules
+  const r = APP.risk;
+  document.getElementById('maxDailyLoss').value  = r.maxDailyLoss  ?? 500000;
+  document.getElementById('maxTradeLoss').value  = r.maxTradeLoss  ?? 200000;
+  document.getElementById('maxTrades').value     = r.maxTrades     ?? 10;
   renderKursHistory();
   renderPairManager();
   renderSetupTags();
@@ -2419,6 +2426,13 @@ function renderSettings() {
 }
 
 // MISC helpers (tidak berubah)
+function saveRiskRules(){
+  const maxDailyLoss = parseInt(document.getElementById('maxDailyLoss').value) || 500000;
+  const maxTradeLoss = parseInt(document.getElementById('maxTradeLoss').value) || 200000;
+  const maxTrades    = parseInt(document.getElementById('maxTrades').value)    || 10;
+  APP.risk = { maxDailyLoss, maxTradeLoss, maxTrades };
+  cloudSync('saveRisk', { risk: APP.risk }, '✅ Risk rules disimpan ke cloud!');
+}
 function onPeriodeChange(){const v=document.getElementById('ctrlPeriode').value;const wrap=document.getElementById('customDateWrap');wrap.style.display=v==='custom'?'flex':'none';if(v!=='custom')updateAll();}
 function showToast(msg,type=''){const el=document.createElement('div');el.className='toast'+(type?' '+type:'');el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3200);}
 function initWinLossChart(){/* replaced by SVG card */}

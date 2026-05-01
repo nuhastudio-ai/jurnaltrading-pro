@@ -21,7 +21,8 @@ const SH = {
   KURS   : 'KURS',
   PAIRS  : 'PAIRS',
   SETUPS : 'SETUPS',
-  AKUN   : 'AKUN'
+  AKUN   : 'AKUN',
+  RISK   : 'RISK'
 };
 
 // ─── Header Kolom ─────────────────────────────────────────
@@ -30,7 +31,8 @@ const HEADERS = {
   KURS    : ['Tanggal','Nilai'],
   PAIRS   : ['Nama','Tipe','Multiplier','Pip','Warna','Deskripsi'],
   SETUPS  : ['Nama'],
-  AKUN    : ['Nama','Broker','Modal','Tipe']
+  AKUN    : ['Nama','Broker','Modal','Tipe'],
+  RISK    : ['Key','Value']
 };
 
 // ─── Style header warna tema dashboard ────────────────────
@@ -57,6 +59,7 @@ function doPost(e) {
       case 'savePairs'       : result = savePairs(req.pairs);     break;
       case 'saveSetups'      : result = saveSetups(req.setups);   break;
       case 'saveAkuns'       : result = saveAkuns(req.akuns);     break;
+      case 'saveRisk'        : result = saveRisk(req.risk);       break;
       case 'replaceAll'      : result = replaceAll(req.data);     break;
       default                : result = { error: 'Unknown action: ' + req.action };
     }
@@ -223,7 +226,18 @@ function getAllData() {
     status : true
   })).filter(a => a.name && a.name !== 'undefined');
 
-  return { ok: true, trades, kurs, kursHistory, pairs, setups, akuns };
+  // ── RISK ─────────────────────────────────────────────────
+  const rSh = ss.getSheetByName(SH.RISK);
+  const riskRows = sheetToObjects(rSh);
+  const riskMap  = {};
+  riskRows.forEach(r => { if (r['Key']) riskMap[String(r['Key'])] = r['Value']; });
+  const risk = {
+    maxDailyLoss : parseInt(riskMap['maxDailyLoss'])  || 500000,
+    maxTradeLoss : parseInt(riskMap['maxTradeLoss'])  || 200000,
+    maxTrades    : parseInt(riskMap['maxTrades'])     || 10
+  };
+
+  return { ok: true, trades, kurs, kursHistory, pairs, setups, akuns, risk };
 }
 
 // ══════════════════════════════════════════════════════════
@@ -346,6 +360,18 @@ function saveAkuns(akuns) {
   return { ok: true };
 }
 
+function saveRisk(risk) {
+  const sh = getOrCreateSheet(SH.RISK, HEADERS.RISK);
+  clearDataRows(sh);
+  const rows = [
+    ['maxDailyLoss', parseInt(risk.maxDailyLoss) || 500000],
+    ['maxTradeLoss', parseInt(risk.maxTradeLoss) || 200000],
+    ['maxTrades',    parseInt(risk.maxTrades)    || 10]
+  ];
+  sh.getRange(2, 1, rows.length, 2).setValues(rows);
+  return { ok: true };
+}
+
 // ══════════════════════════════════════════════════════════
 //  IMPORT / REPLACE ALL (untuk fitur Import JSON)
 // ══════════════════════════════════════════════════════════
@@ -374,6 +400,7 @@ function replaceAll(data) {
   if (data.pairs)  savePairs(data.pairs);
   if (data.setups) saveSetups(data.setups);
   if (data.akuns)  saveAkuns(data.akuns);
+  if (data.risk)   saveRisk(data.risk);
 
   return { ok: true, message: 'Semua data berhasil di-replace' };
 }
