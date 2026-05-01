@@ -918,10 +918,10 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
             <button class="mode-tab" onclick="switchRekapMode('month',this)">MONTH</button>
           </div>
           <select class="ctrl-sel" id="rekapMonth" onchange="renderRekap()" style="font-size:11px;padding:5px 8px;">
-            <option>Jan</option><option>Feb</option><option selected>Mar</option><option>Apr</option><option>Mei</option><option>Jun</option><option>Jul</option><option>Ags</option><option>Sep</option><option>Okt</option><option>Nov</option><option>Des</option>
+            <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>Mei</option><option>Jun</option><option>Jul</option><option>Ags</option><option>Sep</option><option>Okt</option><option>Nov</option><option>Des</option>
           </select>
           <select class="ctrl-sel" id="rekapYear" onchange="renderRekap()" style="font-size:11px;padding:5px 8px;">
-            <option>2025</option><option selected>2026</option>
+            <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
           </select>
         </div>
       </div>
@@ -1030,8 +1030,8 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
         <div class="panel-hd">
           <div class="panel-title"><div class="dot dot-green"></div>Kalender Trading Heatmap</div>
           <div style="display:flex;gap:6px;">
-            <select class="ctrl-sel" id="calMonth" onchange="renderCalendar()" style="font-size:11px;padding:4px 8px;"><option>Jan</option><option>Feb</option><option selected>Mar</option><option>Apr</option><option>Mei</option><option>Jun</option><option>Jul</option><option>Ags</option><option>Sep</option><option>Okt</option><option>Nov</option><option>Des</option></select>
-            <select class="ctrl-sel" id="calYear" onchange="renderCalendar()" style="font-size:11px;padding:4px 8px;"><option>2025</option><option selected>2026</option></select>
+            <select class="ctrl-sel" id="calMonth" onchange="renderCalendar()" style="font-size:11px;padding:4px 8px;"><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>Mei</option><option>Jun</option><option>Jul</option><option>Ags</option><option>Sep</option><option>Okt</option><option>Nov</option><option>Des</option></select>
+            <select class="ctrl-sel" id="calYear" onchange="renderCalendar()" style="font-size:11px;padding:4px 8px;"><option>2024</option><option>2025</option><option>2026</option><option>2027</option></select>
           </div>
         </div>
         <div class="panel-bd"><div class="cal-grid" id="calendarGrid"></div></div>
@@ -1954,29 +1954,51 @@ function switchEquityMode(mode,btn){btn.closest('.mode-tabs').querySelectorAll('
 // REKAP
 function switchRekapMode(mode,btn){btn.closest('.mode-tabs').querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');APP.rekapMode=mode;renderRekap();}
 function getWeekNum(d){const date=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=date.getUTCDay()||7;date.setUTCDate(date.getUTCDate()+4-day);const ys=new Date(Date.UTC(date.getUTCFullYear(),0,1));return Math.ceil((((date-ys)/86400000)+1)/7);}
+function getWeekOfMonth(d){const first=new Date(d.getFullYear(),d.getMonth(),1);const firstDow=first.getDay()===0?6:first.getDay()-1;return Math.ceil((d.getDate()+firstDow)/7);}
 
 function renderRekap(){
-  const trades=getFilteredTrades();const mode=APP.rekapMode;
+  const mNamesArr=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const selMonth=document.getElementById('rekapMonth')?.value;
+  const selYear=parseInt(document.getElementById('rekapYear')?.value)||new Date().getFullYear();
+  const mi=mNamesArr.indexOf(selMonth);
+  const akun=document.getElementById('ctrlAkun').value;
+  const mode=APP.rekapMode;
   const cont=document.getElementById('rekapBody');
+  // DAY/WEEK: filter by month+year; MONTH: filter by year only
+  let trades=APP.trades.filter(t=>{
+    const d=new Date(t.date);
+    if(d.getFullYear()!==selYear)return false;
+    if(mode!=='month'&&mi>=0&&d.getMonth()!==mi)return false;
+    return true;
+  });
+  if(akun!=='all')trades=trades.filter(t=>t.akun===akun);
   if(mode==='day'){
     const dayNames=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu','TOTAL'];
     const dayMap={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
     const weeks={};
-    trades.forEach(t=>{const d=new Date(t.date);const key=d.getFullYear()+'-W'+getWeekNum(d);if(!weeks[key])weeks[key]=Array(7).fill(0);weeks[key][dayMap[d.getDay()]]+=t.pnlRp;});
+    trades.forEach(t=>{
+      const d=new Date(t.date);
+      const wom=getWeekOfMonth(d);
+      const key=d.getFullYear()+'-'+String(d.getMonth()).padStart(2,'0')+'-W'+String(wom).padStart(2,'0');
+      if(!weeks[key])weeks[key]={days:Array(7).fill(0),weekNum:wom};
+      weeks[key].days[dayMap[d.getDay()]]+=t.pnlRp;
+    });
     const wks=Object.keys(weeks).sort();
     let h=`<table class="rekap-tbl"><thead><tr><td class="rekap-hd" style="text-align:left;padding-left:14px;">Minggu</td>${dayNames.map((d,i)=>`<td class="rekap-hd ${i===7?'total-hd':''}">${d}</td>`).join('')}</tr></thead><tbody>`;
-    wks.forEach((wk,wi)=>{const row=weeks[wk];const tot=row.reduce((s,v)=>s+v,0);h+=`<tr><td class="rekap-week-lbl">W${wi+1}</td>${row.map(v=>`<td class="rekap-cell"><span class="${v>0?'rekap-pnl-pos':v<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${v!==0?(v>0?'+':'')+fmt(v):'Rp 0'}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="${tot>0?'rekap-pnl-pos':tot<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${tot>0?'+':''}${fmt(tot)}</span></td></tr>`;});
-    if(!wks.length)h+=`<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data</td></tr>`;
+    wks.forEach(wk=>{const row=weeks[wk].days;const tot=row.reduce((s,v)=>s+v,0);h+=`<tr><td class="rekap-week-lbl">W${weeks[wk].weekNum}</td>${row.map(v=>`<td class="rekap-cell"><span class="${v>0?'rekap-pnl-pos':v<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${v!==0?(v>0?'+':'')+fmt(v):'Rp 0'}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="${tot>0?'rekap-pnl-pos':tot<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${tot>0?'+':''}${fmt(tot)}</span></td></tr>`;});
+    if(!wks.length)h+=`<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data untuk ${selMonth} ${selYear}</td></tr>`;
     cont.innerHTML=h+'</tbody></table>';
   }else if(mode==='week'){
-    const wks={};trades.forEach(t=>{const wn='W'+getWeekNum(new Date(t.date));if(!wks[wn])wks[wn]=0;wks[wn]+=t.pnlRp;});
-    const keys=Object.keys(wks).sort();
-    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(w=>`<td class="rekap-hd">${w}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(w=>`<td class="rekap-cell"><span class="${wks[w]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${wks[w]>=0?'+':''}${fmt(wks[w])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="rekap-pnl-pos">+${fmt(keys.reduce((s,k)=>s+wks[k],0))}</span></td></tr></tbody></table>`||'<div style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data</div>';
+    const wks={};trades.forEach(t=>{const wom=getWeekOfMonth(new Date(t.date));const wn='W'+wom;if(!wks[wn])wks[wn]=0;wks[wn]+=t.pnlRp;});
+    const keys=Object.keys(wks).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+    if(!keys.length){cont.innerHTML=`<div style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data untuk ${selMonth} ${selYear}</div>`;return;}
+    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(w=>`<td class="rekap-hd">${w}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(w=>`<td class="rekap-cell"><span class="${wks[w]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${wks[w]>=0?'+':''}${fmt(wks[w])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="rekap-pnl-pos">+${fmt(keys.reduce((s,k)=>s+wks[k],0))}</span></td></tr></tbody></table>`;
   }else{
     const mths={};trades.forEach(t=>{const m=t.date.slice(0,7);if(!mths[m])mths[m]=0;mths[m]+=t.pnlRp;});
-    const mNames={1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Ags',9:'Sep',10:'Okt',11:'Nov',12:'Des'};
+    const mNamesMap={1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Ags',9:'Sep',10:'Okt',11:'Nov',12:'Des'};
     const keys=Object.keys(mths).sort();
-    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(m=>`<td class="rekap-hd">${mNames[parseInt(m.slice(5))]||m} ${m.slice(0,4)}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(m=>`<td class="rekap-cell"><span class="${mths[m]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${mths[m]>=0?'+':''}${fmt(mths[m])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="rekap-pnl-pos">+${fmt(keys.reduce((s,k)=>s+mths[k],0))}</span></td></tr></tbody></table>`;
+    if(!keys.length){cont.innerHTML=`<div style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data untuk tahun ${selYear}</div>`;return;}
+    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(m=>`<td class="rekap-hd">${mNamesMap[parseInt(m.slice(5))]||m} ${m.slice(0,4)}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(m=>`<td class="rekap-cell"><span class="${mths[m]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${mths[m]>=0?'+':''}${fmt(mths[m])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="rekap-pnl-pos">+${fmt(keys.reduce((s,k)=>s+mths[k],0))}</span></td></tr></tbody></table>`;
   }
 }
 
@@ -2111,7 +2133,7 @@ function renderAnalysis(){
     {icon:'📊',lbl:'Sharpe (est)',val:(stats.wr/10).toFixed(2),sub:'Risk-adjusted return',col:'v-cyan'},
     {icon:'🎯',lbl:'Expectancy/Trade',val:fmtRp(stats.total?stats.netPnl/stats.total:0),sub:'Average per trade',col:'v-green'},
     {icon:'💎',lbl:'Best Single Trade',val:fmtRp(trades.length?Math.max(...trades.map(t=>t.pnlRp)):0),sub:'Profit terbesar',col:'v-gold'},
-    {icon:'🔥',lbl:'Total Volume',val:trades.reduce((s,t)=>s+t.lot,0).toFixed(2)+' lot',sub:'Lots traded total',col:'v-blue'},
+    {icon:'🔥',lbl:'Total Volume',val:trades.reduce((s,t)=>s+t.lot,0).toFixed(4)+' lot',sub:'Lots traded total',col:'v-blue'},
   ];
   document.getElementById('analysisMetrics').innerHTML=metricsData.map(m=>`<div class="metric-card"><div class="mc-icon">${m.icon}</div><div class="mc-lbl">${m.lbl}</div><div class="mc-val ${m.col}">${m.val}</div><div class="mc-sub">${m.sub}</div></div>`).join('');
   document.getElementById('streakGrid').innerHTML=trades.map((t,i)=>`<div class="streak-dot ${t.result==='WIN'?'streak-win':'streak-loss'}" title="T${i+1}: ${t.result} ${fmtRp(t.pnlRp)}"></div>`).join('');
@@ -2404,7 +2426,26 @@ setInterval(()=>{const n=new Date();const str=[n.getHours(),n.getMinutes(),n.get
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;if(e.key==='n'||e.key==='N')openAddModal();if(e.key==='e'||e.key==='E')exportCSV();if(e.key==='f'||e.key==='F'){const jTab=document.querySelectorAll('.sidebar-item')[2];switchPage('journal',jTab);setTimeout(()=>document.getElementById('jSearchPair')?.focus(),100);}if(e.key==='Escape')document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));});
 
 // ── MAIN BOOT ──────────────────────────────────────────────
+// Set filter Kalender & Rekap ke bulan/tahun sekarang
+function initDateFilters(){
+  const now=new Date();
+  const mNames=['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+  const curM=mNames[now.getMonth()];
+  const curY=String(now.getFullYear());
+  ['calYear','rekapYear'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    if(![...el.options].some(o=>o.value===curY)){el.add(new Option(curY,curY));}
+    el.value=curY;
+  });
+  ['calMonth','rekapMonth'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el)el.value=curM;
+  });
+}
+
 (async function init() {
+  initDateFilters();
   // 1. Tampilkan loader
   showLoader('Menghubungkan ke Google Spreadsheet...');
   setCloudPill('saving');
