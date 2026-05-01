@@ -181,6 +181,9 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .td-r{text-align:right;}
 .td-c{text-align:center;}
 .td-m{font-family:var(--fn-m);font-weight:600;}
+/* Override specificity: pastikan td-c & td-r menang atas aturan data-tbl thead/tbody */
+.data-tbl thead th.td-c,.data-tbl tbody td.td-c{text-align:center;}
+.data-tbl thead th.td-r,.data-tbl tbody td.td-r{text-align:right;}
 /* CHIPS */
 .chip{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;font-family:var(--fn-m);letter-spacing:.3px;}
 .chip-gold{background:var(--c-gold-d);color:var(--c-gold);border:1px solid rgba(245,197,24,.28);}
