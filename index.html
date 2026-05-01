@@ -965,7 +965,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     <!-- REKAP AKUN -->
     <div class="panel">
       <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Rekap Per Akun (Rp)</div></div>
-      <div style="overflow-x:auto;"><table class="data-tbl"><thead><tr><th>Nama Akun</th><th class="td-r">Modal (Rp)</th><th class="td-r">Net PnL (Rp)</th><th class="td-r">Return %</th><th class="td-r">Win Rate</th><th class="td-c">Trades</th><th class="td-c">PF</th><th class="td-r">Equity Aktif</th></tr></thead>
+      <div style="overflow-x:auto;"><table class="data-tbl"><thead><tr><th>Nama Akun</th><th class="td-c">Modal (Rp)</th><th class="td-c">Net PnL (Rp)</th><th class="td-c">Return %</th><th class="td-c">Win Rate</th><th class="td-c">Trades</th><th class="td-c">PF</th><th class="td-c">Equity Aktif</th></tr></thead>
       <tbody id="akunTableBody"></tbody></table></div>
     </div>
     <!-- HARI GRID -->
@@ -1072,10 +1072,10 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
           <thead><tr>
             <th style="width:32px;"><input type="checkbox" id="jSelectAll" onchange="toggleSelectAll(this)"></th>
             <th onclick="jSort('id')"># ↓</th><th onclick="jSort('date')">Tanggal</th><th onclick="jSort('akun')">Akun</th><th onclick="jSort('pair')">Pair</th>
-            <th class="td-c" onclick="jSort('dir')">Arah</th><th class="td-r" onclick="jSort('lot')">Lot</th><th class="td-r">Entry</th><th class="td-r">SL</th><th class="td-r">Exit/TP</th>
-            <th class="td-r" onclick="jSort('pnlRp')">PnL (Rp)</th><th class="td-r" onclick="jSort('pnlUSD')">PnL (USD)</th>
-            <th class="td-r" onclick="jSort('fee')" title="Fee/Komisi">Fee (Rp)</th>
-            <th class="td-r" onclick="jSort('rr')" title="Risk/Reward">RR</th>
+            <th class="td-c" onclick="jSort('dir')">Arah</th><th class="td-c" onclick="jSort('lot')">Lot</th><th class="td-c">Entry</th><th class="td-c">SL</th><th class="td-c">Exit/TP</th>
+            <th class="td-c" onclick="jSort('pnlRp')">PnL (Rp)</th><th class="td-c" onclick="jSort('pnlUSD')">PnL (USD)</th>
+            <th class="td-c" onclick="jSort('fee')" title="Fee/Komisi">Fee (Rp)</th>
+            <th class="td-c" onclick="jSort('rr')" title="Risk/Reward">RR</th>
             <th class="td-c" onclick="jSort('result')">Hasil</th><th onclick="jSort('setup')">Setup</th><th>Catatan</th><th class="td-c">Aksi</th>
           </tr></thead>
           <tbody id="journalBody"></tbody>
@@ -1853,12 +1853,12 @@ function renderAkunTable(){
     const s=calcStats(trd);const eq=a.modal+s.netPnl;const ret=a.modal>0?s.netPnl/a.modal*100:0;
     return`<tr style="background:${a.type==='live'?'rgba(79,142,247,.04)':''};">
     <td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td>
-    <td class="td-r td-m">Rp ${fmt(a.modal)}</td>
-    <td class="td-r td-m ${s.netPnl>=0?'v-green':'v-red'}">${s.netPnl>=0?'+':''}Rp ${fmt(s.netPnl)}</td>
-    <td class="td-r"><span class="${s.netPnl>=0?'v-green':'v-red'}" style="font-family:var(--fn-m);">${ret>=0?'+':''}${ret.toFixed(2)}%</span></td>
-    <td class="td-r v-green" style="font-family:var(--fn-m);">${fmtPct(s.wr)}</td>
+    <td class="td-c td-m">Rp ${fmt(a.modal)}</td>
+    <td class="td-c td-m ${s.netPnl>=0?'v-green':'v-red'}">${s.netPnl>=0?'+':''}Rp ${fmt(s.netPnl)}</td>
+    <td class="td-c"><span class="${s.netPnl>=0?'v-green':'v-red'}" style="font-family:var(--fn-m);">${ret>=0?'+':''}${ret.toFixed(2)}%</span></td>
+    <td class="td-c v-green" style="font-family:var(--fn-m);">${fmtPct(s.wr)}</td>
     <td class="td-c td-m">${s.total}</td><td class="td-c td-m">${s.pf===Infinity?'∞':s.pf.toFixed(2)}</td>
-    <td class="td-r td-m v-cyan">Rp ${fmt(eq)}</td></tr>`;
+    <td class="td-c td-m v-cyan">Rp ${fmt(eq)}</td></tr>`;
   }).join('');
 }
 
@@ -1993,14 +1993,14 @@ function renderJournal(){
     <td style="font-size:10.5px;color:#a5b4fc;">${t.akun}</td>
     <td><span class="chip ${p.color}">${t.pair}</span></td>
     <td class="td-c"><span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span></td>
-    <td class="td-r td-m">${t.lot}</td>
-    <td class="td-r td-m v-muted">${t.entry.toLocaleString('id',{maximumFractionDigits:5})}</td>
-    <td class="td-r td-m" style="color:var(--c-red2);font-family:var(--fn-m);font-size:10.5px;">${t.sl>0?t.sl.toLocaleString('id',{maximumFractionDigits:5}):'—'}</td>
-    <td class="td-r td-m v-muted">${t.exit.toLocaleString('id',{maximumFractionDigits:5})}</td>
-    <td class="td-r td-m ${t.pnlRp>=0?'v-green':'v-red'}">${pnlStr}</td>
-    <td class="td-r" style="font-family:var(--fn-m);font-size:10.5px;color:var(--txt2);">${pnlUSDStr}</td>
-    <td class="td-r td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.fee>0?'var(--c-gold)':'var(--txt2)'};">${feeStr}</td>
-    <td class="td-r td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.rr>0?'var(--c-cyan)':'var(--txt2)'};">${rrStr}</td>
+    <td class="td-c td-m">${t.lot}</td>
+    <td class="td-c td-m v-muted">${t.entry.toLocaleString('id',{maximumFractionDigits:5})}</td>
+    <td class="td-c td-m" style="color:var(--c-red2);font-family:var(--fn-m);font-size:10.5px;">${t.sl>0?t.sl.toLocaleString('id',{maximumFractionDigits:5}):'—'}</td>
+    <td class="td-c td-m v-muted">${t.exit.toLocaleString('id',{maximumFractionDigits:5})}</td>
+    <td class="td-c td-m ${t.pnlRp>=0?'v-green':'v-red'}">${pnlStr}</td>
+    <td class="td-c" style="font-family:var(--fn-m);font-size:10.5px;color:var(--txt2);">${pnlUSDStr}</td>
+    <td class="td-c td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.fee>0?'var(--c-gold)':'var(--txt2)'};">${feeStr}</td>
+    <td class="td-c td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.rr>0?'var(--c-cyan)':'var(--txt2)'};">${rrStr}</td>
     <td class="td-c"><span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span></td>
     <td style="font-size:10.5px;color:var(--txt2);">${t.setup}</td>
     <td style="font-size:10.5px;color:var(--txt2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.note}">${t.note||'—'}</td>
