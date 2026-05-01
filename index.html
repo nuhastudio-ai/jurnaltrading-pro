@@ -545,21 +545,31 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     gap: var(--f3) !important;
   }
 
-  /* ensure all panels and content don't overflow viewport */
-  .panel, .kpi, .metric-card {
+  /* ensure panels don't overflow viewport — tapi JANGAN overflow:hidden agar inner scroll container bisa jalan */
+  .panel {
+    max-width: 100%;
+    word-break: break-word;
+  }
+  /* kpi & metric-card boleh di-clip karena tidak punya scroll inner */
+  .kpi, .metric-card {
     max-width: 100%;
     overflow: hidden;
     word-break: break-word;
   }
 
-  /* prevent any child from overflowing horizontally */
+  /* box-sizing for all — max-width hanya pada element container, BUKAN tabel/grid (agar scroll horizontal bisa jalan) */
   .content-area * {
-    max-width: 100%;
     box-sizing: border-box;
   }
+  /* Batasi lebar hanya pada panel & card atas level, bukan konten tabel/grid di dalamnya */
+  .content-area > .main > *,
+  .content-area .jfilter-bar,
+  .content-area .wl-card {
+    max-width: 100%;
+  }
 
-  /* chart canvas max width */
-  canvas { max-width: 100% !important; height: auto; }
+  /* chart canvas max width — override min-width dari tabel */
+  canvas { max-width: 100% !important; min-width: unset !important; height: auto; }
 
   /* ── PANELS ──────────────────────────────────────────── */
   .panel { border-radius: var(--r12); }
@@ -630,11 +640,22 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 
   /* ── REKAP TABLE ─────────────────────────────────────── */
   #rekapBody { overflow-x: auto; -webkit-overflow-scrolling: touch; }
-  .rekap-hd, .rekap-cell { font-size: 10px; padding: var(--f2) var(--f3); }
+  .rekap-tbl { min-width: max-content; }
+  .rekap-hd, .rekap-cell { font-size: 10px; padding: var(--f2) var(--f3); white-space: nowrap; }
 
   /* ── HARI GRID ───────────────────────────────────────── */
-  .hari-grid { overflow-x: auto; }
-  .hari-hd, .hari-cell { font-size: 10px; padding: var(--f2) var(--f2); }
+  /* Wrapper scroll — sama seperti rekap per akun */
+  #hariGrid {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+  }
+  /* Grid min-width agar tidak mengecil & memaksa scroll horizontal */
+  .hari-grid {
+    min-width: 660px;
+    grid-template-columns: 90px repeat(7, minmax(68px, 1fr)) 90px;
+  }
+  .hari-hd, .hari-cell { font-size: 10px; padding: var(--f2) var(--f2); white-space: nowrap; }
 
   /* ── CALENDAR ────────────────────────────────────────── */
   .cal-day { min-height: 36px; padding: var(--f2); }
@@ -647,8 +668,9 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   .mc-val { font-size: 15px; }
 
   /* ── DATA TABLE ──────────────────────────────────────── */
-  .data-tbl { font-size: 10.5px; }
-  .data-tbl thead th { padding: var(--f2) var(--f3); font-size: 9px; }
+  /* min-width: max-content → tabel bebas melebar, wrapper yang scroll */
+  .data-tbl { font-size: 10.5px; min-width: max-content; }
+  .data-tbl thead th { padding: var(--f2) var(--f3); font-size: 9px; white-space: nowrap; }
   .data-tbl tbody td { padding: var(--f3) var(--f3); }
 
   /* ── PAGE SIZE SELECTOR ──────────────────────────────── */
