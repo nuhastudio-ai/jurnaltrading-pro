@@ -398,6 +398,22 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .cloud-pill.idle{background:var(--c-green-d);color:var(--c-green2);border:1px solid rgba(16,185,129,.25);}
 .cloud-pill.saving{background:var(--c-gold-d);color:var(--c-gold);border:1px solid rgba(245,197,24,.3);animation:pulse-cloud .8s ease-in-out infinite;}
 .cloud-pill.err{background:var(--c-red-d);color:var(--c-red2);border:1px solid rgba(239,68,68,.3);}
+/* LIVE KURS WIDGET */
+.live-kurs-box{display:flex;align-items:center;gap:8px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);padding:7px 12px;transition:border-color .2s;}
+.live-kurs-box:hover{border-color:rgba(245,197,24,.3);}
+.live-kurs-src{display:flex;align-items:center;gap:4px;font-size:9.5px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;white-space:nowrap;}
+.live-kurs-src-dot{width:6px;height:6px;border-radius:50%;background:var(--c-green);box-shadow:0 0 5px var(--c-green);animation:blink 1.4s ease-in-out infinite;}
+.live-kurs-src-dot.loading{background:var(--c-gold);box-shadow:0 0 5px var(--c-gold);}
+.live-kurs-src-dot.err{background:var(--c-red);box-shadow:0 0 5px var(--c-red);animation:none;}
+.live-kurs-val{font-family:var(--fn-m);font-size:14px;font-weight:800;color:var(--c-gold);white-space:nowrap;min-width:110px;letter-spacing:.3px;}
+.live-kurs-sep{width:1px;height:18px;background:var(--bdr);flex-shrink:0;}
+.live-kurs-refresh{width:26px;height:26px;padding:0;border-radius:var(--r4);display:inline-flex;align-items:center;justify-content:center;font-size:12px;background:var(--bg4);border:1px solid var(--bdr);color:var(--txt2);cursor:pointer;transition:all .2s;flex-shrink:0;}
+.live-kurs-refresh:hover{color:var(--c-cyan);border-color:var(--c-cyan);}
+.live-kurs-refresh.spinning{animation:spin .7s linear infinite;pointer-events:none;}
+#gunakanKursBtn{padding:6px 13px;font-size:11px;font-weight:800;border-radius:var(--r8);border:1px solid var(--bdr);background:var(--bg4);color:var(--txt2);cursor:not-allowed;transition:all .3s;white-space:nowrap;opacity:.5;font-family:var(--fn);}
+#gunakanKursBtn.active{background:linear-gradient(135deg,var(--c-green),#059669);color:#fff;border-color:transparent;cursor:pointer;opacity:1;box-shadow:0 0 14px rgba(16,185,129,.4);animation:pulse-gunakan 1.2s ease-in-out infinite;}
+#gunakanKursBtn.active:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(16,185,129,.55);}
+@keyframes pulse-gunakan{0%,100%{box-shadow:0 0 10px rgba(16,185,129,.4);}50%{box-shadow:0 0 22px rgba(16,185,129,.7);}}
 @keyframes pulse-cloud{0%,100%{opacity:1;}50%{opacity:.6;}}
 /* FOOTER */
 .footer{background:var(--bg1);border-top:1px solid var(--bdr);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--txt2);}
@@ -1198,11 +1214,37 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <!-- KURS -->
       <div class="s-sec active" id="ssec-kurs">
         <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">💱</span><div class="s-card-title">Kurs IDR/USD Aktif</div></div>
+          <div class="s-card-hd"><span style="font-size:18px;">💱</span><div class="s-card-title">Kurs IDR/USD Aktif</div>
+            <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--c-gold-d);border:1px solid rgba(245,197,24,.22);border-radius:var(--r8);padding:4px 10px;">
+              <span style="font-size:9.5px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;">Kurs Dipakai</span>
+              <span id="kursDisplaySettings" style="font-family:var(--fn-m);font-size:12px;font-weight:800;color:var(--c-gold);">Rp 17,223</span>
+            </div>
+          </div>
           <div class="s-card-bd">
-            <div style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:10px 13px;font-size:11px;color:var(--txt1);margin-bottom:12px;">💡 Kurs digunakan untuk konversi PnL USD → Rupiah. Update manual sesuai kurs terkini.</div>
-            <div class="s-row"><div class="s-info"><div class="s-lbl">Kurs Aktif (Rp/USD)</div><div class="s-hint">Nilai tukar saat ini</div></div>
-              <div class="s-ctrl" style="display:flex;gap:8px;align-items:center;"><span style="font-size:12px;color:var(--txt2);">Rp</span><input type="number" class="s-in" id="kursInput" value="17223" style="width:110px;"><button class="btn btn-primary btn-sm" onclick="saveKurs()">Simpan</button></div>
+            <div style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:10px 13px;font-size:11px;color:var(--txt1);margin-bottom:14px;">
+              💡 Kurs digunakan untuk konversi PnL USD → Rupiah. Rate live diambil otomatis dari <strong style="color:#60a5fa;">Google Finance</strong> — klik <strong style="color:var(--c-green2);">← Gunakan</strong> jika ada selisih, lalu <strong style="color:var(--c-gold);">Simpan</strong>.
+            </div>
+            <!-- Live Rate + Kurs Input Row -->
+            <div class="s-row" style="flex-wrap:wrap;gap:12px;">
+              <div class="s-info"><div class="s-lbl">Kurs Aktif (Rp/USD)</div><div class="s-hint">Set manual atau gunakan live rate</div></div>
+              <div class="s-ctrl" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <!-- Live Rate Widget -->
+                <div class="live-kurs-box" id="liveKursBox">
+                  <div>
+                    <div class="live-kurs-src"><span class="live-kurs-src-dot loading" id="liveKursDot"></span>Google Finance</div>
+                    <div class="live-kurs-val" id="liveKursVal" style="color:var(--txt2);font-size:12px;">Memuat...</div>
+                    <div id="liveKursTime" style="font-size:9px;color:var(--txt2);margin-top:1px;"></div>
+                  </div>
+                  <div class="live-kurs-sep"></div>
+                  <button class="live-kurs-refresh" id="liveKursRefreshBtn" onclick="fetchLiveKurs()" title="Refresh rate">🔄</button>
+                  <button id="gunakanKursBtn" onclick="gunakanLiveKurs()" disabled>⬅ Gunakan</button>
+                </div>
+                <!-- Manual Input -->
+                <div class="live-kurs-sep"></div>
+                <span style="font-size:12px;color:var(--txt2);">Rp</span>
+                <input type="number" class="s-in" id="kursInput" value="17223" style="width:110px;" oninput="checkKursDiff()">
+                <button class="btn btn-primary btn-sm" onclick="saveKurs()">💾 Simpan</button>
+              </div>
             </div>
             <div class="s-row"><div class="s-info"><div class="s-lbl">Tanggal Update</div><div class="s-hint">Kurs berlaku mulai</div></div><div class="s-ctrl"><input type="date" class="s-in" id="kursTgl" value="2026-04-29"></div></div>
           </div>
@@ -2350,11 +2392,98 @@ function saveKurs(){
   const dl=tgl?new Date(tgl).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}):new Date().toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
   APP.kurs=val;APP.kursHistory.unshift({date:dl,val});
   document.getElementById('kursDisplay').textContent='Rp '+val.toLocaleString('id');
+  const ds=document.getElementById('kursDisplaySettings');if(ds)ds.textContent='Rp '+val.toLocaleString('id');
   document.getElementById('kursInput').value=val;
   APP.trades.forEach(t=>t.pnlRp=Math.round(t.pnlUSD*APP.kurs));
   renderKursHistory();updateAll();
   showToast('💱 Kurs diperbarui: Rp '+val.toLocaleString('id'));
   cloudSync('saveKurs',{kurs:{date:dl,val}});
+  checkKursDiff();
+}
+
+// ── LIVE KURS (Google Finance via Open Exchange Rates) ──────
+let LIVE_KURS_VAL = null;
+
+async function fetchLiveKurs() {
+  const valEl = document.getElementById('liveKursVal');
+  const dotEl = document.getElementById('liveKursDot');
+  const refreshBtn = document.getElementById('liveKursRefreshBtn');
+  const timeEl = document.getElementById('liveKursTime');
+  if (!valEl) return;
+
+  // Loading state
+  valEl.textContent = 'Memuat...';
+  valEl.style.color = 'var(--txt2)';
+  valEl.style.fontSize = '12px';
+  if (dotEl) { dotEl.className = 'live-kurs-src-dot loading'; }
+  if (refreshBtn) refreshBtn.classList.add('spinning');
+  LIVE_KURS_VAL = null;
+  checkKursDiff();
+
+  try {
+    // Try primary source: open.er-api.com
+    let rate = null;
+    try {
+      const r1 = await fetch('https://open.er-api.com/v6/latest/USD', { signal: AbortSignal.timeout(6000) });
+      const d1 = await r1.json();
+      if (d1.rates && d1.rates.IDR) rate = Math.round(d1.rates.IDR);
+    } catch(e) {}
+
+    // Fallback: exchangerate-api
+    if (!rate) {
+      const r2 = await fetch('https://api.exchangerate-api.com/v4/latest/USD', { signal: AbortSignal.timeout(6000) });
+      const d2 = await r2.json();
+      if (d2.rates && d2.rates.IDR) rate = Math.round(d2.rates.IDR);
+    }
+
+    if (!rate) throw new Error('Data tidak tersedia');
+
+    LIVE_KURS_VAL = rate;
+    valEl.textContent = 'Rp ' + rate.toLocaleString('id');
+    valEl.style.color = 'var(--c-gold)';
+    valEl.style.fontSize = '14px';
+    if (dotEl) { dotEl.className = 'live-kurs-src-dot'; }
+    if (timeEl) { const now = new Date(); timeEl.textContent = 'Update: ' + now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}); }
+    checkKursDiff();
+  } catch (e) {
+    valEl.textContent = '⚠️ Gagal memuat';
+    valEl.style.color = 'var(--c-red2)';
+    valEl.style.fontSize = '11px';
+    if (dotEl) dotEl.className = 'live-kurs-src-dot err';
+    if (timeEl) timeEl.textContent = 'Coba refresh';
+    LIVE_KURS_VAL = null;
+    checkKursDiff();
+  } finally {
+    if (refreshBtn) refreshBtn.classList.remove('spinning');
+  }
+}
+
+function checkKursDiff() {
+  const btn = document.getElementById('gunakanKursBtn');
+  if (!btn) return;
+  if (LIVE_KURS_VAL === null) {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    return;
+  }
+  const inputVal = parseInt(document.getElementById('kursInput').value) || 0;
+  if (LIVE_KURS_VAL !== inputVal) {
+    btn.disabled = false;
+    btn.classList.add('active');
+    btn.textContent = '⬅ Gunakan';
+    btn.title = `Terapkan Rp ${LIVE_KURS_VAL.toLocaleString('id')} ke input kurs`;
+  } else {
+    btn.disabled = true;
+    btn.classList.remove('active');
+    btn.textContent = '✓ Sama';
+  }
+}
+
+function gunakanLiveKurs() {
+  if (LIVE_KURS_VAL === null) return;
+  document.getElementById('kursInput').value = LIVE_KURS_VAL;
+  checkKursDiff();
+  showToast(`📈 Kurs live Rp ${LIVE_KURS_VAL.toLocaleString('id')} siap — klik Simpan untuk menyimpan!`, 'info');
 }
 function renderPairManager(){document.getElementById('pairManagerBody').innerHTML=APP.pairs.map((p,i)=>`<tr><td><span class="chip ${p.color}">${p.name}</span> <span style="font-size:10px;color:var(--txt2);">${p.desc||''}</span></td><td style="font-size:11px;color:var(--txt1);">${{forex:'Forex ×100k',commodity100:'Commodity ×100',commodity1000:'Commodity ×1k',jpy:'JPY ×1k',custom:'Custom'}[p.type]||p.type}</td><td class="td-m" style="color:var(--c-gold);">${p.mult.toLocaleString()}</td><td class="td-m" style="color:var(--c-cyan);">${p.pip}</td><td><span class="chip ${p.color}">${p.color.replace('chip-','')}</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditPairModal(${i})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deletePair(${i})">🗑</button></td></tr>`).join('');}
 function renderSetupTags(){document.getElementById('setupTags').innerHTML=APP.setups.map((s,i)=>`<div class="setup-tag">${s}<span class="setup-tag-x" onclick="deleteSetup(${i})">✕</span></div>`).join('');const sel=document.getElementById('fm-setup');if(sel)sel.innerHTML=APP.setups.map(s=>`<option>${s}</option>`).join('');const jSel=document.getElementById('jFilterSetup');if(jSel)jSel.innerHTML=`<option value="">Semua Setup</option>`+APP.setups.map(s=>`<option>${s}</option>`).join('');}
@@ -2555,6 +2684,7 @@ function applyCloudData(data) {
 function renderSettings() {
   document.getElementById('kursDisplay').textContent = 'Rp ' + APP.kurs.toLocaleString('id');
   document.getElementById('kursInput').value = APP.kurs;
+  const ds=document.getElementById('kursDisplaySettings');if(ds)ds.textContent='Rp '+APP.kurs.toLocaleString('id');
   // Risk Management Rules
   const r = APP.risk;
   document.getElementById('maxDailyLoss').value  = r.maxDailyLoss  ?? 500000;
@@ -2564,6 +2694,9 @@ function renderSettings() {
   renderPairManager();
   renderSetupTags();
   renderAkunManager();
+  // Fetch live kurs jika belum ada data
+  if (LIVE_KURS_VAL === null) fetchLiveKurs();
+  else checkKursDiff();
 }
 
 // MISC helpers (tidak berubah)
