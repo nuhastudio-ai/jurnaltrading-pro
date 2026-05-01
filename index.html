@@ -351,6 +351,14 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .setup-tag{display:inline-flex;align-items:center;gap:4px;background:var(--c-blue-d);border:1px solid rgba(79,142,247,.25);color:#60a5fa;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;}
 .setup-tag-x{cursor:pointer;color:var(--txt2);font-size:12px;line-height:1;transition:color .15s;}
 .setup-tag-x:hover{color:var(--c-red2);}
+/* SETUP MULTI-PICKER (modal) */
+.setup-picker{display:flex;flex-wrap:wrap;gap:6px;padding:8px 10px;background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--r8);min-height:42px;transition:border-color .2s;}
+.setup-picker:focus-within{border-color:var(--c-blue);}
+.setup-pick-chip{display:inline-flex;align-items:center;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;border:1px solid var(--bdr);background:var(--bg3);color:var(--txt2);transition:all .18s;user-select:none;line-height:1.4;}
+.setup-pick-chip.selected{background:var(--c-blue-d);border-color:rgba(79,142,247,.45);color:#60a5fa;box-shadow:0 0 8px rgba(79,142,247,.15);}
+.setup-pick-chip:hover:not(.selected){border-color:var(--bdr2);color:var(--txt1);background:rgba(255,255,255,.05);}
+.setup-multi-chips{display:flex;flex-wrap:wrap;gap:4px;}
+.setup-multi-chip{display:inline-flex;align-items:center;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;font-family:var(--fn-m);background:var(--c-blue-d);color:#60a5fa;border:1px solid rgba(79,142,247,.28);}
 /* ANALYSIS */
 .metric-card{background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:var(--r12);padding:13px 14px;transition:all .2s;}
 .metric-card:hover{border-color:var(--bdr2);background:rgba(255,255,255,.04);}
@@ -1421,7 +1429,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
         </div>
         <input type="hidden" id="fm-result" value="BE">
       </div>
-      <div class="form-field"><label class="form-lbl">Setup</label><select class="form-in" id="fm-setup"></select></div>
+      <div class="form-field full"><label class="form-lbl">Setup <span style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari satu</span></label><div class="setup-picker" id="fm-setup-picker"></div></div>
       <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text" class="form-in" id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
     </div>
     <div class="pnl-preview" id="pnlPreview">
@@ -1794,7 +1802,7 @@ function openEditModal(id){
   document.getElementById('fm-rr').value=t.rr||'';
   document.getElementById('fm-rr-display').value=t.rr>0?t.rr.toFixed(2)+'R':'';
   document.getElementById('fm-result').value=t.result;setResultDisplay(t.result);
-  document.getElementById('fm-setup').value=t.setup;
+  renderSetupPicker(getSetupArr(t));
   document.getElementById('fm-note').value=t.note;
   onPairChange();
   openModal('tradeModal');
@@ -1803,9 +1811,19 @@ function openEditModal(id){
 function populateTradeForm(){
   document.getElementById('fm-akun').innerHTML=APP.akuns.map(a=>`<option>${a.name}</option>`).join('');
   document.getElementById('fm-pair').innerHTML=APP.pairs.map(p=>`<option value="${p.name}">${p.name} — ${p.desc||''}</option>`).join('');
-  document.getElementById('fm-setup').innerHTML=APP.setups.map(s=>`<option>${s}</option>`).join('');
+  renderSetupPicker([]);
   onPairChange();
 }
+
+// ── SETUP MULTI-PICKER HELPERS ─────────────────────────────
+function getSetupArr(t){const s=t.setup;if(!s||s==='')return[];if(Array.isArray(s))return s.filter(Boolean);return[s];}
+function renderSetupPicker(selected=[]){
+  const picker=document.getElementById('fm-setup-picker');
+  if(!picker)return;
+  if(!APP.setups.length){picker.innerHTML='<span style="font-size:11px;color:var(--txt2);">Belum ada setup — tambah di Settings → Setup</span>';return;}
+  picker.innerHTML=APP.setups.map(s=>`<div class="setup-pick-chip${selected.includes(s)?' selected':''}" onclick="this.classList.toggle('selected')">${s}</div>`).join('');
+}
+function getSelectedSetups(){return[...document.querySelectorAll('#fm-setup-picker .setup-pick-chip.selected')].map(el=>el.textContent.trim());}
 
 function saveTrade(){
   const manual=document.getElementById('fm-pnl-usd').value;
@@ -1825,7 +1843,7 @@ function saveTrade(){
     pnlUSD,pnlRp,fee,
     rr:parseFloat(document.getElementById('fm-rr').value)||0,
     result:document.getElementById('fm-result').value,
-    setup:document.getElementById('fm-setup').value,
+    setup:getSelectedSetups(),
     note:document.getElementById('fm-note').value,
   };
   const wasEditId = APP.editTradeId; // capture BEFORE reset
@@ -2199,7 +2217,7 @@ function getJFiltered(){
   return APP.trades.filter(t=>{
     if(search&&!t.pair.toLowerCase().includes(search)&&!t.note.toLowerCase().includes(search)&&!t.akun.toLowerCase().includes(search))return false;
     if(akun&&t.akun!==akun)return false;if(result&&t.result!==result)return false;
-    if(dir&&t.dir!==dir)return false;if(setup&&t.setup!==setup)return false;
+    if(dir&&t.dir!==dir)return false;if(setup&&!getSetupArr(t).includes(setup))return false;
     if(pair&&t.pair!==pair)return false;
     if(from&&t.date.slice(0,10)<from)return false;if(to&&t.date.slice(0,10)>to)return false;
     return true;
@@ -2252,7 +2270,7 @@ function renderJournal(){
     <td class="td-c td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.fee>0?'var(--c-gold)':'var(--txt2)'};">${feeStr}</td>
     <td class="td-c td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.rr>0?'var(--c-cyan)':'var(--txt2)'};">${rrStr}</td>
     <td class="td-c"><span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span></td>
-    <td style="font-size:10.5px;color:var(--txt2);">${t.setup}</td>
+    <td><div class="setup-multi-chips">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2);font-size:10px;">—</span>'}</div></td>
     <td style="font-size:10.5px;color:var(--txt2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.note}">${t.note||'—'}</td>
     <td class="td-c" style="white-space:nowrap;">
       <button class="btn btn-ghost btn-icon btn-sm" onclick="viewDetail(${t.id})" title="Detail">👁</button>
@@ -2285,7 +2303,7 @@ function viewDetail(id){
   const p=getPair(t.pair);const col=t.pnlRp>=0?'var(--c-green2)':'var(--c-red2)';
   document.getElementById('detailContent').innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<span style="color:var(--c-cyan)">${t.setup}</span>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['Exit / TP',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
+  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['Exit / TP',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
   </div>
   <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--r8);padding:11px 13px;margin-bottom:12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Catatan</div><div style="font-size:12px;color:var(--txt1);">${t.note||'Tidak ada catatan.'}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="openEditModal(${t.id});closeModal('detailModal')">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="closeModal('detailModal')">Tutup</button></div>`;
@@ -2340,9 +2358,9 @@ function renderAnalysis(){
   const mx=Math.max(bW2,sW,sL,bL2,1);
   document.getElementById('an-dist-bars').innerHTML=[{lbl:'>500k',cnt:bW2,col:'linear-gradient(90deg,#059669,#10b981)',vc:'var(--c-green2)'},{lbl:'0~500k',cnt:sW,col:'linear-gradient(90deg,#065f46,#10b981)',vc:'var(--c-green2)'},{lbl:'-250k~0',cnt:sL,col:'linear-gradient(90deg,#dc2626,#ef4444)',vc:'var(--c-red2)'},{lbl:'<-250k',cnt:bL2,col:'linear-gradient(90deg,#7f1d1d,#dc2626)',vc:'var(--c-red2)'}].map(r=>`<div class="dist-row"><div class="dist-lbl">${r.lbl}</div><div class="dist-bg"><div class="dist-fill" style="width:${(r.cnt/mx*100).toFixed(0)}%;background:${r.col}"></div></div><div class="dist-val" style="color:${r.vc}">${r.cnt} trade</div></div>`).join('');
   // Setup bars
-  const sm={};trades.forEach(t=>{if(!sm[t.setup])sm[t.setup]={win:0,total:0};sm[t.setup].total++;if(t.result==='WIN')sm[t.setup].win++;});
+  const sm={};trades.forEach(t=>{getSetupArr(t).forEach(s=>{if(!s)return;if(!sm[s])sm[s]={win:0,total:0};sm[s].total++;if(t.result==='WIN')sm[s].win++;});});
   const setups=Object.entries(sm).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('an-setup-bars').innerHTML=setups.map(([nm,d])=>{const wr=d.total?d.win/d.total*100:0;return`<div class="dist-row"><div class="dist-lbl">${nm}</div><div class="dist-bg"><div class="dist-fill" style="width:${wr.toFixed(0)}%;background:linear-gradient(90deg,var(--c-blue),var(--c-cyan))"></div></div><div class="dist-val v-blue">${fmtPct(wr)}</div></div>`;}).join('');
+  document.getElementById('an-setup-bars').innerHTML=setups.length?setups.map(([nm,d])=>{const wr=d.total?d.win/d.total*100:0;return`<div class="dist-row"><div class="dist-lbl">${nm}</div><div class="dist-bg"><div class="dist-fill" style="width:${wr.toFixed(0)}%;background:linear-gradient(90deg,var(--c-blue),var(--c-cyan))"></div></div><div class="dist-val v-blue">${fmtPct(wr)}</div></div>`;}).join(''):'<div style="color:var(--txt2);font-size:11px;padding:8px 0;">Belum ada data setup.</div>';
   // Day chart
   const dm={1:0,2:1,3:2,4:3,5:4,6:5,0:6};const dp=Array(7).fill(0);
   trades.forEach(t=>{dp[dm[new Date(t.date).getDay()]]+=t.pnlRp;});
@@ -2486,14 +2504,14 @@ function gunakanLiveKurs() {
   showToast(`📈 Kurs live Rp ${LIVE_KURS_VAL.toLocaleString('id')} siap — klik Simpan untuk menyimpan!`, 'info');
 }
 function renderPairManager(){document.getElementById('pairManagerBody').innerHTML=APP.pairs.map((p,i)=>`<tr><td><span class="chip ${p.color}">${p.name}</span> <span style="font-size:10px;color:var(--txt2);">${p.desc||''}</span></td><td style="font-size:11px;color:var(--txt1);">${{forex:'Forex ×100k',commodity100:'Commodity ×100',commodity1000:'Commodity ×1k',jpy:'JPY ×1k',custom:'Custom'}[p.type]||p.type}</td><td class="td-m" style="color:var(--c-gold);">${p.mult.toLocaleString()}</td><td class="td-m" style="color:var(--c-cyan);">${p.pip}</td><td><span class="chip ${p.color}">${p.color.replace('chip-','')}</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditPairModal(${i})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deletePair(${i})">🗑</button></td></tr>`).join('');}
-function renderSetupTags(){document.getElementById('setupTags').innerHTML=APP.setups.map((s,i)=>`<div class="setup-tag">${s}<span class="setup-tag-x" onclick="deleteSetup(${i})">✕</span></div>`).join('');const sel=document.getElementById('fm-setup');if(sel)sel.innerHTML=APP.setups.map(s=>`<option>${s}</option>`).join('');const jSel=document.getElementById('jFilterSetup');if(jSel)jSel.innerHTML=`<option value="">Semua Setup</option>`+APP.setups.map(s=>`<option>${s}</option>`).join('');}
+function renderSetupTags(){document.getElementById('setupTags').innerHTML=APP.setups.map((s,i)=>`<div class="setup-tag">${s}<span class="setup-tag-x" onclick="deleteSetup(${i})">✕</span></div>`).join('');const jSel=document.getElementById('jFilterSetup');if(jSel)jSel.innerHTML=`<option value="">Semua Setup</option>`+APP.setups.map(s=>`<option>${s}</option>`).join('');const picker=document.getElementById('fm-setup-picker');if(picker)renderSetupPicker([]);}
 function addSetup(){const val=document.getElementById('newSetupInput').value.trim();if(!val)return;if(APP.setups.includes(val))return showToast('❌ Setup sudah ada','error');APP.setups.push(val);document.getElementById('newSetupInput').value='';renderSetupTags();cloudSync('saveSetups',{setups:APP.setups},`✅ Setup "${val}" ditambahkan!`);}
 function deleteSetup(idx){APP.setups.splice(idx,1);renderSetupTags();cloudSync('saveSetups',{setups:APP.setups});}
 function renderAkunManager(){document.getElementById('akunManagerBody').innerHTML=APP.akuns.map((a,i)=>`<tr><td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td class="td-m" style="color:var(--c-gold);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td><span style="background:var(--c-green-d);color:var(--c-green2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">✓ Aktif</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditAkunModal(${i})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteAkun(${i})">🗑</button></td></tr>`).join('');populateCtrlAkun();}
 function populateCtrlAkun(){const sel=document.getElementById('ctrlAkun');const cur=sel.value;sel.innerHTML=`<option value="all">Semua Akun</option>`+APP.akuns.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');if(cur)sel.value=cur;const jSel=document.getElementById('jFilterAkun');if(jSel)jSel.innerHTML=`<option value="">Semua Akun</option>`+APP.akuns.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');const jP=document.getElementById('jFilterPair');if(jP){const pairs=[...new Set(APP.trades.map(t=>t.pair))].sort();jP.innerHTML=`<option value="">Semua Pair</option>`+pairs.map(p=>`<option>${p}</option>`).join('');}}
 
 // EXPORT/IMPORT
-function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.dir,t.lot,t.entry,t.sl||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,t.setup,'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
+function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.dir,t.lot,t.entry,t.sl||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,getSetupArr(t).join('|'),'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
 function exportJSON(){const data={version:'3.0',exported:new Date().toISOString(),kurs:APP.kurs,pairs:APP.pairs,setups:APP.setups,akuns:APP.akuns,trades:APP.trades};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='forex-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();showToast('📄 JSON backup berhasil!');}
 function importData(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.trades)APP.trades=data.trades;if(data.pairs)APP.pairs=data.pairs;if(data.setups)APP.setups=data.setups;if(data.akuns)APP.akuns=data.akuns;if(data.kurs)APP.kurs=data.kurs;if(data.kursHistory)APP.kursHistory=data.kursHistory;APP.trades.forEach(t=>{if(!t.pnlRp)t.pnlRp=Math.round(t.pnlUSD*APP.kurs);});updateAll();renderSettings();showToast('✅ Data berhasil diimport! Menyinkronkan ke cloud...');
   // Push semua ke cloud
