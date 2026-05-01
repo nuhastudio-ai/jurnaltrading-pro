@@ -83,7 +83,8 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 @keyframes blink{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.4;transform:scale(.7);}}
 /* SUBBAR */
 .subbar{background:var(--bg1);border-bottom:1px solid var(--bdr);padding:0 20px;height:42px;box-sizing:border-box;display:flex;align-items:center;}
-.main{padding:16px 20px;display:flex;flex-direction:column;gap:14px;}
+.main{padding:16px 20px;display:flex;flex-direction:column;gap:14px;overflow-x:hidden;}
+.wl-equity-grid{display:grid;grid-template-columns:460px 1fr;gap:14px;align-items:stretch;}
 .chg-up{color:var(--c-green2);background:var(--c-green-d);}
 .chg-dn{color:var(--c-red2);background:var(--c-red-d);}
 .ctrl-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;width:100%;}
@@ -465,16 +466,20 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     padding: 0 var(--f4);          /* 13px */
     height: auto;
     min-height: 40px;
+    overflow: hidden;
   }
   .ctrl-row {
-    gap: var(--f3);                /* 8px */
+    gap: var(--f2);                /* 5px — tighter on mobile */
     flex-wrap: nowrap;
     overflow-x: auto;
     scrollbar-width: none;
-    padding: var(--f3) 0;         /* 8px top/bottom */
+    padding: var(--f2) 0;         /* 5px top/bottom */
     -webkit-overflow-scrolling: touch;
+    width: 100%;
   }
   .ctrl-row::-webkit-scrollbar { display: none; }
+  .ctrl-label { font-size: 9px; }
+  .ctrl-sel, .ctrl-in { font-size: 11px; padding: 4px 7px; max-width: 120px; }
 
   /* hide export btn from subbar on mobile (accessible via ⋮ or journal) */
   .ctrl-row > div[style*="margin-left:auto"] { display: none !important; }
@@ -509,12 +514,14 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     gap: var(--f3) !important;     /* 8px */
   }
   .kpi {
-    padding: var(--f4) var(--f3); /* 13×8 — φ proportion */
+    padding: var(--f3) var(--f3); /* 8×8 — compact for narrow screens */
     border-radius: var(--r8);
+    min-width: 0;
   }
-  .kpi-val { font-size: 15px; }
+  .kpi-val { font-size: 14px; }
   .kpi-lbl { font-size: 9px; }
   .kpi-sub { font-size: 9px; }
+  .kpi-ico { width: 22px; height: 22px; font-size: 12px; }
 
   /* ── GENERAL GRIDS ───────────────────────────────────── */
   .g2, .g3, .g4 {
@@ -523,11 +530,36 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   }
 
   /* win/loss + equity inline grid → column stack */
-  [style*="grid-template-columns:260px"] {
+  [style*="grid-template-columns:260px"],
+  [style*="grid-template-columns:460px"],
+  .wl-equity-grid {
     display: flex !important;
     flex-direction: column !important;
     gap: var(--f4) !important;     /* 13px */
   }
+
+  /* fix 1fr 1fr inline grids on very narrow screens */
+  [style*="grid-template-columns:1fr 1fr"] {
+    display: grid !important;
+    grid-template-columns: 1fr 1fr !important;
+    gap: var(--f3) !important;
+  }
+
+  /* ensure all panels and content don't overflow viewport */
+  .panel, .kpi, .metric-card {
+    max-width: 100%;
+    overflow: hidden;
+    word-break: break-word;
+  }
+
+  /* prevent any child from overflowing horizontally */
+  .content-area * {
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  /* chart canvas max width */
+  canvas { max-width: 100% !important; height: auto; }
 
   /* ── PANELS ──────────────────────────────────────────── */
   .panel { border-radius: var(--r12); }
@@ -540,15 +572,21 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   .panel-title { font-size: 10px; }
   .panel-bd { padding: var(--f3) var(--f4); } /* 8×13 */
 
-  /* ── CHART HEIGHTS ───────────────────────────────────── */
+  .mobile-nav-item:focus-visible {
+    outline: 2px solid var(--c-blue);
+    outline-offset: -2px;
+    border-radius: var(--r4);
+  }
+
+  /* ── CHART HEIGHTS — reduced for 640-844px tall screens ─ */
   /* Ratios: 160 ÷ 1.618 ≈ 99, 200 ÷ 1.618 ≈ 123, 220 ÷ 1.618 ≈ 136 */
-  .chart-wrap.h240 { height: 160px; }
-  .chart-wrap.h280 { height: 180px; }
-  .chart-wrap.h200 { height: 144px; } /* fib(12) = 144 */
+  .chart-wrap.h240 { height: 150px; }
+  .chart-wrap.h280 { height: 170px; }
+  .chart-wrap.h200 { height: 130px; }
 
   /* ── WIN/LOSS SVG ────────────────────────────────────── */
-  .wl-svg { width: 130px; height: 130px; }
-  .wl-pct { font-size: 22px; }
+  .wl-svg { width: 210px; height: 210px; }
+  .wl-pct { font-size: 20px; }
 
   /* ── SETTINGS ────────────────────────────────────────── */
   .settings-tabbar { height: auto !important; }
@@ -651,6 +689,12 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     color: var(--txt2);
     position: relative;
     -webkit-tap-highlight-color: transparent;
+    font-family: var(--fn);
+    /* reset browser button styles */
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
+    min-width: 0;
   }
 
   /* active indicator — golden width bar at top */
@@ -699,13 +743,15 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   }
 }
 
-/* ── EXTRA SMALL (≤ 380px) ───────────────────────────────── */
-@media (max-width: 380px) {
+/* ── EXTRA SMALL (≤ 390px) — covers 360–390px phones ───── */
+@media (max-width: 390px) {
   .topbar-kurs { display: none; }
   .clock-box { display: none; }
   .cloud-pill { font-size: 8px; padding: var(--f1) var(--f2); }
   .kpi-val { font-size: 13px; }
   .main { padding: var(--f3) var(--f3); gap: var(--f3); }
+  .brand-icon { width: 28px; height: 28px; font-size: 13px; }
+  .btn-gold { padding: var(--f1) var(--f3); font-size: 10px; }
 }
 </style>
 </head>
@@ -769,26 +815,26 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 
 <!-- MOBILE BOTTOM NAV (visible only on ≤768px) -->
 <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi utama">
-  <div class="mobile-nav-item active" id="mbn-dashboard" role="button" tabindex="0"
+  <button class="mobile-nav-item active" id="mbn-dashboard" type="button"
        onclick="switchPage('dashboard',this)" aria-label="Dashboard">
     <span class="mobile-nav-icon" aria-hidden="true">🏠</span>
     <span class="mobile-nav-label">Dashboard</span>
-  </div>
-  <div class="mobile-nav-item" id="mbn-analysis" role="button" tabindex="0"
+  </button>
+  <button class="mobile-nav-item" id="mbn-analysis" type="button"
        onclick="switchPage('analysis',this)" aria-label="Analisis">
     <span class="mobile-nav-icon" aria-hidden="true">📈</span>
     <span class="mobile-nav-label">Analisis</span>
-  </div>
-  <div class="mobile-nav-item" id="mbn-journal" role="button" tabindex="0"
+  </button>
+  <button class="mobile-nav-item" id="mbn-journal" type="button"
        onclick="switchPage('journal',this)" aria-label="Jurnal">
     <span class="mobile-nav-icon" aria-hidden="true">📋</span>
     <span class="mobile-nav-label">Jurnal</span>
-  </div>
-  <div class="mobile-nav-item" id="mbn-settings" role="button" tabindex="0"
+  </button>
+  <button class="mobile-nav-item" id="mbn-settings" type="button"
        onclick="switchPage('settings',this)" aria-label="Settings">
     <span class="mobile-nav-icon" aria-hidden="true">⚙️</span>
     <span class="mobile-nav-label">Settings</span>
-  </div>
+  </button>
 </nav>
 
 <!-- BODY WRAP -->
@@ -822,7 +868,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div class="kpi kpi-green"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Return %</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="kReturn">—</div><div class="kpi-sub">Dari modal awal</div></div>
     </div>
     <!-- WIN/LOSS CHART (left) + EQUITY CURVE (right) -->
-    <div style="display:grid;grid-template-columns:460px 1fr;gap:14px;align-items:stretch;">
+    <div class="wl-equity-grid">
       <!-- WIN/LOSS CARD -->
       <div class="panel" style="display:flex;flex-direction:column;">
         <div class="panel-hd"><div class="panel-title"><div class="dot dot-gold"></div>Win / Loss</div><span id="wlTotalBadge" style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);font-weight:700;">0 trades</span></div>
@@ -845,15 +891,15 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
                   </filter>
                 </defs>
                 <!-- Track -->
-                <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14" stroke-linecap="round"/>
+                <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="22" stroke-linecap="round"/>
                 <!-- Loss arc (full bg red) -->
-                <circle id="wlArcLoss" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradLoss)" stroke-width="14" stroke-linecap="round"
+                <circle id="wlArcLoss" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradLoss)" stroke-width="22" stroke-linecap="round"
                   stroke-dasharray="389.6 0" stroke-dashoffset="97.4" transform="rotate(-90 80 80)" opacity="0.35" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);"/>
                 <!-- Win arc -->
-                <circle id="wlArcWin" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradWin)" stroke-width="14" stroke-linecap="round"
+                <circle id="wlArcWin" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradWin)" stroke-width="22" stroke-linecap="round"
                   stroke-dasharray="0 389.6" stroke-dashoffset="97.4" transform="rotate(-90 80 80)" filter="url(#wlGlow)" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);"/>
                 <!-- BE dots -->
-                <circle id="wlArcBE" cx="80" cy="80" r="62" fill="none" stroke="#f5c518" stroke-width="4" stroke-linecap="round"
+                <circle id="wlArcBE" cx="80" cy="80" r="62" fill="none" stroke="#f5c518" stroke-width="10" stroke-linecap="round"
                   stroke-dasharray="0 389.6" stroke-dashoffset="97.4" transform="rotate(-90 80 80)" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);"/>
               </svg>
               <div class="wl-center">
