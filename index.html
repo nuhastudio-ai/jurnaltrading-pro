@@ -822,14 +822,14 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div class="kpi kpi-green"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Return %</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="kReturn">—</div><div class="kpi-sub">Dari modal awal</div></div>
     </div>
     <!-- WIN/LOSS CHART (left) + EQUITY CURVE (right) -->
-    <div style="display:grid;grid-template-columns:260px 1fr;gap:14px;align-items:stretch;">
+    <div style="display:grid;grid-template-columns:460px 1fr;gap:14px;align-items:stretch;">
       <!-- WIN/LOSS CARD -->
       <div class="panel" style="display:flex;flex-direction:column;">
         <div class="panel-hd"><div class="panel-title"><div class="dot dot-gold"></div>Win / Loss</div><span id="wlTotalBadge" style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);font-weight:700;">0 trades</span></div>
         <div class="panel-bd" style="flex:1;display:flex;flex-direction:column;">
           <div class="wl-card">
             <div class="wl-ring-wrap">
-              <svg class="wl-svg" width="160" height="160" viewBox="0 0 160 160">
+              <svg class="wl-svg" width="260" height="260" viewBox="0 0 160 160">
                 <defs>
                   <linearGradient id="wlGradWin" x1="0%" y1="0%" x2="100%" y2="100%">
                     <stop offset="0%" stop-color="#34d399"/>
@@ -928,7 +928,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div id="rekapBody" style="overflow-x:auto;"></div>
     </div>
     <!-- STATS + TOP PAIRS + METRICS -->
-    <div class="g2">
+    <div style="display:grid;grid-template-columns:35fr 65fr;gap:14px;">
       <div style="display:flex;flex-direction:column;gap:14px;">
         <div class="panel">
           <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Statistik Trading</div></div>
