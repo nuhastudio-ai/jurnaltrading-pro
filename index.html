@@ -1546,20 +1546,41 @@ function onPairTypeChange(){
 }
 
 // PAGE NAV
-function switchPage(page,el){
+// ── CLIENT-SIDE ROUTER ─────────────────────────────────────
+const _PAGE_URL = { dashboard:'/', analysis:'/analisa', journal:'/jurnal', settings:'/setting' };
+const _SEC_URL  = { kurs:'/setting/kurs', pairs:'/setting/pair', setups:'/setting/setup', akun:'/setting/akun', backup:'/setting/backup', about:'/setting/about' };
+const _URL_ROUTE = {
+  '/':              { page:'dashboard' },
+  '/analisa':       { page:'analysis' },
+  '/jurnal':        { page:'journal' },
+  '/setting':       { page:'settings', sec:'kurs' },
+  '/setting/kurs':  { page:'settings', sec:'kurs' },
+  '/setting/pair':  { page:'settings', sec:'pairs' },
+  '/setting/setup': { page:'settings', sec:'setups' },
+  '/setting/akun':  { page:'settings', sec:'akun' },
+  '/setting/backup':{ page:'settings', sec:'backup' },
+  '/setting/about': { page:'settings', sec:'about' },
+};
+
+function router(){
+  const path = window.location.pathname.replace(/\/$/, '') || '/';
+  const route = _URL_ROUTE[path] || { page:'dashboard' };
+  _applyPage(route.page);
+  if(route.page === 'settings' && route.sec){
+    const tabEl = document.querySelector(`.settings-tab[onclick*="'${route.sec}'"]`);
+    _applySec(route.sec, tabEl, false);
+  }
+}
+
+function _applyPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.sidebar-item').forEach(t=>t.classList.remove('active'));
   document.querySelectorAll('.mobile-nav-item').forEach(t=>t.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
-  // Activate sidebar item for this page (handles keyboard shortcut calls)
   const sItem=document.querySelector(`.sidebar-item[onclick*="'${page}'"]`);
   if(sItem)sItem.classList.add('active');
-  // Activate mobile nav item for this page
   const mItem=document.getElementById('mbn-'+page);
   if(mItem)mItem.classList.add('active');
-  // Also activate the passed element (handles all callers)
-  if(el&&!el.classList.contains('sidebar-item')&&!el.classList.contains('mobile-nav-item'))el.classList.add('active');
-  // Toggle subbar vs settings tabbar
   const isSettings=page==='settings';
   document.getElementById('mainSubbar').style.display=isSettings?'none':'block';
   document.getElementById('settingsTabbar').style.display=isSettings?'block':'none';
@@ -1569,6 +1590,25 @@ function switchPage(page,el){
   if(page==='journal')renderJournal();
   if(page==='settings')renderSettings();
 }
+
+function _applySec(id, el, push){
+  document.querySelectorAll('.s-sec').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.settings-tab').forEach(s=>s.classList.remove('active'));
+  document.getElementById('ssec-'+id).classList.add('active');
+  if(el) el.classList.add('active');
+  if(push) history.pushState(null, '', _SEC_URL[id] || '/setting');
+}
+
+function switchPage(page, el){
+  _applyPage(page);
+  if(el && !el.classList.contains('sidebar-item') && !el.classList.contains('mobile-nav-item')) el.classList.add('active');
+  const activeSec = document.querySelector('.s-sec.active');
+  const secId = activeSec ? activeSec.id.replace('ssec-','') : null;
+  const url = page==='settings' ? (_SEC_URL[secId] || '/setting') : (_PAGE_URL[page] || '/');
+  history.pushState(null, '', url);
+}
+
+window.addEventListener('popstate', router);
 // SIDEBAR TOGGLE
 function toggleSidebar(){
   document.getElementById('mainSidebar').classList.toggle('collapsed');
@@ -2136,7 +2176,7 @@ function renderCalendar(){
 }
 
 // SETTINGS
-function showSettingsSec(id,el){document.querySelectorAll('.s-sec').forEach(s=>s.classList.remove('active'));document.querySelectorAll('.settings-tab').forEach(s=>s.classList.remove('active'));document.getElementById('ssec-'+id).classList.add('active');el.classList.add('active');}
+function showSettingsSec(id,el){ _applySec(id, el, true); }
 
 function renderKursHistory(){document.getElementById('kursHistory').innerHTML=APP.kursHistory.map((k,i)=>`<div style="display:flex;align-items:center;justify-content:space-between;padding:9px 16px;border-bottom:1px solid var(--bdr);font-size:12px;"><span style="color:var(--txt2);">${k.date}</span><span style="font-family:var(--fn-m);font-weight:700;color:var(--c-gold);">Rp ${k.val.toLocaleString('id')}</span>${i===0?'<span style="background:var(--c-green-d);color:var(--c-green2);padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;">Aktif</span>':'<span></span>'}</div>`).join('');}
 function saveKurs(){
@@ -2379,7 +2419,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.
     // Render dengan data default yang sudah ada di APP
     document.getElementById('kursDisplay').textContent = 'Rp ' + APP.kurs.toLocaleString('id');
     document.getElementById('kursInput').value = APP.kurs;
-    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings();
+    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings(); router();
     showToast('⚠️ Isi GAS_URL untuk mengaktifkan cloud storage', 'info');
     return;
   }
@@ -2404,7 +2444,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.
     // 4. Render semua
     document.getElementById('kursDisplay').textContent = 'Rp ' + APP.kurs.toLocaleString('id');
     document.getElementById('kursInput').value = APP.kurs;
-    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings();
+    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings(); router();
 
     if (total === 0) showToast('☁️ Cloud terhubung! Belum ada trade.', 'info');
     else showToast(`☁️ ${total} trade berhasil dimuat dari cloud!`);
@@ -2427,7 +2467,7 @@ document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.
     hideLoader();
     document.getElementById('kursDisplay').textContent = 'Rp ' + APP.kurs.toLocaleString('id');
     document.getElementById('kursInput').value = APP.kurs;
-    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings();
+    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings(); router();
     showToast('⚠️ Offline mode — data cloud tidak tersedia', 'error');
   }
 })();
