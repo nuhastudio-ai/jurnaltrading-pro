@@ -297,6 +297,104 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .pg-btn.active{background:var(--c-blue2);color:#fff;border-color:var(--c-blue2);}
 .pg-btn:disabled{opacity:.3;cursor:not-allowed;}
 /* MODAL */
+/* DELETE AKUN MODAL */
+.del-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.82);z-index:2000;backdrop-filter:blur(10px);align-items:center;justify-content:center;}
+.del-modal-overlay.active{display:flex;}
+.del-modal{background:linear-gradient(145deg,#0f1628,#141d34);border-radius:24px;padding:0;width:min(480px,94vw);box-shadow:0 24px 80px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.06);animation:delModalIn .32s cubic-bezier(.16,1,.3,1);overflow:hidden;}
+@keyframes delModalIn{from{opacity:0;transform:scale(.88) translateY(20px);}to{opacity:1;transform:scale(1) translateY(0);}}
+.del-modal-top{background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(220,38,38,.08));border-bottom:1px solid rgba(239,68,68,.18);padding:28px 28px 24px;text-align:center;position:relative;overflow:hidden;}
+.del-modal-top::before{content:'';position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:160px;height:160px;background:radial-gradient(circle,rgba(239,68,68,.18),transparent 70%);border-radius:50%;pointer-events:none;}
+.del-modal-icon{font-size:48px;margin-bottom:12px;display:block;filter:drop-shadow(0 4px 16px rgba(239,68,68,.5));animation:delIconPulse 2s ease-in-out infinite;}
+@keyframes delIconPulse{0%,100%{transform:scale(1);}50%{transform:scale(1.08);}}
+.del-modal-title{font-family:var(--fn-h);font-size:18px;font-weight:800;color:#fff;margin-bottom:6px;}
+.del-modal-sub{font-size:12px;color:var(--txt1);line-height:1.5;}
+.del-modal-account{margin:12px auto 0;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:10px 18px;display:inline-flex;align-items:center;gap:10px;max-width:100%;}
+.del-modal-account-icon{font-size:18px;flex-shrink:0;}
+.del-modal-account-name{font-family:var(--fn-h);font-size:13px;font-weight:700;color:var(--c-gold);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.del-modal-account-broker{font-size:10px;color:var(--txt2);}
+.del-modal-options{padding:22px 24px 24px;display:flex;flex-direction:column;gap:12px;}
+.del-option{display:flex;align-items:center;gap:16px;padding:16px 18px;border-radius:16px;cursor:pointer;border:1.5px solid transparent;transition:all .25s cubic-bezier(.4,0,.2,1);position:relative;overflow:hidden;}
+.del-option::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .25s;}
+.del-option:hover::before{opacity:1;}
+.del-option-arsip{background:rgba(79,142,247,.07);border-color:rgba(79,142,247,.2);}
+.del-option-arsip::before{background:linear-gradient(135deg,rgba(79,142,247,.12),rgba(34,211,238,.07));}
+.del-option-arsip:hover{border-color:rgba(79,142,247,.5);transform:translateX(4px);}
+.del-option-perm{background:rgba(239,68,68,.07);border-color:rgba(239,68,68,.2);}
+.del-option-perm::before{background:linear-gradient(135deg,rgba(239,68,68,.14),rgba(220,38,38,.08));}
+.del-option-perm:hover{border-color:rgba(239,68,68,.5);transform:translateX(4px);}
+.del-option-ico{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;position:relative;z-index:1;}
+.del-option-arsip .del-option-ico{background:rgba(79,142,247,.15);}
+.del-option-perm .del-option-ico{background:rgba(239,68,68,.15);}
+.del-option-txt{flex:1;position:relative;z-index:1;}
+.del-option-title{font-family:var(--fn-h);font-size:13px;font-weight:700;margin-bottom:3px;}
+.del-option-arsip .del-option-title{color:#60a5fa;}
+.del-option-perm .del-option-title{color:var(--c-red2);}
+.del-option-desc{font-size:10.5px;color:var(--txt2);line-height:1.4;}
+.del-option-arrow{font-size:16px;color:var(--txt2);position:relative;z-index:1;transition:transform .2s;}
+.del-option:hover .del-option-arrow{transform:translateX(3px);}
+.del-modal-cancel{width:100%;background:transparent;border:1px solid var(--bdr);color:var(--txt2);font-family:var(--fn);font-size:12px;font-weight:600;padding:10px;border-radius:12px;cursor:pointer;transition:all .2s;margin-top:2px;}
+.del-modal-cancel:hover{border-color:var(--txt1);color:var(--txt0);}
+/* LOADING DELETE POPUP */
+.del-loading-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:3000;backdrop-filter:blur(14px);align-items:center;justify-content:center;flex-direction:column;gap:0;}
+.del-loading-overlay.active{display:flex;}
+.del-loading-box{display:flex;flex-direction:column;align-items:center;gap:28px;animation:delLoadIn .4s cubic-bezier(.16,1,.3,1);}
+@keyframes delLoadIn{from{opacity:0;transform:scale(.8)translateY(30px);}to{opacity:1;transform:scale(1)translateY(0);}}
+/* ORBIT RING ANIMATION */
+.del-orbit-wrap{position:relative;width:120px;height:120px;}
+.del-orbit-core{position:absolute;inset:50%;transform:translate(-50%,-50%);width:44px;height:44px;background:linear-gradient(135deg,var(--c-red),#7f1d1d);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:0 0 24px rgba(239,68,68,.6),0 0 60px rgba(239,68,68,.2);animation:corePulse 1.2s ease-in-out infinite;}
+@keyframes corePulse{0%,100%{box-shadow:0 0 24px rgba(239,68,68,.6),0 0 60px rgba(239,68,68,.2);}50%{box-shadow:0 0 36px rgba(239,68,68,.9),0 0 90px rgba(239,68,68,.35);}}
+.del-orbit-ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;animation:orbitSpin linear infinite;}
+.del-orbit-ring::before{content:'';position:absolute;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;}
+.del-orbit-r1{border-color:rgba(239,68,68,.15);animation-duration:1.6s;color:var(--c-red);}
+.del-orbit-r1::before{width:10px;height:10px;top:-5px;left:50%;transform:translateX(-50%);}
+.del-orbit-r2{inset:12px;border-color:rgba(239,68,68,.1);animation-duration:2.2s;animation-direction:reverse;color:#f97316;}
+.del-orbit-r2::before{width:7px;height:7px;top:-3.5px;left:50%;transform:translateX(-50%);}
+.del-orbit-r3{inset:24px;border-color:rgba(239,68,68,.08);animation-duration:1s;color:var(--c-red2);}
+.del-orbit-r3::before{width:5px;height:5px;top:-2.5px;left:50%;transform:translateX(-50%);}
+@keyframes orbitSpin{to{transform:rotate(360deg);}}
+/* PARTICLES */
+.del-particles{position:absolute;inset:-20px;pointer-events:none;}
+.del-particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--c-red);opacity:0;animation:particleFly 2s ease-in-out infinite;}
+.del-particle:nth-child(1){top:10%;left:50%;animation-delay:0s;animation-duration:2.1s;}
+.del-particle:nth-child(2){top:50%;right:5%;animation-delay:.3s;animation-duration:1.8s;background:var(--c-orange);}
+.del-particle:nth-child(3){bottom:10%;left:50%;animation-delay:.6s;animation-duration:2.3s;}
+.del-particle:nth-child(4){top:50%;left:5%;animation-delay:.9s;animation-duration:1.9s;background:var(--c-red2);}
+.del-particle:nth-child(5){top:20%;right:15%;animation-delay:.15s;animation-duration:2.0s;background:#fca5a5;}
+.del-particle:nth-child(6){bottom:20%;left:15%;animation-delay:.75s;animation-duration:2.2s;background:var(--c-orange);}
+@keyframes particleFly{0%{opacity:0;transform:scale(0)translate(0,0);}30%{opacity:1;}100%{opacity:0;transform:scale(1.5)translate(var(--dx,20px),var(--dy,-30px));}}
+.del-particle:nth-child(1){--dx:0px;--dy:-35px;}
+.del-particle:nth-child(2){--dx:35px;--dy:0px;}
+.del-particle:nth-child(3){--dx:0px;--dy:35px;}
+.del-particle:nth-child(4){--dx:-35px;--dy:0px;}
+.del-particle:nth-child(5){--dx:25px;--dy:-25px;}
+.del-particle:nth-child(6){--dx:-25px;--dy:25px;}
+/* TEXT */
+.del-loading-title{font-family:var(--fn-h);font-size:18px;font-weight:800;color:#fff;text-align:center;}
+.del-loading-sub{font-size:12px;color:var(--txt1);text-align:center;margin-top:-18px;}
+.del-loading-dots span{display:inline-block;animation:dotBounce .9s ease-in-out infinite;}
+.del-loading-dots span:nth-child(2){animation-delay:.15s;}
+.del-loading-dots span:nth-child(3){animation-delay:.3s;}
+@keyframes dotBounce{0%,80%,100%{transform:translateY(0);}40%{transform:translateY(-6px);}}
+/* PROGRESS BAR */
+.del-progress-wrap{width:220px;height:4px;background:rgba(255,255,255,.08);border-radius:2px;overflow:hidden;}
+.del-progress-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--c-red),var(--c-orange));border-radius:2px;transition:width .3s ease;box-shadow:0 0 8px rgba(239,68,68,.5);}
+.del-progress-label{font-size:10px;color:var(--txt2);font-family:var(--fn-m);text-align:center;margin-top:-20px;}
+/* ARSIP PANEL */
+.arsip-toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r12);margin-bottom:14px;}
+.arsip-toggle-lbl{display:flex;align-items:center;gap:10px;font-size:12px;font-weight:600;color:var(--txt1);}
+.arsip-toggle-lbl span{font-size:16px;}
+.toggle-sw{position:relative;width:42px;height:24px;flex-shrink:0;}
+.toggle-sw input{opacity:0;width:0;height:0;}
+.toggle-track{position:absolute;inset:0;background:var(--bg4);border:1px solid var(--bdr);border-radius:12px;cursor:pointer;transition:all .25s;}
+.toggle-sw input:checked+.toggle-track{background:linear-gradient(135deg,var(--c-blue),#1d4ed8);border-color:var(--c-blue2);box-shadow:0 0 10px rgba(79,142,247,.35);}
+.toggle-track::after{content:'';position:absolute;left:3px;top:50%;transform:translateY(-50%);width:16px;height:16px;background:#fff;border-radius:50%;transition:left .25s;box-shadow:0 1px 4px rgba(0,0,0,.4);}
+.toggle-sw input:checked+.toggle-track::after{left:21px;}
+.arsip-panel{background:linear-gradient(135deg,rgba(167,139,250,.05),rgba(79,142,247,.04));border:1px solid rgba(167,139,250,.18);border-radius:var(--r16);overflow:hidden;}
+.arsip-panel-hd{padding:12px 16px;border-bottom:1px solid rgba(167,139,250,.15);display:flex;align-items:center;gap:8px;background:rgba(167,139,250,.06);}
+.arsip-panel-title{font-family:var(--fn-h);font-size:11px;font-weight:700;color:var(--c-purple);text-transform:uppercase;letter-spacing:.8px;}
+.arsip-count{background:var(--c-purple-d);color:var(--c-purple);border:1px solid rgba(167,139,250,.3);padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700;}
+.arsip-empty{padding:28px;text-align:center;color:var(--txt2);font-size:12px;}
+.arsip-empty-ico{font-size:28px;margin-bottom:8px;}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:1000;backdrop-filter:blur(6px);align-items:center;justify-content:center;}
 .modal-overlay.open{display:flex;}
 .modal{background:var(--bg2);border:1px solid var(--bdr);border-radius:var(--r24);padding:22px;width:min(640px,95vw);max-height:90vh;overflow-y:auto;box-shadow:var(--sh2);animation:fadeUp .28s ease;}
@@ -388,7 +486,8 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .cal-day.cal-win .cal-num,.cal-day.cal-loss .cal-num{color:var(--txt0);}
 .cal-pnl{font-family:var(--fn-m);font-weight:700;font-size:9px;}
 /* TOAST */
-.toast{position:fixed;top:14px;right:20px;z-index:9999;background:var(--c-green-d);border:1px solid var(--c-green);color:var(--c-green2);padding:9px 16px;border-radius:var(--r8);font-size:12px;font-weight:700;box-shadow:var(--sh);animation:fadeUp .28s ease;}
+.toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);z-index:9999;background:var(--c-green-d);border:1px solid var(--c-green);color:var(--c-green2);padding:9px 16px;border-radius:var(--r8);font-size:12px;font-weight:700;box-shadow:var(--sh);animation:toastDrop .28s cubic-bezier(.16,1,.3,1);white-space:nowrap;}
+@keyframes toastDrop{from{opacity:0;transform:translateX(-50%) translateY(-12px);}to{opacity:1;transform:translateX(-50%) translateY(0);}}
 .toast.error{background:var(--c-red-d);border-color:var(--c-red);color:var(--c-red2);}
 .toast.info{background:var(--c-blue-d);border-color:var(--c-blue2);color:#60a5fa;}
 /* CLOUD LOADER OVERLAY */
@@ -1305,6 +1404,26 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
           <div style="overflow-x:auto;"><table class="manager-table"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Modal Awal (Rp)</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="akunManagerBody"></tbody></table></div>
         </div>
+        <!-- ARSIP PANEL -->
+        <div class="s-card">
+          <div class="s-card-hd"><span style="font-size:18px;">🗄️</span><div class="s-card-title">Akun Diarsipkan</div></div>
+          <div class="s-card-bd" style="padding-bottom:4px;">
+            <div class="arsip-toggle-row">
+              <div class="arsip-toggle-lbl"><span>👁️</span><div><div style="font-size:12px;font-weight:700;color:var(--txt0);">Tampilkan di Statistik & Jurnal</div><div style="font-size:10px;color:var(--txt2);margin-top:1px;">Saat ON, akun arsip muncul di filter & statistik global</div></div></div>
+              <label class="toggle-sw"><input type="checkbox" id="arsipToggle" onchange="toggleArsipView(this.checked)"><span class="toggle-track"></span></label>
+            </div>
+            <div class="arsip-panel">
+              <div class="arsip-panel-hd">
+                <div class="dot dot-purple"></div>
+                <div class="arsip-panel-title">Daftar Arsip</div>
+                <span class="arsip-count" id="arsipCount">0</span>
+              </div>
+              <div style="overflow-x:auto;"><table class="manager-table" id="arsipTable" style="display:none;"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Modal Awal (Rp)</th><th>Tipe</th><th>Aksi</th></tr></thead>
+              <tbody id="arsipManagerBody"></tbody></table></div>
+              <div class="arsip-empty" id="arsipEmpty"><div class="arsip-empty-ico">🗃️</div><div style="font-weight:600;margin-bottom:4px;">Belum Ada Akun Diarsipkan</div><div style="font-size:10px;">Klik 🗑 pada akun aktif lalu pilih "Arsipkan"</div></div>
+            </div>
+          </div>
+        </div>
         <div class="s-card">
           <div class="s-card-hd"><span style="font-size:18px;">⚠️</span><div class="s-card-title">Risk Management Rules</div></div>
           <div class="s-card-bd">
@@ -1470,6 +1589,97 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('pairModal')">Batal</button><button class="btn btn-gold" onclick="savePair()">💾 Simpan Pair</button></div>
   </div>
 </div>
+<!-- DELETE LOADING OVERLAY -->
+<div class="del-loading-overlay" id="delLoadingOverlay">
+  <div class="del-loading-box">
+    <div class="del-orbit-wrap">
+      <div class="del-particles">
+        <div class="del-particle"></div><div class="del-particle"></div>
+        <div class="del-particle"></div><div class="del-particle"></div>
+        <div class="del-particle"></div><div class="del-particle"></div>
+      </div>
+      <div class="del-orbit-ring del-orbit-r1"></div>
+      <div class="del-orbit-ring del-orbit-r2"></div>
+      <div class="del-orbit-ring del-orbit-r3"></div>
+      <div class="del-orbit-core">🗑️</div>
+    </div>
+    <div class="del-loading-title" id="delLoadingTitle">Menghapus<span class="del-loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+    <div class="del-progress-wrap"><div class="del-progress-bar" id="delProgressBar"></div></div>
+    <div class="del-progress-label" id="delProgressLabel">Memproses...</div>
+    <div class="del-loading-sub" id="delLoadingSub">Mohon tunggu, jangan tutup halaman ini</div>
+  </div>
+</div>
+<!-- AKUN DELETE CONFIRM MODAL -->
+<div class="del-modal-overlay" id="deleteAkunModal">
+  <div class="del-modal">
+    <!-- STEP 1: Pilih tindakan -->
+    <div id="delStep1">
+      <div class="del-modal-top">
+        <span class="del-modal-icon">⚠️</span>
+        <div class="del-modal-title">Apa yang ingin dilakukan?</div>
+        <div class="del-modal-sub">Pilih tindakan untuk akun berikut:</div>
+        <div class="del-modal-account">
+          <span class="del-modal-account-icon">👤</span>
+          <div>
+            <div class="del-modal-account-name" id="deleteAkunName">—</div>
+            <div class="del-modal-account-broker" id="deleteAkunBroker">—</div>
+          </div>
+        </div>
+      </div>
+      <div class="del-modal-options">
+        <div class="del-option del-option-arsip" onclick="confirmDeleteAkun('arsip')">
+          <div class="del-option-ico">🗄️</div>
+          <div class="del-option-txt">
+            <div class="del-option-title">Arsipkan Akun</div>
+            <div class="del-option-desc">Akun disembunyikan dari filter & statistik. Data jurnal tetap aman dan bisa dikembalikan kapanpun.</div>
+          </div>
+          <span class="del-option-arrow">›</span>
+        </div>
+        <div class="del-option del-option-perm" onclick="goToDelStep2()">
+          <div class="del-option-ico">🗑️</div>
+          <div class="del-option-txt">
+            <div class="del-option-title">Hapus Permanen</div>
+            <div class="del-option-desc">Akun dihapus selamanya. Akan ada konfirmasi lanjutan untuk data jurnal terkait.</div>
+          </div>
+          <span class="del-option-arrow">›</span>
+        </div>
+        <button class="del-modal-cancel" onclick="document.getElementById('deleteAkunModal').classList.remove('active')">Batal</button>
+      </div>
+    </div>
+    <!-- STEP 2: Konfirmasi trade -->
+    <div id="delStep2" style="display:none;">
+      <div class="del-modal-top" style="background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(127,29,29,.15));border-color:rgba(239,68,68,.25);">
+        <span class="del-modal-icon" style="animation:none;filter:drop-shadow(0 4px 16px rgba(239,68,68,.7));">🗑️</span>
+        <div class="del-modal-title" style="color:var(--c-red2);">Hapus Permanen</div>
+        <div class="del-modal-sub">Akun <b id="delStep2AkunName" style="color:#fff;"></b> akan dihapus selamanya.</div>
+        <div style="margin-top:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 14px;">
+          <div style="font-size:11px;font-weight:700;color:var(--c-red2);margin-bottom:4px;">⚠️ Data Jurnal Terkait</div>
+          <div style="font-size:11px;color:var(--txt1);"><span id="delStep2TradeCount" style="color:#fff;font-weight:700;font-family:var(--fn-m);">0</span> trade ditemukan dengan akun ini.</div>
+        </div>
+      </div>
+      <div class="del-modal-options">
+        <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:-4px;">Pilih nasib data jurnal:</div>
+        <div class="del-option del-option-perm" onclick="confirmDeleteAkun('permanent', true)" style="border-color:rgba(239,68,68,.35);">
+          <div class="del-option-ico" style="background:rgba(239,68,68,.2);">💥</div>
+          <div class="del-option-txt">
+            <div class="del-option-title">Hapus Akun + Semua Jurnalnya</div>
+            <div class="del-option-desc">Semua trade terkait akun ini ikut dihapus permanen dari cloud. Tidak dapat dikembalikan.</div>
+          </div>
+          <span class="del-option-arrow">›</span>
+        </div>
+        <div class="del-option" onclick="confirmDeleteAkun('permanent', false)" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
+          <div class="del-option-ico" style="background:rgba(255,255,255,.07);font-size:20px;">📂</div>
+          <div class="del-option-txt">
+            <div class="del-option-title" style="color:var(--txt1);">Hapus Akun Saja</div>
+            <div class="del-option-desc">Data jurnal tetap tersimpan tapi tanpa referensi akun (orphan). Tidak muncul di statistik.</div>
+          </div>
+          <span class="del-option-arrow" style="color:var(--txt2);">›</span>
+        </div>
+        <button class="del-modal-cancel" onclick="goToDelStep1()">← Kembali</button>
+      </div>
+    </div>
+  </div>
+</div>
 <div class="modal-overlay" id="akunModal">
   <div class="modal sm">
     <div class="modal-hd"><div class="modal-title" id="akunModalTitle">👤 Tambah Akun</div><div class="modal-close" onclick="closeModal('akunModal')">✕</div></div>
@@ -1518,7 +1728,8 @@ const APP={
   ],
   trades:[],
   risk:{ maxDailyLoss:500000, maxTradeLoss:200000, maxTrades:10 },
-  editTradeId:null,editPairIdx:null,editAkunIdx:null,
+  showArsip:false,
+  editTradeId:null,editPairIdx:null,editAkunIdx:null,_deleteAkunIdx:null,
   jSortKey:'id',jSortAsc:false,jPage:1,jPageSize:15,jSelected:new Set(),
   rekapMode:'day',equityMode:'day',charts:{}
 };
@@ -1922,9 +2133,110 @@ function saveAkun(){
   if(!data.name)return showToast('❌ Nama akun tidak boleh kosong','error');
   if(APP.editAkunIdx!==null){APP.akuns[APP.editAkunIdx]=data;showToast('✅ Akun diperbarui!');}
   else{APP.akuns.push(data);showToast('✅ Akun ditambahkan!');}
-  closeModal('akunModal');renderAkunManager();populateCtrlAkun();cloudSync('saveAkuns',{akuns:APP.akuns});
+  closeModal('akunModal');renderAkunManager();renderArchivedAkuns();populateCtrlAkun();updateAll();cloudSync('saveAkuns',{akuns:APP.akuns});
 }
-function deleteAkun(idx){if(!confirm('Hapus akun '+APP.akuns[idx].name+'?'))return;APP.akuns.splice(idx,1);renderAkunManager();cloudSync('saveAkuns',{akuns:APP.akuns});}
+function deleteAkun(idx){
+  const a=APP.akuns[idx];
+  APP._deleteAkunIdx=idx;
+  document.getElementById('deleteAkunName').textContent=a.name;
+  document.getElementById('deleteAkunBroker').textContent=a.broker+' · '+(a.type||'').toUpperCase();
+  goToDelStep1();
+  document.getElementById('deleteAkunModal').classList.add('active');
+}
+function goToDelStep1(){
+  document.getElementById('delStep1').style.display='block';
+  document.getElementById('delStep2').style.display='none';
+}
+function goToDelStep2(){
+  const idx=APP._deleteAkunIdx;
+  if(idx===null||idx===undefined)return;
+  const a=APP.akuns[idx];
+  const tradeCount=APP.trades.filter(t=>t.akun===a.name).length;
+  document.getElementById('delStep2AkunName').textContent=a.name;
+  document.getElementById('delStep2TradeCount').textContent=tradeCount;
+  document.getElementById('delStep1').style.display='none';
+  document.getElementById('delStep2').style.display='block';
+}
+function showDelLoading(title, sub){
+  document.getElementById('delLoadingTitle').innerHTML=title+'<span class="del-loading-dots"><span>.</span><span>.</span><span>.</span></span>';
+  document.getElementById('delLoadingSub').textContent=sub||'Mohon tunggu, jangan tutup halaman ini';
+  document.getElementById('delProgressBar').style.width='0%';
+  document.getElementById('delProgressLabel').textContent='Memproses...';
+  document.getElementById('delLoadingOverlay').classList.add('active');
+}
+function setDelProgress(pct, label){
+  document.getElementById('delProgressBar').style.width=pct+'%';
+  document.getElementById('delProgressLabel').textContent=label||'';
+}
+function hideDelLoading(){
+  document.getElementById('delLoadingOverlay').classList.remove('active');
+}
+async function confirmDeleteAkun(mode, deleteTradesAlso){
+  const idx=APP._deleteAkunIdx;
+  if(idx===null||idx===undefined)return;
+  const a=APP.akuns[idx];
+  document.getElementById('deleteAkunModal').classList.remove('active');
+  if(mode==='permanent'){
+    if(deleteTradesAlso){
+      const tradeIds=APP.trades.filter(t=>t.akun===a.name).map(t=>t.id);
+      showDelLoading('Menghapus Data', `Menghapus akun & ${tradeIds.length} trade terkait`);
+      setDelProgress(5,'Menghapus akun...');
+      await new Promise(r=>setTimeout(r,300));
+      // Hapus trade satu per satu dengan progress
+      for(let i=0;i<tradeIds.length;i++){
+        try{ await api('deleteTrade',{id:tradeIds[i]}); }catch(e){}
+        const pct=Math.round(10+(i+1)/Math.max(tradeIds.length,1)*75);
+        setDelProgress(pct,`Menghapus trade ${i+1} dari ${tradeIds.length}...`);
+        // Throttle sedikit agar tidak flood GAS
+        if(i%3===2)await new Promise(r=>setTimeout(r,120));
+      }
+      APP.trades=APP.trades.filter(t=>t.akun!==a.name);
+      setDelProgress(88,'Memperbarui akun...');
+      APP.akuns.splice(idx,1);
+      await new Promise(r=>setTimeout(r,200));
+      setDelProgress(96,'Sinkronisasi...');
+      cloudSync('saveAkuns',{akuns:APP.akuns});
+      setDelProgress(100,'Selesai!');
+      await new Promise(r=>setTimeout(r,600));
+      hideDelLoading();
+      showToast(`🗑️ Akun "${a.name}" + ${tradeIds.length} trade dihapus permanen`,'info');
+    } else {
+      showDelLoading('Menghapus Akun','Menghapus data akun dari cloud');
+      setDelProgress(30,'Menghapus akun...');
+      await new Promise(r=>setTimeout(r,300));
+      APP.akuns.splice(idx,1);
+      setDelProgress(80,'Sinkronisasi...');
+      cloudSync('saveAkuns',{akuns:APP.akuns});
+      setDelProgress(100,'Selesai!');
+      await new Promise(r=>setTimeout(r,600));
+      hideDelLoading();
+      showToast(`🗑️ Akun "${a.name}" dihapus permanen (jurnal dipertahankan)`,'info');
+    }
+  } else {
+    showDelLoading('Mengarsipkan Akun','Menyimpan status akun ke cloud');
+    setDelProgress(40,'Mengarsipkan...');
+    await new Promise(r=>setTimeout(r,300));
+    APP.akuns[idx].status='inactive';
+    setDelProgress(85,'Sinkronisasi...');
+    cloudSync('saveAkuns',{akuns:APP.akuns});
+    setDelProgress(100,'Selesai!');
+    await new Promise(r=>setTimeout(r,500));
+    hideDelLoading();
+    showToast(`🗄️ Akun "${a.name}" berhasil diarsipkan`,'info');
+  }
+  APP._deleteAkunIdx=null;
+  renderAkunManager();renderArchivedAkuns();populateCtrlAkun();updateAll();
+}
+function unarsipAkun(idx){
+  APP.akuns[idx].status=true;
+  showToast(`✅ Akun "${APP.akuns[idx].name}" diaktifkan kembali`,'info');
+  renderAkunManager();renderArchivedAkuns();populateCtrlAkun();updateAll();
+  cloudSync('saveAkuns',{akuns:APP.akuns});
+}
+function toggleArsipView(on){
+  APP.showArsip=on;
+  populateCtrlAkun();updateAll();
+}
 
 // FILTER
 function getFilteredTrades(){
@@ -1936,9 +2248,15 @@ function getFilteredTrades(){
   const d=new Date();d.setDate(d.getDate()-d.getDay()+1);
   const weekStart=d.toISOString().slice(0,10);
   const monthStart=new Date().toISOString().slice(0,7)+'-01';
+  // Kumpulkan nama akun yang diarsipkan
+  const arsipNames=new Set(APP.akuns.filter(a=>a.status==='inactive').map(a=>a.name));
   return APP.trades.filter(t=>{
+    // Sembunyikan trade dari akun arsip jika toggle off
+    if(!APP.showArsip&&arsipNames.has(t.akun))return false;
     const td=t.date.slice(0,10);
-    if(akun!=='all'&&t.akun!==akun)return false;
+    // Jika filter akun = "(arsip)" match, strip suffix
+    const filterAkun=akun==='all'?'all':akun.replace(' (arsip)','');
+    if(filterAkun!=='all'&&t.akun!==filterAkun)return false;
     if(periode==='today'&&td!==today)return false;
     if(periode==='week'&&td<weekStart)return false;
     if(periode==='month'&&td<monthStart)return false;
@@ -2005,7 +2323,8 @@ function updateAll(){
   const trades=getFilteredTrades();
   const stats=calcStats(trades);
   const akunName=document.getElementById('ctrlAkun').value;
-  const modal=akunName==='all'?APP.akuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
+  const activeAkuns=APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=='inactive');
+  const modal=akunName==='all'?activeAkuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
   const equity=modal+stats.netPnl;
   const ret=modal>0?stats.netPnl/modal*100:0;
   g('kEquity',fmtRp(equity));g('kPnl',fmtRp(stats.netPnl));
@@ -2043,11 +2362,13 @@ function renderTopPairs(trades){
 }
 
 function renderAkunTable(){
-  document.getElementById('akunTableBody').innerHTML=APP.akuns.map(a=>{
+  const visibleAkuns=APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=='inactive');
+  document.getElementById('akunTableBody').innerHTML=visibleAkuns.map(a=>{
     const trd=APP.trades.filter(t=>t.akun===a.name);
     const s=calcStats(trd);const eq=a.modal+s.netPnl;const ret=a.modal>0?s.netPnl/a.modal*100:0;
-    return`<tr style="background:${a.type==='live'?'rgba(79,142,247,.04)':''};">
-    <td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td>
+    const isArsip=a.status==='inactive';
+    return`<tr style="background:${a.type==='live'&&!isArsip?'rgba(79,142,247,.04)':'rgba(167,139,250,.03)'};${isArsip?'opacity:.7;':''}"}>
+    <td style="font-weight:700;color:${isArsip?'var(--c-purple)':a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}${isArsip?'<span style="font-size:9px;background:var(--c-purple-d);color:var(--c-purple);padding:1px 5px;border-radius:4px;margin-left:5px;">ARSIP</span>':''}</td>
     <td class="td-c td-m">Rp ${fmt(a.modal)}</td>
     <td class="td-c td-m ${s.netPnl>=0?'v-green':'v-red'}">${s.netPnl>=0?'+':''}Rp ${fmt(s.netPnl)}</td>
     <td class="td-c"><span class="${s.netPnl>=0?'v-green':'v-red'}" style="font-family:var(--fn-m);">${ret>=0?'+':''}${ret.toFixed(2)}%</span></td>
@@ -2090,7 +2411,7 @@ function renderPerfMetrics(stats){
 function renderEquityChart(trades){
   const sorted=[...trades].sort((a,b)=>a.date.localeCompare(b.date));
   const akunName=document.getElementById('ctrlAkun').value;
-  const modal=akunName==='all'?APP.akuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
+  const _visAkuns=APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=="inactive");const modal=akunName==="all"?_visAkuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
   let cum=modal;
   const pts=[{x:'Start',y:modal}];
   sorted.forEach(t=>{cum+=t.pnlRp;pts.push({x:t.date.slice(5,10),y:cum});});
@@ -2230,7 +2551,7 @@ function renderJournal(){
   document.getElementById('jCount').textContent=data.length;
   const js=calcStats(data);
   const akunName=document.getElementById('ctrlAkun').value;
-  const modal=akunName==='all'?APP.akuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
+  const _visAkuns=APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=="inactive");const modal=akunName==="all"?_visAkuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
   document.getElementById('journalSummary').innerHTML=[
     {lbl:'Total',val:data.length,col:'v-blue',cls:'kpi-blue'},
     {lbl:'WIN',val:js.wins,col:'v-green',cls:'kpi-green'},
@@ -2315,7 +2636,7 @@ function renderAnalysis(){
   const trades=getFilteredTrades().sort((a,b)=>a.date.localeCompare(b.date));
   const stats=calcStats(trades);
   const akunName=document.getElementById('ctrlAkun').value;
-  const modal=akunName==='all'?APP.akuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
+  const _visAkuns=APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=="inactive");const modal=akunName==="all"?_visAkuns.reduce((s,a)=>s+a.modal,0):(getAkun(akunName)?.modal||0);
   let bW=0,cW=0,bL=0,cL=0;
   trades.forEach(t=>{if(t.result==='WIN'){cW++;bW=Math.max(bW,cW);cL=0;}else if(t.result==='LOSS'){cL++;bL=Math.max(bL,cL);cW=0;}else{cW=0;cL=0;}});
   let peak=modal,eq=modal,maxDD=0;
@@ -2507,8 +2828,50 @@ function renderPairManager(){document.getElementById('pairManagerBody').innerHTM
 function renderSetupTags(){document.getElementById('setupTags').innerHTML=APP.setups.map((s,i)=>`<div class="setup-tag">${s}<span class="setup-tag-x" onclick="deleteSetup(${i})">✕</span></div>`).join('');const jSel=document.getElementById('jFilterSetup');if(jSel)jSel.innerHTML=`<option value="">Semua Setup</option>`+APP.setups.map(s=>`<option>${s}</option>`).join('');const picker=document.getElementById('fm-setup-picker');if(picker)renderSetupPicker([]);}
 function addSetup(){const val=document.getElementById('newSetupInput').value.trim();if(!val)return;if(APP.setups.includes(val))return showToast('❌ Setup sudah ada','error');APP.setups.push(val);document.getElementById('newSetupInput').value='';renderSetupTags();cloudSync('saveSetups',{setups:APP.setups},`✅ Setup "${val}" ditambahkan!`);}
 function deleteSetup(idx){APP.setups.splice(idx,1);renderSetupTags();cloudSync('saveSetups',{setups:APP.setups});}
-function renderAkunManager(){document.getElementById('akunManagerBody').innerHTML=APP.akuns.map((a,i)=>`<tr><td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td class="td-m" style="color:var(--c-gold);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td><span style="background:var(--c-green-d);color:var(--c-green2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">✓ Aktif</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditAkunModal(${i})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteAkun(${i})">🗑</button></td></tr>`).join('');populateCtrlAkun();}
-function populateCtrlAkun(){const sel=document.getElementById('ctrlAkun');const cur=sel.value;sel.innerHTML=`<option value="all">Semua Akun</option>`+APP.akuns.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');if(cur)sel.value=cur;const jSel=document.getElementById('jFilterAkun');if(jSel)jSel.innerHTML=`<option value="">Semua Akun</option>`+APP.akuns.map(a=>`<option value="${a.name}">${a.name}</option>`).join('');const jP=document.getElementById('jFilterPair');if(jP){const pairs=[...new Set(APP.trades.map(t=>t.pair))].sort();jP.innerHTML=`<option value="">Semua Pair</option>`+pairs.map(p=>`<option>${p}</option>`).join('');}}
+function renderAkunManager(){
+  const active=APP.akuns.filter(a=>a.status!=='inactive');
+  document.getElementById('akunManagerBody').innerHTML=active.map((a,_i)=>{
+    const realIdx=APP.akuns.indexOf(a);
+    return`<tr><td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td class="td-m" style="color:var(--c-gold);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td><span style="background:var(--c-green-d);color:var(--c-green2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">✓ Aktif</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditAkunModal(${realIdx})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteAkun(${realIdx})">🗑</button></td></tr>`;
+  }).join('');
+  renderArchivedAkuns();populateCtrlAkun();
+}
+function renderArchivedAkuns(){
+  const archived=APP.akuns.filter(a=>a.status==='inactive');
+  const countEl=document.getElementById('arsipCount');
+  const tableEl=document.getElementById('arsipTable');
+  const emptyEl=document.getElementById('arsipEmpty');
+  const bodyEl=document.getElementById('arsipManagerBody');
+  if(countEl)countEl.textContent=archived.length;
+  if(!tableEl||!emptyEl||!bodyEl)return;
+  if(archived.length===0){tableEl.style.display='none';emptyEl.style.display='block';return;}
+  emptyEl.style.display='none';tableEl.style.display='table';
+  bodyEl.innerHTML=archived.map((a,_i)=>{
+    const realIdx=APP.akuns.indexOf(a);
+    return`<tr style="opacity:.85;"><td style="font-weight:700;color:var(--c-purple);">${a.name} <span style="font-size:9px;font-weight:600;background:var(--c-purple-d);color:var(--c-purple);padding:1px 6px;border-radius:4px;margin-left:4px;">ARSIP</span></td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td class="td-m" style="color:var(--txt1);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="unarsipAkun(${realIdx})" title="Aktifkan kembali">♻️ Aktifkan</button> <button class="btn btn-danger btn-sm" onclick="deletePermanentArsip(${realIdx})">🗑</button></td></tr>`;
+  }).join('');
+}
+function deletePermanentArsip(idx){
+  // Reuse modal yang sama dengan flow step 2 langsung
+  APP._deleteAkunIdx=idx;
+  const a=APP.akuns[idx];
+  document.getElementById('deleteAkunName').textContent=a.name;
+  document.getElementById('deleteAkunBroker').textContent=a.broker+' · '+(a.type||'').toUpperCase();
+  goToDelStep2();
+  document.getElementById('deleteAkunModal').classList.add('active');
+}
+function populateCtrlAkun(){
+  const activeAkuns=APP.akuns.filter(a=>a.status!=='inactive');
+  const arsipAkuns=APP.akuns.filter(a=>a.status==='inactive');
+  const visibleAkuns=APP.showArsip?APP.akuns:activeAkuns;
+  const sel=document.getElementById('ctrlAkun');const cur=sel.value;
+  sel.innerHTML=`<option value="all">Semua Akun</option>`+activeAkuns.map(a=>`<option value="${a.name}">${a.name}</option>`).join('')+(APP.showArsip&&arsipAkuns.length?arsipAkuns.map(a=>`<option value="${a.name}">${a.name} (arsip)</option>`).join(''):'');
+  if(cur)sel.value=cur;
+  const jSel=document.getElementById('jFilterAkun');
+  if(jSel)jSel.innerHTML=`<option value="">Semua Akun</option>`+activeAkuns.map(a=>`<option value="${a.name}">${a.name}</option>`).join('')+(APP.showArsip&&arsipAkuns.length?arsipAkuns.map(a=>`<option value="${a.name}">${a.name} (arsip)</option>`).join(''):'');
+  const jP=document.getElementById('jFilterPair');
+  if(jP){const pairs=[...new Set(APP.trades.map(t=>t.pair))].sort();jP.innerHTML=`<option value="">Semua Pair</option>`+pairs.map(p=>`<option>${p}</option>`).join('');}
+}
 
 // EXPORT/IMPORT
 function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.dir,t.lot,t.entry,t.sl||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,getSetupArr(t).join('|'),'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
@@ -2712,7 +3075,7 @@ function renderSettings() {
   renderPairManager();
   renderSetupTags();
   renderAkunManager();
-  // Fetch live kurs jika belum ada data
+  renderArchivedAkuns();
   if (LIVE_KURS_VAL === null) fetchLiveKurs();
   else checkKursDiff();
 }
@@ -2726,7 +3089,26 @@ function saveRiskRules(){
   cloudSync('saveRisk', { risk: APP.risk }, '✅ Risk rules disimpan ke cloud!');
 }
 function onPeriodeChange(){const v=document.getElementById('ctrlPeriode').value;const wrap=document.getElementById('customDateWrap');wrap.style.display=v==='custom'?'flex':'none';if(v!=='custom')updateAll();}
-function showToast(msg,type=''){const el=document.createElement('div');el.className='toast'+(type?' '+type:'');el.textContent=msg;document.body.appendChild(el);setTimeout(()=>el.remove(),3200);}
+const _toastQueue=[];let _toastRunning=false;
+function showToast(msg,type=''){
+  _toastQueue.push({msg,type});
+  if(!_toastRunning)_processToastQueue();
+}
+function _processToastQueue(){
+  if(!_toastQueue.length){_toastRunning=false;return;}
+  _toastRunning=true;
+  const {msg,type}=_toastQueue.shift();
+  const el=document.createElement('div');
+  el.className='toast'+(type?' '+type:'');
+  el.textContent=msg;
+  document.body.appendChild(el);
+  setTimeout(()=>{
+    el.style.transition='opacity .25s ease, transform .25s ease';
+    el.style.opacity='0';
+    el.style.transform='translateX(-50%) translateY(-8px)';
+    setTimeout(()=>{el.remove();_processToastQueue();},260);
+  },2800);
+}
 function initWinLossChart(){/* replaced by SVG card */}
 setInterval(()=>{const n=new Date();const str=[n.getHours(),n.getMinutes(),n.getSeconds()].map(v=>String(v).padStart(2,'0')).join(':');document.getElementById('clockBox').textContent=str;document.getElementById('fTime').textContent=n.toLocaleDateString('id-ID')+' '+str;},1000);
 document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT'||e.target.tagName==='TEXTAREA')return;if(e.key==='n'||e.key==='N')openAddModal();if(e.key==='e'||e.key==='E')exportCSV();if(e.key==='f'||e.key==='F'){const jTab=document.querySelectorAll('.sidebar-item')[2];switchPage('journal',jTab);setTimeout(()=>document.getElementById('jSearchPair')?.focus(),100);}if(e.key==='Escape')document.querySelectorAll('.modal-overlay').forEach(m=>m.classList.remove('open'));});

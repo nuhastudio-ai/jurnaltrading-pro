@@ -31,7 +31,7 @@ const HEADERS = {
   KURS    : ['Tanggal','Nilai'],
   PAIRS   : ['Nama','Tipe','Multiplier','Pip','Warna','Deskripsi'],
   SETUPS  : ['Nama'],
-  AKUN    : ['Nama','Broker','Modal','Tipe'],
+  AKUN    : ['Nama','Broker','Modal','Tipe','Status'],
   RISK    : ['Key','Value']
 };
 
@@ -223,7 +223,7 @@ function getAllData() {
     broker : String(r['Broker']),
     modal  : parseInt(r['Modal']) || 0,
     type   : String(r['Tipe']),
-    status : true
+    status : (r['Status'] && String(r['Status']).toLowerCase() === 'inactive') ? 'inactive' : true
   })).filter(a => a.name && a.name !== 'undefined');
 
   // ── RISK ─────────────────────────────────────────────────
@@ -348,12 +348,13 @@ function saveAkuns(akuns) {
   const sh = getOrCreateSheet(SH.AKUN, HEADERS.AKUN);
   clearDataRows(sh);
   if (akuns && akuns.length > 0) {
-    sh.getRange(2, 1, akuns.length, 4).setValues(
+    sh.getRange(2, 1, akuns.length, 5).setValues(
       akuns.map(a => [
         a.name,
         a.broker,
         parseInt(a.modal) || 0,
-        a.type
+        a.type,
+        a.status === 'inactive' ? 'inactive' : 'active'
       ])
     );
   }
