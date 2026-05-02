@@ -1281,6 +1281,11 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <span style="color:var(--txt2);font-size:11px;">s/d</span>
       <input type="date" class="ctrl-in" id="jDateTo" onchange="renderJournal()">
       <button class="btn btn-ghost btn-sm" onclick="resetJFilter()">✕ Reset</button>
+      <div class="ctrl-sep"></div>
+      <label class="toggle-sw" title="Tampilkan/sembunyikan trade dari akun yang diarsipkan" style="cursor:pointer;">
+        <input type="checkbox" id="jArsipToggle" onchange="toggleArsipView(this.checked)"><span class="toggle-track"></span>
+      </label>
+      <span style="font-size:11px;color:var(--txt2);white-space:nowrap;">📦 Arsip</span>
       <div style="margin-left:auto;font-size:11px;color:var(--txt2);">Tampil: <span id="jCount" style="color:var(--txt0);font-weight:700;">0</span></div>
     </div>
     <div class="panel">
@@ -2239,7 +2244,10 @@ function unarsipAkun(idx){
 }
 function toggleArsipView(on){
   APP.showArsip=on;
-  populateCtrlAkun();updateAll();
+  // Sync kedua toggle (settings & jurnal) supaya selalu sinkron
+  const t1=document.getElementById('arsipToggle');if(t1)t1.checked=on;
+  const t2=document.getElementById('jArsipToggle');if(t2)t2.checked=on;
+  populateCtrlAkun();updateAll();renderJournal();
 }
 
 // FILTER
@@ -2531,6 +2539,8 @@ function renderRekap(){
 
 // JOURNAL
 function getJFiltered(){
+  // Kumpulkan nama akun yang diarsipkan — trade mereka disembunyikan kecuali showArsip ON
+  const arsipNames=new Set(APP.akuns.filter(a=>a.status==='inactive').map(a=>a.name));
   const search=document.getElementById('jSearchPair').value.toLowerCase();
   const akun=document.getElementById('jFilterAkun').value;
   const result=document.getElementById('jFilterResult').value;
@@ -2540,6 +2550,8 @@ function getJFiltered(){
   const from=document.getElementById('jDateFrom').value;
   const to=document.getElementById('jDateTo').value;
   return APP.trades.filter(t=>{
+    // Sembunyikan trade dari akun arsip jika toggle Tampilkan Arsip sedang OFF
+    if(!APP.showArsip&&arsipNames.has(t.akun))return false;
     if(search&&!t.pair.toLowerCase().includes(search)&&!t.note.toLowerCase().includes(search)&&!t.akun.toLowerCase().includes(search))return false;
     if(akun&&t.akun!==akun)return false;if(result&&t.result!==result)return false;
     if(dir&&t.dir!==dir)return false;if(setup&&!getSetupArr(t).includes(setup))return false;

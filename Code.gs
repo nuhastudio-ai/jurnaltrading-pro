@@ -96,16 +96,30 @@ function getOrCreateSheet(name, headers) {
     Logger.log('Sheet "' + name + '" dibuat baru.');
   }
 
-  // Cek apakah header sudah ada
   if (sh.getLastRow() === 0) {
+    // Sheet kosong — buat header dari awal
     sh.appendRow(headers);
-    // Style header
     const hdr = sh.getRange(1, 1, 1, headers.length);
     hdr.setFontWeight(HEADER_STYLE.bold ? 'bold' : 'normal');
     hdr.setBackground(HEADER_STYLE.bg);
     hdr.setFontColor(HEADER_STYLE.fg);
     sh.setFrozenRows(1);
     Logger.log('Header sheet "' + name + '" dibuat.');
+  } else {
+    // Sheet sudah ada: cek apakah ada kolom header yang kurang.
+    // Terjadi jika kolom baru ditambahkan ke HEADERS setelah sheet dibuat
+    // (misal: kolom 'Status' di AKUN tidak ada karena dibuat versi lama).
+    const existingCols = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    if (existingCols.length < headers.length) {
+      const missingHeaders = headers.slice(existingCols.length);
+      const startCol = existingCols.length + 1;
+      const newHdr = sh.getRange(1, startCol, 1, missingHeaders.length);
+      newHdr.setValues([missingHeaders]);
+      newHdr.setFontWeight(HEADER_STYLE.bold ? 'bold' : 'normal');
+      newHdr.setBackground(HEADER_STYLE.bg);
+      newHdr.setFontColor(HEADER_STYLE.fg);
+      Logger.log('Header "' + missingHeaders.join(',') + '" ditambahkan ke sheet "' + name + '".');
+    }
   }
 
   return sh;
@@ -217,14 +231,22 @@ function getAllData() {
     .filter(s => s && s !== 'undefined');
 
   // ── AKUN ─────────────────────────────────────────────────
+  // Membaca dari raw values (bukan sheetToObjects) agar kolom Status tetap
+  // terbaca meski header-nya belum ada (sheet dibuat versi lama sebelum
+  // kolom Status ditambahkan). Index: 0=Nama,1=Broker,2=Modal,3=Tipe,4=Status
   const aSh = ss.getSheetByName(SH.AKUN);
-  const akuns = sheetToObjects(aSh).map(r => ({
-    name   : String(r['Nama']),
-    broker : String(r['Broker']),
-    modal  : parseInt(r['Modal']) || 0,
-    type   : String(r['Tipe']),
-    status : (r['Status'] && String(r['Status']).toLowerCase() === 'inactive') ? 'inactive' : 'active'
-  })).filter(a => a.name && a.name !== 'undefined');
+  const akunRaw = (aSh && aSh.getLastRow() > 1)
+    ? aSh.getDataRange().getValues().slice(1) : [];
+  const akuns = akunRaw
+    .filter(row => row.some(cell => cell !== ''  && cell !== null && cell !== undefined))
+    .map(row => ({
+      name   : String(row[0] || ''),
+      broker : String(row[1] || ''),
+      modal  : parseInt(row[2]) || 0,
+      type   : String(row[3] || ''),
+      status : (row[4] && String(row[4]).toLowerCase() === 'inactive') ? 'inactive' : 'active'
+    }))
+    .filter(a => a.name && a.name !== 'undefined');
 
   // ── RISK ─────────────────────────────────────────────────
   const rSh = ss.getSheetByName(SH.RISK);
