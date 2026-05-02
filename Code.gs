@@ -223,7 +223,7 @@ function getAllData() {
     broker : String(r['Broker']),
     modal  : parseInt(r['Modal']) || 0,
     type   : String(r['Tipe']),
-    status : (r['Status'] && String(r['Status']).toLowerCase() === 'inactive') ? 'inactive' : true
+    status : (r['Status'] && String(r['Status']).toLowerCase() === 'inactive') ? 'inactive' : 'active'
   })).filter(a => a.name && a.name !== 'undefined');
 
   // ── RISK ─────────────────────────────────────────────────
@@ -264,7 +264,10 @@ function saveTrade(trade) {
     parseInt(trade.fee)         || 0,
     parseFloat(trade.rr)        || 0,
     trade.result,
-    trade.setup,
+    // ← FIX: trade.setup bisa berupa JS array dari frontend (multi-select).
+    // Google Apps Script / Java akan mengubah array menjadi "[Ljava.lang.Object;@xxxxxxx"
+    // jika tidak di-serialize dulu ke string sebelum ditulis ke sel spreadsheet.
+    Array.isArray(trade.setup) ? trade.setup.filter(Boolean).join(', ') : (trade.setup || ''),
     trade.note || ''
   ];
 

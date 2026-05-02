@@ -2027,7 +2027,9 @@ function populateTradeForm(){
 }
 
 // ── SETUP MULTI-PICKER HELPERS ─────────────────────────────
-function getSetupArr(t){const s=t.setup;if(!s||s==='')return[];if(Array.isArray(s))return s.filter(Boolean);return[s];}
+function getSetupArr(t){const s=t.setup;if(!s||s==='')return[];if(Array.isArray(s))return s.filter(Boolean);
+  // Handle comma-separated string yang disimpan dari DB (contoh: "ICT, Breakout")
+  return s.split(',').map(x=>x.trim()).filter(Boolean);}
 function renderSetupPicker(selected=[]){
   const picker=document.getElementById('fm-setup-picker');
   if(!picker)return;
@@ -2129,7 +2131,9 @@ function openEditAkunModal(idx){
   openModal('akunModal');
 }
 function saveAkun(){
-  const data={name:document.getElementById('am-name').value.trim(),broker:document.getElementById('am-broker').value.trim(),modal:parseInt(document.getElementById('am-modal').value)||0,type:document.getElementById('am-type').value,status:true};
+  // Pertahankan status akun yang sudah ada saat edit (jangan reset akun arsip ke aktif)
+  const existingStatus = APP.editAkunIdx !== null ? APP.akuns[APP.editAkunIdx].status : 'active';
+  const data={name:document.getElementById('am-name').value.trim(),broker:document.getElementById('am-broker').value.trim(),modal:parseInt(document.getElementById('am-modal').value)||0,type:document.getElementById('am-type').value,status:existingStatus};
   if(!data.name)return showToast('❌ Nama akun tidak boleh kosong','error');
   if(APP.editAkunIdx!==null){APP.akuns[APP.editAkunIdx]=data;showToast('✅ Akun diperbarui!');}
   else{APP.akuns.push(data);showToast('✅ Akun ditambahkan!');}
@@ -2228,7 +2232,7 @@ async function confirmDeleteAkun(mode, deleteTradesAlso){
   renderAkunManager();renderArchivedAkuns();populateCtrlAkun();updateAll();
 }
 function unarsipAkun(idx){
-  APP.akuns[idx].status=true;
+  APP.akuns[idx].status='active';
   showToast(`✅ Akun "${APP.akuns[idx].name}" diaktifkan kembali`,'info');
   renderAkunManager();renderArchivedAkuns();populateCtrlAkun();updateAll();
   cloudSync('saveAkuns',{akuns:APP.akuns});
