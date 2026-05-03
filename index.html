@@ -2042,7 +2042,7 @@ function openEditModal(id){
   const t=APP.trades.find(x=>x.id===id);if(!t)return;
   APP.editTradeId=id;
   document.getElementById('tradeModalTitle').textContent='✏️ Edit Trade #'+id;
-  populateTradeForm();
+  populateTradeForm(t.akun);
   document.getElementById('fm-akun').value=t.akun;
   document.getElementById('fm-date').value=dateToInputVal(t.date);
   document.getElementById('fm-pair').value=t.pair;
@@ -2062,8 +2062,16 @@ function openEditModal(id){
   openModal('tradeModal');
 }
 
-function populateTradeForm(){
-  document.getElementById('fm-akun').innerHTML=APP.akuns.map(a=>`<option>${a.name}</option>`).join('');
+function populateTradeForm(includeAkunName){
+  // Hanya tampilkan akun aktif (bukan arsip) di form tambah/edit trade
+  const activeAkuns=APP.akuns.filter(a=>a.status!=='inactive');
+  let opts=activeAkuns.map(a=>`<option>${a.name}</option>`).join('');
+  // Jika sedang edit trade yang akunnya diarsipkan, tambahkan sebagai opsi tersendiri
+  if(includeAkunName&&!activeAkuns.some(a=>a.name===includeAkunName)){
+    const arsipAkun=APP.akuns.find(a=>a.name===includeAkunName);
+    if(arsipAkun)opts+=`<option value="${arsipAkun.name}">${arsipAkun.name} (arsip)</option>`;
+  }
+  document.getElementById('fm-akun').innerHTML=opts;
   document.getElementById('fm-pair').innerHTML=APP.pairs.map(p=>`<option value="${p.name}">${p.name} — ${p.desc||''}</option>`).join('');
   renderSetupPicker([]);
   onPairChange();
