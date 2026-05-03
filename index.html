@@ -522,7 +522,19 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 #gunakanKursBtn.active:hover{transform:translateY(-1px);box-shadow:0 4px 20px rgba(16,185,129,.55);}
 @keyframes pulse-gunakan{0%,100%{box-shadow:0 0 10px rgba(16,185,129,.4);}50%{box-shadow:0 0 22px rgba(16,185,129,.7);}}
 @keyframes pulse-cloud{0%,100%{opacity:1;}50%{opacity:.6;}}
-/* FOOTER */
+/* GROWTH PER AKUN */
+.growth-section{border-top:1px solid var(--bdr);background:linear-gradient(180deg,rgba(79,142,247,.03),transparent);}
+.growth-hd{display:flex;align-items:center;justify-content:space-between;padding:12px 16px 8px;}
+.growth-note{font-size:9px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.6px;opacity:.7;}
+.growth-chart-wrap{height:200px;padding:0 16px;position:relative;}
+.growth-chart-wrap canvas{width:100%!important;}
+.growth-legend{display:flex;flex-wrap:wrap;gap:8px;padding:10px 16px 14px;justify-content:center;border-top:1px solid rgba(255,255,255,.04);margin-top:8px;}
+.growth-legend-item{display:flex;align-items:center;gap:6px;padding:4px 11px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.07);border-radius:20px;cursor:default;transition:all .2s;}
+.growth-legend-item:hover{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.12);}
+.growth-legend-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.growth-legend-name{font-size:10px;font-weight:600;color:var(--txt1);white-space:nowrap;font-family:var(--fn);}
+@keyframes glowPulse{0%,100%{opacity:1;}50%{opacity:.5;}}
+@media(max-width:768px){.growth-chart-wrap{height:150px;}.growth-hd{padding:10px 13px 6px;}.growth-legend{padding:8px 13px 12px;}.growth-note{display:none;}}
 .footer{background:var(--bg1);border-top:1px solid var(--bdr);padding:7px 20px;display:flex;align-items:center;justify-content:space-between;font-size:10.5px;color:var(--txt2);}
 .shortcut-hints{display:flex;gap:16px;flex-wrap:wrap;}
 .sh-item{display:flex;align-items:center;gap:4px;}
@@ -1112,6 +1124,18 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
           </div>
         </div>
         <div class="panel-bd"><div class="chart-wrap h240"><canvas id="equityChart"></canvas></div></div>
+        <!-- GROWTH PER AKUN CARD -->
+        <div class="growth-section">
+          <div class="growth-hd">
+            <div class="panel-title">
+              <div class="dot dot-blue" style="box-shadow:0 0 10px var(--c-blue),0 0 22px rgba(79,142,247,.4);animation:glowPulse 2.4s ease-in-out infinite;"></div>
+              Pertumbuhan Per Akun
+            </div>
+            <span class="growth-note">Filter: Harian / Mingguan / Bulanan ↑</span>
+          </div>
+          <div class="growth-chart-wrap"><canvas id="growthChart"></canvas></div>
+          <div id="growthLegend" class="growth-legend"></div>
+        </div>
       </div>
     </div>
     <!-- REKAP PNL - di bawah equity -->
@@ -2353,7 +2377,7 @@ function updateAll(){
   g('st-fee',stats.totalFee>0?'-Rp '+fmt(stats.totalFee):'Rp 0');
   g('st-pnl',fmtRp(stats.netPnl));
   updateWLCard(stats);
-  renderTopPairs(trades);renderAkunTable();renderHariGrid(trades);renderPerfMetrics(stats);renderEquityChart(trades);renderRekap();
+  renderTopPairs(trades);renderAkunTable();renderHariGrid(trades);renderPerfMetrics(stats);renderEquityChart(trades);renderGrowthChart();renderRekap();
 }
 
 function renderTopPairs(trades){
@@ -2433,7 +2457,135 @@ function renderEquityChart(trades){
     options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{backgroundColor:'#1e293b',borderColor:'rgba(255,255,255,.08)',borderWidth:1,callbacks:{label:c=>' Equity: Rp '+fmt(c.raw)}}},scales:{x:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:14}},y:{grid:{color:'rgba(255,255,255,.04)'},ticks:{color:'#4a5568',font:{size:9},callback:v=>'Rp '+(v/1000000).toFixed(2)+'M'}}}}});
   }else{APP.charts.equity.data.labels=pts.map(p=>p.x);APP.charts.equity.data.datasets[0].data=pts.map(p=>p.y);APP.charts.equity.update('active');}
 }
-function switchEquityMode(mode,btn){btn.closest('.mode-tabs').querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');APP.equityMode=mode;}
+function switchEquityMode(mode,btn){btn.closest('.mode-tabs').querySelectorAll('.mode-tab').forEach(t=>t.classList.remove('active'));btn.classList.add('active');APP.equityMode=mode;renderGrowthChart(getFilteredTrades());}
+
+// GROWTH PER AKUN CHART
+const GROWTH_COLORS=['#4f8ef7','#ef4444','#22d3ee','#a78bfa','#f5c518','#10b981','#f97316','#ec4899'];
+function getPeriodKeyGrowth(dateStr,mode){
+  const d=new Date(dateStr);
+  if(mode==='month')return dateStr.slice(0,7);
+  if(mode==='week'){
+    const tmp=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+    const day=tmp.getUTCDay()||7;
+    tmp.setUTCDate(tmp.getUTCDate()+4-day);
+    const ys=new Date(Date.UTC(tmp.getUTCFullYear(),0,1));
+    const wk=Math.ceil((((tmp-ys)/86400000)+1)/7);
+    return d.getFullYear()+'-W'+String(wk).padStart(2,'0');
+  }
+  return dateStr.slice(0,10);
+}
+function formatPeriodLabel(p,mode){
+  if(mode==='month'){const[yr,mo]=p.split('-');return['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'][parseInt(mo)-1]+' '+yr.slice(2);}
+  if(mode==='week')return p.replace(/\d{4}-/,'');
+  return p.slice(5);
+}
+
+const _growthGlowPlugin={
+  id:'growthGlow',
+  beforeDatasetDraw(chart,args){
+    const col=chart.data.datasets[args.index]?.borderColor;
+    if(col){chart.ctx.shadowColor=col;chart.ctx.shadowBlur=14;}
+  },
+  afterDatasetDraw(chart){chart.ctx.shadowBlur=0;chart.ctx.shadowColor='transparent';}
+};
+
+function renderGrowthChart(){
+  const mode=APP.equityMode;
+  const visAkuns=(APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=='inactive'));
+  const allTrades=APP.trades;
+  // Collect unique period keys from all trades
+  const periodSet=new Set();
+  allTrades.forEach(t=>{if(t.date)periodSet.add(getPeriodKeyGrowth(t.date,mode));});
+  const allPeriods=[...periodSet].sort();
+  if(!allPeriods.length){
+    const legendEl=document.getElementById('growthLegend');
+    if(legendEl)legendEl.innerHTML='<span style="font-size:11px;color:var(--txt2);">Belum ada data trade</span>';
+    return;
+  }
+  // Build dataset per akun
+  const datasets=visAkuns.map((akun,i)=>{
+    const col=GROWTH_COLORS[i%GROWTH_COLORS.length];
+    const akunTrades=allTrades.filter(t=>t.akun===akun.name);
+    // Map period → pnl sum
+    const pMap={};
+    akunTrades.forEach(t=>{const pk=getPeriodKeyGrowth(t.date,mode);pMap[pk]=(pMap[pk]||0)+t.pnlRp;});
+    let cum=0;
+    const data=allPeriods.map(p=>{cum+=(pMap[p]||0);return akun.modal+cum;});
+    // Add start point
+    return{
+      label:akun.name,
+      data,
+      borderColor:col,
+      backgroundColor:'transparent',
+      borderWidth:2.5,
+      tension:0.42,
+      pointRadius:3,
+      pointHoverRadius:7,
+      pointBackgroundColor:col,
+      pointBorderColor:'rgba(0,0,0,.4)',
+      pointBorderWidth:1.5,
+      fill:false,
+      _col:col
+    };
+  });
+  const labels=allPeriods.map(p=>formatPeriodLabel(p,mode));
+  // Render chart
+  if(!APP.charts.growth){
+    const ctx=document.getElementById('growthChart');
+    if(!ctx)return;
+    APP.charts.growth=new Chart(ctx.getContext('2d'),{
+      type:'line',
+      data:{labels,datasets},
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        interaction:{mode:'index',intersect:false},
+        plugins:{
+          legend:{display:false},
+          tooltip:{
+            backgroundColor:'rgba(11,17,32,.97)',
+            borderColor:'rgba(255,255,255,.09)',
+            borderWidth:1,
+            padding:10,
+            titleColor:'#94a3b8',
+            titleFont:{size:10,weight:'700'},
+            bodyColor:'#f0f4ff',
+            bodyFont:{size:11,family:'JetBrains Mono,monospace',weight:'600'},
+            callbacks:{
+              title:items=>{const p=allPeriods[items[0]?.dataIndex]||'';return formatPeriodLabel(p,mode);},
+              label:c=>{const col=GROWTH_COLORS[c.datasetIndex%GROWTH_COLORS.length];return` ${c.dataset.label}: Rp ${fmt(c.raw)}`;}
+            }
+          }
+        },
+        scales:{
+          x:{grid:{color:'rgba(255,255,255,.035)'},ticks:{color:'#4a5568',font:{size:9},maxTicksLimit:12}},
+          y:{grid:{color:'rgba(255,255,255,.035)'},ticks:{color:'#4a5568',font:{size:9},callback:v=>{const m=Math.abs(v);return(v<0?'-':'')+'Rp '+(m>=1000000?(m/1000000).toFixed(1)+'M':fmt(m));}}}
+        }
+      },
+      plugins:[_growthGlowPlugin]
+    });
+  }else{
+    APP.charts.growth.data.labels=labels;
+    APP.charts.growth.data.datasets=datasets;
+    APP.charts.growth.update('active');
+  }
+  // Render legend
+  const legendEl=document.getElementById('growthLegend');
+  if(legendEl){
+    legendEl.innerHTML=visAkuns.map((a,i)=>{
+      const col=GROWTH_COLORS[i%GROWTH_COLORS.length];
+      const trd=allTrades.filter(t=>t.akun===a.name);
+      const net=trd.reduce((s,t)=>s+t.pnlRp,0);
+      const ret=a.modal>0?net/a.modal*100:0;
+      const retStr=(ret>=0?'+':'')+ret.toFixed(1)+'%';
+      const retCol=net>=0?'var(--c-green2)':'var(--c-red2)';
+      return`<div class="growth-legend-item" title="${a.name} — Net PnL: ${fmtRp(net)} | Return: ${retStr}">
+        <div class="growth-legend-dot" style="background:${col};box-shadow:0 0 7px ${col},0 0 16px ${col}66;"></div>
+        <span class="growth-legend-name">${a.name}</span>
+        <span style="font-size:9.5px;font-family:var(--fn-m);font-weight:700;color:${retCol};margin-left:2px;">${retStr}</span>
+      </div>`;
+    }).join('');
+  }
+}
 
 // REKAP
 /* ── MONTH NAVIGATION HELPERS ─────────────────────────────── */
