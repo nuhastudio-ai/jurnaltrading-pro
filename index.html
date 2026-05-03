@@ -2042,7 +2042,7 @@ function openEditModal(id){
   const t=APP.trades.find(x=>x.id===id);if(!t)return;
   APP.editTradeId=id;
   document.getElementById('tradeModalTitle').textContent='✏️ Edit Trade #'+id;
-  populateTradeForm();
+  populateTradeForm(t.akun);
   document.getElementById('fm-akun').value=t.akun;
   document.getElementById('fm-date').value=dateToInputVal(t.date);
   document.getElementById('fm-pair').value=t.pair;
@@ -2051,19 +2051,26 @@ function openEditModal(id){
   document.getElementById('fm-entry').value=t.entry;
   document.getElementById('fm-sl').value=t.sl||'';
   document.getElementById('fm-exit').value=t.exit;
-  document.getElementById('fm-pnl-usd').value=t.pnlUSD;
+  // Kosongkan override PnL agar RR, Hasil, dan estimasi PnL dihitung ulang
+  // secara otomatis dari Entry/SL/Exit yang baru diisi. User bisa isi manual
+  // field Override PnL USD jika diperlukan setelah modal terbuka.
+  document.getElementById('fm-pnl-usd').value='';
   document.getElementById('fm-fee').value=t.fee||'';
-  document.getElementById('fm-rr').value=t.rr||'';
-  document.getElementById('fm-rr-display').value=t.rr>0?t.rr.toFixed(2)+'R':'';
-  document.getElementById('fm-result').value=t.result;setResultDisplay(t.result);
   renderSetupPicker(getSetupArr(t));
   document.getElementById('fm-note').value=t.note;
+  // Trigger kalkulasi ulang: PnL preview, RR, dan Hasil otomatis ter-refresh
   onPairChange();
   openModal('tradeModal');
 }
 
-function populateTradeForm(){
-  document.getElementById('fm-akun').innerHTML=APP.akuns.map(a=>`<option>${a.name}</option>`).join('');
+function populateTradeForm(includeAkunName){
+  const activeAkuns=APP.akuns.filter(a=>a.status!=='inactive');
+  let opts=activeAkuns.map(a=>`<option>${a.name}</option>`).join('');
+  if(includeAkunName&&!activeAkuns.some(a=>a.name===includeAkunName)){
+    const arsipAkun=APP.akuns.find(a=>a.name===includeAkunName);
+    if(arsipAkun)opts+=`<option value="${arsipAkun.name}">${arsipAkun.name} (arsip)</option>`;
+  }
+  document.getElementById('fm-akun').innerHTML=opts;
   document.getElementById('fm-pair').innerHTML=APP.pairs.map(p=>`<option value="${p.name}">${p.name} — ${p.desc||''}</option>`).join('');
   renderSetupPicker([]);
   onPairChange();
@@ -2666,13 +2673,15 @@ function renderRekap(){
   const mode=APP.rekapMode;
   const cont=document.getElementById('rekapBody');
   // DAY/WEEK: filter by month+year; MONTH: filter by year only
+  const arsipNamesRekap=new Set(APP.akuns.filter(a=>a.status==='inactive').map(a=>a.name));
   let trades=APP.trades.filter(t=>{
+    if(!APP.showArsip&&arsipNamesRekap.has(t.akun))return false;
     const d=new Date(t.date);
     if(d.getFullYear()!==selYear)return false;
     if(mode!=='month'&&mi>=0&&d.getMonth()!==mi)return false;
     return true;
   });
-  if(akun!=='all')trades=trades.filter(t=>t.akun===akun);
+  if(akun!=='all')trades=trades.filter(t=>t.akun===akun.replace(' (arsip)',''));
   if(mode==='day'){
     const dayNames=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu','TOTAL'];
     const dayMap={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
@@ -2806,7 +2815,6 @@ function duplicateTrade(id){
   const src=APP.trades.find(t=>t.id===id);if(!src)return;
   const newId=Math.max(0,...APP.trades.map(t=>t.id))+1;
   const dup={...src, id:newId};
-  // Sisipkan tepat setelah trade sumber agar mudah ditemukan
   const srcIdx=APP.trades.findIndex(t=>t.id===id);
   APP.trades.splice(srcIdx,0,dup);
   renderJournal();updateAll();
