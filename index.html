@@ -164,6 +164,12 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .stats-tbl td{padding:8px 12px;font-size:12px;}
 .stats-tbl td:first-child{color:var(--txt2);font-weight:500;}
 .stats-tbl td:last-child{text-align:left;font-family:var(--fn-m);font-weight:700;}
+/* FLEX STAT ROWS — stretch to fill card height */
+.st-row{display:flex;align-items:center;justify-content:space-between;flex:1;padding:0 14px;border-bottom:1px solid var(--bdr);min-height:36px;transition:background .15s;}
+.st-row:hover{background:rgba(255,255,255,.018);}
+.st-row-last{border-bottom:none;}
+.st-lbl{font-size:12px;color:var(--txt2);font-weight:500;}
+.st-val{font-family:var(--fn-m);font-size:12px;font-weight:700;text-align:right;}
 .v-green{color:var(--c-green2);}
 .v-red{color:var(--c-red2);}
 .v-gold{color:var(--c-gold);}
@@ -788,6 +794,8 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 
   /* ── STATS TABLE ─────────────────────────────────────── */
   .stats-tbl td { padding: var(--f2) var(--f3); font-size: 11px; } /* 5×8 */
+  .st-row { min-height: 30px; padding: 0 13px; font-size: 11px; }
+  .st-lbl, .st-val { font-size: 11px; }
 
   /* ── REKAP TABLE ─────────────────────────────────────── */
   #rekapBody { overflow-x: auto; -webkit-overflow-scrolling: touch; }
@@ -1163,24 +1171,22 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     </div>
     </div><!-- /month-nav-wrap rekapNavWrap -->
     <!-- STATS + TOP PAIRS + METRICS -->
-    <div class="g2">
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="panel">
+    <div class="g2" style="align-items:stretch;">
+      <div style="display:flex;flex-direction:column;height:100%;">
+        <div class="panel" style="flex:1;display:flex;flex-direction:column;">
           <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Statistik Trading</div></div>
-          <div style="padding:4px 0;">
-            <table class="stats-tbl">
-              <tr><td>Win Trades</td><td class="v-green" id="st-win">—</td></tr>
-              <tr><td>Loss Trades</td><td class="v-red" id="st-loss">—</td></tr>
-              <tr><td>BE Trades</td><td class="v-white" id="st-be">—</td></tr>
-              <tr><td>Win Rate</td><td class="v-green" id="st-wr">—</td></tr>
-              <tr><td>Loss Rate</td><td class="v-red" id="st-lr">—</td></tr>
-              <tr><td>Profit Factor</td><td class="v-gold" id="st-pf">—</td></tr>
-              <tr><td>Avg Win (Rp)</td><td class="v-green" id="st-aw">—</td></tr>
-              <tr><td>Avg Loss (Rp)</td><td class="v-red" id="st-al">—</td></tr>
-              <tr><td>W/L Ratio</td><td class="v-cyan" id="st-wl">—</td></tr>
-              <tr><td>Total Fee (Rp)</td><td class="v-gold" id="st-fee">—</td></tr>
-              <tr><td>Net PnL (Rp)</td><td class="v-green" id="st-pnl">—</td></tr>
-            </table>
+          <div style="flex:1;display:flex;flex-direction:column;">
+            <div class="st-row"><span class="st-lbl">Win Trades</span><span class="v-green st-val" id="st-win">—</span></div>
+            <div class="st-row"><span class="st-lbl">Loss Trades</span><span class="v-red st-val" id="st-loss">—</span></div>
+            <div class="st-row"><span class="st-lbl">BE Trades</span><span class="v-white st-val" id="st-be">—</span></div>
+            <div class="st-row"><span class="st-lbl">Win Rate</span><span class="v-green st-val" id="st-wr">—</span></div>
+            <div class="st-row"><span class="st-lbl">Loss Rate</span><span class="v-red st-val" id="st-lr">—</span></div>
+            <div class="st-row"><span class="st-lbl">Profit Factor</span><span class="v-gold st-val" id="st-pf">—</span></div>
+            <div class="st-row"><span class="st-lbl">Avg Win (Rp)</span><span class="v-green st-val" id="st-aw">—</span></div>
+            <div class="st-row"><span class="st-lbl">Avg Loss (Rp)</span><span class="v-red st-val" id="st-al">—</span></div>
+            <div class="st-row"><span class="st-lbl">W/L Ratio</span><span class="v-cyan st-val" id="st-wl">—</span></div>
+            <div class="st-row"><span class="st-lbl">Total Fee (Rp)</span><span class="v-gold st-val" id="st-fee">—</span></div>
+            <div class="st-row st-row-last"><span class="st-lbl">Net PnL (Rp)</span><span class="v-green st-val" id="st-pnl">—</span></div>
           </div>
         </div>
       </div>
