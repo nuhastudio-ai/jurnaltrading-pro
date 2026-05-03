@@ -2042,7 +2042,7 @@ function openEditModal(id){
   const t=APP.trades.find(x=>x.id===id);if(!t)return;
   APP.editTradeId=id;
   document.getElementById('tradeModalTitle').textContent='✏️ Edit Trade #'+id;
-  populateTradeForm(t.akun);
+  populateTradeForm();
   document.getElementById('fm-akun').value=t.akun;
   document.getElementById('fm-date').value=dateToInputVal(t.date);
   document.getElementById('fm-pair').value=t.pair;
@@ -2062,16 +2062,8 @@ function openEditModal(id){
   openModal('tradeModal');
 }
 
-function populateTradeForm(includeAkunName){
-  // Hanya tampilkan akun aktif (bukan arsip) di form tambah/edit trade
-  const activeAkuns=APP.akuns.filter(a=>a.status!=='inactive');
-  let opts=activeAkuns.map(a=>`<option>${a.name}</option>`).join('');
-  // Jika sedang edit trade yang akunnya diarsipkan, tambahkan sebagai opsi tersendiri
-  if(includeAkunName&&!activeAkuns.some(a=>a.name===includeAkunName)){
-    const arsipAkun=APP.akuns.find(a=>a.name===includeAkunName);
-    if(arsipAkun)opts+=`<option value="${arsipAkun.name}">${arsipAkun.name} (arsip)</option>`;
-  }
-  document.getElementById('fm-akun').innerHTML=opts;
+function populateTradeForm(){
+  document.getElementById('fm-akun').innerHTML=APP.akuns.map(a=>`<option>${a.name}</option>`).join('');
   document.getElementById('fm-pair').innerHTML=APP.pairs.map(p=>`<option value="${p.name}">${p.name} — ${p.desc||''}</option>`).join('');
   renderSetupPicker([]);
   onPairChange();
@@ -2674,13 +2666,16 @@ function renderRekap(){
   const mode=APP.rekapMode;
   const cont=document.getElementById('rekapBody');
   // DAY/WEEK: filter by month+year; MONTH: filter by year only
+  const arsipNamesRekap=new Set(APP.akuns.filter(a=>a.status==='inactive').map(a=>a.name));
   let trades=APP.trades.filter(t=>{
+    // Sembunyikan trade dari akun arsip jika toggle Tampilkan Arsip sedang OFF
+    if(!APP.showArsip&&arsipNamesRekap.has(t.akun))return false;
     const d=new Date(t.date);
     if(d.getFullYear()!==selYear)return false;
     if(mode!=='month'&&mi>=0&&d.getMonth()!==mi)return false;
     return true;
   });
-  if(akun!=='all')trades=trades.filter(t=>t.akun===akun);
+  if(akun!=='all')trades=trades.filter(t=>t.akun===akun.replace(' (arsip)',''));
   if(mode==='day'){
     const dayNames=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu','TOTAL'];
     const dayMap={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
