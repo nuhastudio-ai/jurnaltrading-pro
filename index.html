@@ -2666,16 +2666,13 @@ function renderRekap(){
   const mode=APP.rekapMode;
   const cont=document.getElementById('rekapBody');
   // DAY/WEEK: filter by month+year; MONTH: filter by year only
-  const arsipNamesRekap=new Set(APP.akuns.filter(a=>a.status==='inactive').map(a=>a.name));
   let trades=APP.trades.filter(t=>{
-    // Sembunyikan trade dari akun arsip jika toggle Tampilkan Arsip sedang OFF
-    if(!APP.showArsip&&arsipNamesRekap.has(t.akun))return false;
     const d=new Date(t.date);
     if(d.getFullYear()!==selYear)return false;
     if(mode!=='month'&&mi>=0&&d.getMonth()!==mi)return false;
     return true;
   });
-  if(akun!=='all')trades=trades.filter(t=>t.akun===akun.replace(' (arsip)',''));
+  if(akun!=='all')trades=trades.filter(t=>t.akun===akun);
   if(mode==='day'){
     const dayNames=['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu','TOTAL'];
     const dayMap={1:0,2:1,3:2,4:3,5:4,6:5,0:6};
@@ -2781,6 +2778,7 @@ function renderJournal(){
     <td class="td-c" style="white-space:nowrap;">
       <button class="btn btn-ghost btn-icon btn-sm" onclick="viewDetail(${t.id})" title="Detail">👁</button>
       <button class="btn btn-ghost btn-icon btn-sm" onclick="openEditModal(${t.id})" title="Edit">✏️</button>
+      <button class="btn btn-ghost btn-icon btn-sm" onclick="duplicateTrade(${t.id})" title="Duplikat trade ini" style="color:var(--c-cyan);border-color:rgba(34,211,238,.2);">⧉</button>
       <button class="btn btn-danger btn-icon btn-sm" onclick="deleteTrade(${t.id})" title="Hapus">🗑</button>
     </td></tr>`;
   }).join('')||`<tr><td colspan="18" style="padding:24px;text-align:center;color:var(--txt2);">Tidak ada data trade</td></tr>`;
@@ -2803,6 +2801,18 @@ function toggleSelectAll(el){const data=getJFiltered();if(el.checked)data.forEac
 function bulkDelete(){if(!APP.jSelected.size||!confirm(`Hapus ${APP.jSelected.size} trade?`))return;const ids=[...APP.jSelected];APP.trades=APP.trades.filter(t=>!APP.jSelected.has(t.id));APP.jSelected.clear();renderJournal();updateAll();showToast('🗑️ Trade dihapus!');
   setCloudPill('saving');Promise.all(ids.map(id=>api('deleteTrade',{id}))).then(()=>setCloudPill('idle')).catch(()=>setCloudPill('err'));}
 function deleteTrade(id){if(!confirm('Hapus trade #'+id+'?'))return;APP.trades=APP.trades.filter(t=>t.id!==id);renderJournal();updateAll();showToast('🗑️ Trade #'+id+' dihapus!');cloudSync('deleteTrade',{id});}
+
+function duplicateTrade(id){
+  const src=APP.trades.find(t=>t.id===id);if(!src)return;
+  const newId=Math.max(0,...APP.trades.map(t=>t.id))+1;
+  const dup={...src, id:newId};
+  // Sisipkan tepat setelah trade sumber agar mudah ditemukan
+  const srcIdx=APP.trades.findIndex(t=>t.id===id);
+  APP.trades.splice(srcIdx,0,dup);
+  renderJournal();updateAll();
+  showToast(`⧉ Trade #${id} diduplikat → #${newId}`,'info');
+  cloudSync('saveTrade',{trade:dup});
+}
 
 function viewDetail(id){
   const t=APP.trades.find(x=>x.id===id);if(!t)return;
