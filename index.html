@@ -2385,6 +2385,9 @@ function updateAll(){
   const equity=modal+stats.netPnl;
   const ret=modal>0?stats.netPnl/modal*100:0;
   g('kEquity',fmtRp(equity));g('kPnl',fmtRp(stats.netPnl));
+  // Dynamic color for KPI values
+  const kPnlEl=document.getElementById('kPnl');if(kPnlEl)kPnlEl.style.color=stats.netPnl>=0?'var(--c-green2)':'var(--c-red2)';
+  const kEqEl=document.getElementById('kEquity');if(kEqEl)kEqEl.style.color=equity>=0?'#60a5fa':'var(--c-red2)';
   g('kPnlSub','Avg: '+fmtRp(stats.total?stats.netPnl/stats.total:0));
   g('kWR',fmtPct(stats.wr));g('kWRsub',stats.wins+' win / '+stats.total+' trade');
   g('kPF',stats.pf===Infinity?'∞':stats.pf.toFixed(2));g('kTotal',stats.total);
@@ -2397,6 +2400,7 @@ function updateAll(){
   g('st-wl',stats.wlRatio===Infinity?'∞':stats.wlRatio.toFixed(2));
   g('st-fee',stats.totalFee>0?'-Rp '+fmt(stats.totalFee):'Rp 0');
   g('st-pnl',fmtRp(stats.netPnl));
+  const stPnlEl=document.getElementById('st-pnl');if(stPnlEl){stPnlEl.className=(stats.netPnl>=0?'v-green':'v-red')+' st-val';}
   updateWLCard(stats);
   renderTopPairs(trades);renderAkunTable();renderHariGrid(trades);renderPerfMetrics(stats,trades);renderEquityChart(trades);renderGrowthChart();renderRekap();
 }
@@ -2413,7 +2417,7 @@ function renderTopPairs(trades){
     return`<tr><td class="td-c"><span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;font-size:10px;font-weight:800;background:${rankBg};color:${rankCol}">${i+1}</span></td>
     <td><span class="chip ${p.color}">${r.pair}</span></td>
     <td class="td-c td-m">${r.trades}</td><td class="td-c v-green td-m">${r.win}</td><td class="td-c v-red td-m">${r.loss}</td>
-    <td class="td-r td-m ${r.pnl>=0?'v-green':'v-red'}">${r.pnl>=0?'+':''}Rp ${fmt(r.pnl)}</td>
+    <td class="td-r td-m ${r.pnl>=0?'v-green':'v-red'}">${r.pnl>=0?'+':'-'}Rp ${fmt(r.pnl)}</td>
     <td class="td-r"><div class="wr-bar-wrap"><div class="wr-bar-bg"><div class="wr-bar-fill" style="width:${wr.toFixed(0)}%"></div></div><span class="v-green" style="font-family:var(--fn-m);font-size:10px;font-weight:700;white-space:nowrap;">${fmtPct(wr)}</span></div></td></tr>`;
   }).join('');
 }
@@ -2427,7 +2431,7 @@ function renderAkunTable(){
     return`<tr style="background:${a.type==='live'&&!isArsip?'rgba(79,142,247,.04)':'rgba(167,139,250,.03)'};${isArsip?'opacity:.7;':''}"}>
     <td style="font-weight:700;color:${isArsip?'var(--c-purple)':a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}${isArsip?'<span style="font-size:9px;background:var(--c-purple-d);color:var(--c-purple);padding:1px 5px;border-radius:4px;margin-left:5px;">ARSIP</span>':''}</td>
     <td class="td-c td-m">Rp ${fmt(a.modal)}</td>
-    <td class="td-c td-m ${s.netPnl>=0?'v-green':'v-red'}">${s.netPnl>=0?'+':''}Rp ${fmt(s.netPnl)}</td>
+    <td class="td-c td-m ${s.netPnl>=0?'v-green':'v-red'}">${s.netPnl>=0?'+':'-'}Rp ${fmt(s.netPnl)}</td>
     <td class="td-c"><span class="${s.netPnl>=0?'v-green':'v-red'}" style="font-family:var(--fn-m);">${ret>=0?'+':''}${ret.toFixed(2)}%</span></td>
     <td class="td-c v-green" style="font-family:var(--fn-m);">${fmtPct(s.wr)}</td>
     <td class="td-c td-m">${s.total}</td><td class="td-c td-m">${s.pf===Infinity?'∞':s.pf.toFixed(2)}</td>
@@ -2444,7 +2448,7 @@ function renderHariGrid(trades){
   const tT=byDay.reduce((s,d)=>s+d.trades,0);
   const tW=byDay.reduce((s,d)=>s+d.win,0);
   let html=`<div class="hari-grid"><div class="hari-hd" style="text-align:left;padding-left:14px;">Metrik</div>${days.map(d=>`<div class="hari-hd">${d}</div>`).join('')}<div class="hari-hd">Total</div></div>
-  <div class="hari-grid"><div class="hari-cell">PnL (Rp)</div>${byDay.map(d=>`<div class="hari-cell ${d.pnl>0?'v-green':d.pnl<0?'v-red':'v-muted'}">${d.pnl!==0?(d.pnl>0?'+':'')+fmt(d.pnl):'—'}</div>`).join('')}<div class="hari-cell">${tPnl>0?'+':''}${fmt(tPnl)}</div></div>
+  <div class="hari-grid"><div class="hari-cell">PnL (Rp)</div>${byDay.map(d=>`<div class="hari-cell ${d.pnl>0?'v-green':d.pnl<0?'v-red':'v-muted'}">${d.pnl!==0?(d.pnl>0?'+':d.pnl<0?'-':'')+fmt(d.pnl):'—'}</div>`).join('')}<div class="hari-cell ${tPnl>0?'v-green':tPnl<0?'v-red':''}">${tPnl>0?'+':(tPnl<0?'-':'')}${fmt(tPnl)}</div></div>
   <div class="hari-grid"><div class="hari-cell">Trades</div>${byDay.map(d=>`<div class="hari-cell v-blue">${d.trades||'—'}</div>`).join('')}<div class="hari-cell">${tT}</div></div>
   <div class="hari-grid"><div class="hari-cell">Win Rate</div>${byDay.map(d=>`<div class="hari-cell v-green">${d.trades>0?fmtPct(d.win/d.trades*100):'—'}</div>`).join('')}<div class="hari-cell">${tT>0?fmtPct(tW/tT*100):'—'}</div></div>`;
   document.getElementById('hariGrid').innerHTML=html;
@@ -2698,20 +2702,20 @@ function renderRekap(){
     });
     const wks=Object.keys(weeks).sort();
     let h=`<table class="rekap-tbl"><thead><tr><td class="rekap-hd" style="text-align:left;padding-left:14px;">Minggu</td>${dayNames.map((d,i)=>`<td class="rekap-hd ${i===7?'total-hd':''}">${d}</td>`).join('')}</tr></thead><tbody>`;
-    wks.forEach(wk=>{const row=weeks[wk].days;const tot=row.reduce((s,v)=>s+v,0);h+=`<tr><td class="rekap-week-lbl">W${weeks[wk].weekNum}</td>${row.map(v=>`<td class="rekap-cell"><span class="${v>0?'rekap-pnl-pos':v<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${v!==0?(v>0?'+':'')+fmt(v):'Rp 0'}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="${tot>0?'rekap-pnl-pos':tot<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${tot>0?'+':''}${fmt(tot)}</span></td></tr>`;});
+    wks.forEach(wk=>{const row=weeks[wk].days;const tot=row.reduce((s,v)=>s+v,0);h+=`<tr><td class="rekap-week-lbl">W${weeks[wk].weekNum}</td>${row.map(v=>`<td class="rekap-cell"><span class="${v>0?'rekap-pnl-pos':v<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${v!==0?(v>0?'+':v<0?'-':'')+fmt(v):'Rp 0'}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="${tot>0?'rekap-pnl-pos':tot<0?'rekap-pnl-neg':'rekap-pnl-zero'}">${tot>0?'+':(tot<0?'-':'')}${fmt(tot)}</span></td></tr>`;});
     if(!wks.length)h+=`<tr><td colspan="9" style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data untuk ${selMonth} ${selYear}</td></tr>`;
     cont.innerHTML=h+'</tbody></table>';
   }else if(mode==='week'){
     const wks={};trades.forEach(t=>{const wom=getWeekOfMonth(new Date(t.date));const wn='W'+wom;if(!wks[wn])wks[wn]=0;wks[wn]+=t.pnlRp;});
     const keys=Object.keys(wks).sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
     if(!keys.length){cont.innerHTML=`<div style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data untuk ${selMonth} ${selYear}</div>`;return;}
-    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(w=>`<td class="rekap-hd">${w}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(w=>`<td class="rekap-cell"><span class="${wks[w]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${wks[w]>=0?'+':''}${fmt(wks[w])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="rekap-pnl-pos">+${fmt(keys.reduce((s,k)=>s+wks[k],0))}</span></td></tr></tbody></table>`;
+    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(w=>`<td class="rekap-hd">${w}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(w=>`<td class="rekap-cell"><span class="${wks[w]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${wks[w]>=0?'+':'-'}${fmt(wks[w])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="${keys.reduce((s,k)=>s+wks[k],0)>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${keys.reduce((s,k)=>s+wks[k],0)>=0?'+':'-'}${fmt(keys.reduce((s,k)=>s+wks[k],0))}</span></td></tr></tbody></table>`;
   }else{
     const mths={};trades.forEach(t=>{const m=t.date.slice(0,7);if(!mths[m])mths[m]=0;mths[m]+=t.pnlRp;});
     const mNamesMap={1:'Jan',2:'Feb',3:'Mar',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Ags',9:'Sep',10:'Okt',11:'Nov',12:'Des'};
     const keys=Object.keys(mths).sort();
     if(!keys.length){cont.innerHTML=`<div style="padding:20px;text-align:center;color:var(--txt2);">Tidak ada data untuk tahun ${selYear}</div>`;return;}
-    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(m=>`<td class="rekap-hd">${mNamesMap[parseInt(m.slice(5))]||m} ${m.slice(0,4)}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(m=>`<td class="rekap-cell"><span class="${mths[m]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${mths[m]>=0?'+':''}${fmt(mths[m])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="rekap-pnl-pos">+${fmt(keys.reduce((s,k)=>s+mths[k],0))}</span></td></tr></tbody></table>`;
+    cont.innerHTML=`<table class="rekap-tbl"><thead><tr>${keys.map(m=>`<td class="rekap-hd">${mNamesMap[parseInt(m.slice(5))]||m} ${m.slice(0,4)}</td>`).join('')}<td class="rekap-hd total-hd">TOTAL</td></tr></thead><tbody><tr>${keys.map(m=>`<td class="rekap-cell"><span class="${mths[m]>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${mths[m]>=0?'+':'-'}${fmt(mths[m])}</span></td>`).join('')}<td class="rekap-cell total-cell"><span class="${keys.reduce((s,k)=>s+mths[k],0)>=0?'rekap-pnl-pos':'rekap-pnl-neg'}">${keys.reduce((s,k)=>s+mths[k],0)>=0?'+':'-'}${fmt(keys.reduce((s,k)=>s+mths[k],0))}</span></td></tr></tbody></table>`;
   }
 }
 
