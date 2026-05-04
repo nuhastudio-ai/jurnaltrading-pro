@@ -2398,7 +2398,7 @@ function updateAll(){
   g('st-fee',stats.totalFee>0?'-Rp '+fmt(stats.totalFee):'Rp 0');
   g('st-pnl',fmtRp(stats.netPnl));
   updateWLCard(stats);
-  renderTopPairs(trades);renderAkunTable();renderHariGrid(trades);renderPerfMetrics(stats);renderEquityChart(trades);renderGrowthChart();renderRekap();
+  renderTopPairs(trades);renderAkunTable();renderHariGrid(trades);renderPerfMetrics(stats,trades);renderEquityChart(trades);renderGrowthChart();renderRekap();
 }
 
 function renderTopPairs(trades){
@@ -2450,7 +2450,9 @@ function renderHariGrid(trades){
   document.getElementById('hariGrid').innerHTML=html;
 }
 
-function renderPerfMetrics(stats){
+function renderPerfMetrics(stats,trades){
+  // Gunakan `trades` (sudah difilter, tanpa akun arsip) — bukan APP.trades
+  const activeTrades=trades||[];
   const metrics=[
     {name:'Win Rate',val:stats.wr,vStr:fmtPct(stats.wr),col:'var(--c-green),var(--c-green2)'},
     {name:'Profit Factor (dari 10)',val:Math.min(stats.pf===Infinity?100:stats.pf*10,100),vStr:stats.pf===Infinity?'∞':stats.pf.toFixed(2),col:'var(--c-gold),var(--c-orange)'},
@@ -2458,11 +2460,12 @@ function renderPerfMetrics(stats){
     {name:'W/L Ratio (dari 5)',val:Math.min(stats.wlRatio===Infinity?100:stats.wlRatio*20,100),vStr:stats.wlRatio===Infinity?'∞':stats.wlRatio.toFixed(2),col:'var(--c-purple),#818cf8'},
   ];
   document.getElementById('perfMetrics').innerHTML=metrics.map(m=>`<div class="prog-row"><div class="prog-hd"><span class="prog-name">${m.name}</span><span class="prog-val" style="color:${m.col.split(',')[0]}">${m.vStr}</span></div><div class="prog-bg"><div class="prog-fill" style="width:${Math.min(m.val,100).toFixed(0)}%;background:linear-gradient(90deg,${m.col})"></div></div></div>`).join('');
+  const activeStats=calcStats(activeTrades);
   document.getElementById('miniStats').innerHTML=`
-  <div class="mini-card"><div class="mini-lbl">Best Trade</div><div class="mini-val v-green">${APP.trades.length?fmtRp(Math.max(...APP.trades.map(t=>t.pnlRp))):'—'}</div></div>
-  <div class="mini-card"><div class="mini-lbl">Worst Trade</div><div class="mini-val v-red">${APP.trades.length?fmtRp(Math.min(...APP.trades.map(t=>t.pnlRp))):'—'}</div></div>
-  <div class="mini-card"><div class="mini-lbl">Avg Win</div><div class="mini-val v-green">Rp ${fmt(calcStats(APP.trades).avgWin)}</div></div>
-  <div class="mini-card"><div class="mini-lbl">Avg Loss</div><div class="mini-val v-red">-Rp ${fmt(calcStats(APP.trades).avgLoss)}</div></div>`;
+  <div class="mini-card"><div class="mini-lbl">Best Trade</div><div class="mini-val v-green">${activeTrades.length?fmtRp(Math.max(...activeTrades.map(t=>t.pnlRp))):'—'}</div></div>
+  <div class="mini-card"><div class="mini-lbl">Worst Trade</div><div class="mini-val v-red">${activeTrades.length?fmtRp(Math.min(...activeTrades.map(t=>t.pnlRp))):'—'}</div></div>
+  <div class="mini-card"><div class="mini-lbl">Avg Win</div><div class="mini-val v-green">Rp ${fmt(activeStats.avgWin)}</div></div>
+  <div class="mini-card"><div class="mini-lbl">Avg Loss</div><div class="mini-val v-red">-Rp ${fmt(activeStats.avgLoss)}</div></div>`;
 }
 
 function renderEquityChart(trades){
