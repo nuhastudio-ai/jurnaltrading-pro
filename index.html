@@ -3502,17 +3502,21 @@ function drpNavMonth(dir) {
   _drpRender();
 }
 
-function drpDayClick(dateStr) {
-  if(DRP.selecting === 0 || DRP.selecting === 2) {
-    // Start new selection
-    DRP.startDate = dateStr;
-    DRP.endDate = null;
-    DRP.selecting = 1;
-    // Clear preset since user is picking custom
-    DRP.preset = 'custom';
-    document.querySelectorAll('.drp-preset').forEach(el => el.classList.remove('drp-preset-active'));
-  } else {
-    // End selection
+function drpDayMouseDown(dateStr) {
+  // Selalu mulai seleksi baru saat mousedown
+  DRP.startDate = dateStr;
+  DRP.endDate = null;
+  DRP.selecting = 1;
+  DRP.hoverDate = null;
+  DRP.preset = 'custom';
+  document.querySelectorAll('.drp-preset').forEach(el => el.classList.remove('drp-preset-active'));
+  _drpRender();
+  _drpUpdateFooter();
+}
+
+function drpDayMouseUp(dateStr) {
+  if(DRP.selecting === 1) {
+    // Selesaikan seleksi: tentukan start & end yang benar
     if(dateStr < DRP.startDate) {
       DRP.endDate = DRP.startDate;
       DRP.startDate = dateStr;
@@ -3520,9 +3524,10 @@ function drpDayClick(dateStr) {
       DRP.endDate = dateStr;
     }
     DRP.selecting = 2;
+    DRP.hoverDate = null;
+    _drpRender();
+    _drpUpdateFooter();
   }
-  _drpRender();
-  _drpUpdateFooter();
 }
 
 function drpDayHover(dateStr) {
@@ -3531,6 +3536,26 @@ function drpDayHover(dateStr) {
     _drpRender();
   }
 }
+
+// Global mouseup: jika user melepas mouse di luar sel tanggal (di area popup/overlay),
+// selesaikan seleksi menggunakan hoverDate terakhir supaya tidak "menggantung"
+document.addEventListener('mouseup', function(e) {
+  if(DRP.selecting === 1) {
+    const candidate = DRP.hoverDate || DRP.startDate;
+    if(candidate) {
+      if(candidate < DRP.startDate) {
+        DRP.endDate = DRP.startDate;
+        DRP.startDate = candidate;
+      } else {
+        DRP.endDate = candidate;
+      }
+    }
+    DRP.selecting = 2;
+    DRP.hoverDate = null;
+    _drpRender();
+    _drpUpdateFooter();
+  }
+});
 
 function _drpRender() {
   const rightYear = DRP.viewMonth === 11 ? DRP.viewYear + 1 : DRP.viewYear;
@@ -3579,7 +3604,7 @@ function _drpBuildGrid(gridId, year, month) {
     else if(isStart) cls += ' drp-day-start';
     else if(isEnd)   cls += ' drp-day-end';
     else if(inRange) cls += ' drp-day-in-range';
-    html += `<div class="${cls}" onclick="drpDayClick('${ds}')" onmouseenter="drpDayHover('${ds}')">${d}</div>`;
+    html += `<div class="${cls}" onmousedown="drpDayMouseDown('${ds}')" onmouseup="drpDayMouseUp('${ds}')" onmouseenter="drpDayHover('${ds}')" ondragstart="return false">${d}</div>`;
   }
 
   // Fill trailing
@@ -3612,6 +3637,27 @@ function _drpFormatDisplay(ds) {
 function drpApply() {
   const fromId = DRP.target==='main'?'dateFrom':'jDateFrom';
   const toId   = DRP.target==='main'?'dateTo':'jDateTo';
+
+  // Jika masih selecting (belum selesai pilih tanggal akhir),
+  // gunakan hoverDate atau startDate sebagai endDate
+  if(DRP.selecting === 1) {
+    const candidate = DRP.hoverDate || DRP.startDate;
+    if(candidate && DRP.startDate) {
+      if(candidate < DRP.startDate) {
+        DRP.endDate = DRP.startDate;
+        DRP.startDate = candidate;
+      } else {
+        DRP.endDate = candidate;
+      }
+    }
+    DRP.selecting = 2;
+    DRP.hoverDate = null;
+  }
+  // Jika endDate masih null tapi startDate ada → single-day range
+  if(DRP.startDate && !DRP.endDate) {
+    DRP.endDate = DRP.startDate;
+  }
+
   document.getElementById(fromId).value = DRP.startDate || '';
   document.getElementById(toId).value   = DRP.endDate   || '';
 
