@@ -932,6 +932,56 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   }
 }
 
+/* ═══════════════════════════════════════════════
+   DATE RANGE PICKER
+═══════════════════════════════════════════════ */
+.drp-btn{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;background:var(--bg3);border:1px solid var(--bdr);border-radius:var(--r8);font-size:11.5px;font-weight:600;color:var(--txt0);cursor:pointer;transition:all .2s;white-space:nowrap;font-family:var(--fn);}
+.drp-btn:hover{border-color:var(--c-blue);background:var(--c-blue-d);}
+.drp-btn.drp-active{border-color:var(--c-blue);background:var(--c-blue-d);color:var(--c-blue);}
+.drp-btn-ico{font-size:13px;opacity:.75;}
+.drp-btn-label{max-width:200px;overflow:hidden;text-overflow:ellipsis;}
+.drp-btn-chev{font-size:9px;opacity:.5;margin-left:2px;}
+
+.drp-overlay{position:fixed;inset:0;z-index:900;background:transparent;}
+.drp-popup{position:fixed;z-index:901;background:var(--bg1);border:1px solid rgba(79,142,247,.22);border-radius:var(--r16);box-shadow:0 16px 60px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.04);display:none;flex-direction:row;overflow:hidden;animation:drpIn .18s cubic-bezier(.16,1,.3,1);}
+.drp-popup.open{display:flex;}
+@keyframes drpIn{from{opacity:0;transform:translateY(-8px)scale(.97);}to{opacity:1;transform:translateY(0)scale(1);}}
+
+/* Presets panel */
+.drp-presets{width:148px;flex-shrink:0;border-right:1px solid var(--bdr);padding:10px 0;display:flex;flex-direction:column;background:var(--bg2);}
+.drp-preset{padding:8px 16px;font-size:11.5px;font-weight:600;color:var(--txt2);cursor:pointer;transition:all .15s;border-left:2px solid transparent;white-space:nowrap;}
+.drp-preset:hover{color:var(--txt0);background:rgba(255,255,255,.04);border-left-color:var(--c-blue);}
+.drp-preset.drp-preset-active{color:var(--c-blue);background:var(--c-blue-d);border-left-color:var(--c-blue);}
+
+/* Calendars */
+.drp-cals{display:flex;flex-direction:column;}
+.drp-cals-row{display:flex;gap:0;}
+.drp-cal{padding:14px 18px;min-width:230px;}
+.drp-cal+.drp-cal{border-left:1px solid var(--bdr);}
+.drp-cal-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;}
+.drp-cal-nav{width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:var(--r8);cursor:pointer;color:var(--txt1);font-size:14px;background:transparent;border:none;transition:all .15s;}
+.drp-cal-nav:hover{background:rgba(255,255,255,.07);color:var(--txt0);}
+.drp-cal-title{font-family:var(--fn-h);font-size:12px;font-weight:700;color:var(--txt0);}
+.drp-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.drp-dow{text-align:center;font-size:9.5px;font-weight:700;color:var(--txt2);text-transform:uppercase;padding:3px 0 6px;letter-spacing:.5px;}
+.drp-day{width:30px;height:30px;display:flex;align-items:center;justify-content:center;font-size:11.5px;font-weight:500;border-radius:var(--r8);cursor:pointer;transition:all .12s;position:relative;color:var(--txt0);border:none;background:transparent;}
+.drp-day:hover:not(.drp-day-other):not(.drp-day-disabled){background:rgba(79,142,247,.18);color:#fff;}
+.drp-day-other{color:var(--txt2);opacity:.4;}
+.drp-day-disabled{opacity:.2;pointer-events:none;}
+.drp-day-start,.drp-day-end{background:var(--c-blue2)!important;color:#fff!important;font-weight:700;}
+.drp-day-start{border-radius:var(--r8) 0 0 var(--r8);}
+.drp-day-end{border-radius:0 var(--r8) var(--r8) 0;}
+.drp-day-start.drp-day-end{border-radius:var(--r8)!important;}
+.drp-day-in-range{background:var(--c-blue-d);border-radius:0;color:var(--txt0);}
+.drp-day-today::after{content:'';position:absolute;bottom:3px;left:50%;transform:translateX(-50%);width:4px;height:4px;border-radius:50%;background:var(--c-blue);opacity:.7;}
+.drp-day-start.drp-day-today::after,.drp-day-end.drp-day-today::after{background:#fff;}
+
+/* Footer */
+.drp-footer{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-top:1px solid var(--bdr);background:var(--bg2);}
+.drp-range-lbl{font-size:11px;color:var(--txt2);font-family:var(--fn-m);}
+.drp-range-lbl b{color:var(--c-blue);}
+.drp-footer-btns{display:flex;gap:8px;}
+
 /* ── EXTRA SMALL (≤ 390px) — covers 360–390px phones ───── */
 @media (max-width: 390px) {
   .topbar-kurs { display: none; }
@@ -972,16 +1022,14 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <select class="ctrl-sel" id="ctrlAkun" onchange="updateAll()"><option value="all">Semua Akun</option></select>
       <div class="ctrl-sep"></div>
       <span class="ctrl-label">Periode</span>
-      <select class="ctrl-sel" id="ctrlPeriode" onchange="onPeriodeChange()">
-        <option value="all">ALL</option><option value="today">Hari Ini</option>
-        <option value="week">Minggu Ini</option><option value="month">Bulan Ini</option><option value="custom">Custom</option>
-      </select>
-      <span id="customDateWrap" style="display:none;align-items:center;gap:6px;">
-        <input type="date" class="ctrl-in" id="dateFrom">
-        <span style="color:var(--txt2);font-size:11px;">s/d</span>
-        <input type="date" class="ctrl-in" id="dateTo">
-        <button class="btn btn-primary btn-sm" onclick="updateAll()">Terapkan</button>
-      </span>
+      <button class="drp-btn" id="mainDrpBtn" onclick="openDRP('main')">
+        <span class="drp-btn-ico">📅</span>
+        <span class="drp-btn-label" id="mainDrpLabel">Semua Waktu</span>
+        <span class="drp-btn-chev">▼</span>
+      </button>
+      <!-- hidden inputs kept for getFilteredTrades() compatibility -->
+      <input type="hidden" id="dateFrom">
+      <input type="hidden" id="dateTo">
       <div style="margin-left:auto;display:flex;gap:8px;">
         <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 Export CSV</button>
       </div>
@@ -1315,9 +1363,13 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <select class="ctrl-sel" id="jFilterSetup" onchange="renderJournal()"><option value="">Semua Setup</option></select>
       <select class="ctrl-sel" id="jFilterPair" onchange="renderJournal()"><option value="">Semua Pair</option></select>
       <div class="ctrl-sep"></div>
-      <input type="date" class="ctrl-in" id="jDateFrom" onchange="renderJournal()">
-      <span style="color:var(--txt2);font-size:11px;">s/d</span>
-      <input type="date" class="ctrl-in" id="jDateTo" onchange="renderJournal()">
+      <button class="drp-btn" id="jDrpBtn" onclick="openDRP('journal')">
+        <span class="drp-btn-ico">📅</span>
+        <span class="drp-btn-label" id="jDrpLabel">Semua Tanggal</span>
+        <span class="drp-btn-chev">▼</span>
+      </button>
+      <input type="hidden" id="jDateFrom">
+      <input type="hidden" id="jDateTo">
       <button class="btn btn-ghost btn-sm" onclick="resetJFilter()">✕ Reset</button>
       <div class="ctrl-sep"></div>
       <label class="toggle-sw" title="Tampilkan/sembunyikan trade dari akun yang diarsipkan" style="cursor:pointer;">
@@ -1739,6 +1791,52 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
   <div class="modal sm">
     <div class="modal-hd"><div class="modal-title">📄 Detail Trade</div><div class="modal-close" onclick="closeModal('detailModal')">✕</div></div>
     <div id="detailContent"></div>
+  </div>
+</div>
+<!-- DATE RANGE PICKER OVERLAY -->
+<div class="drp-overlay" id="drpOverlay" onclick="closeDRP()" style="display:none;"></div>
+<div class="drp-popup" id="drpPopup">
+  <!-- Presets -->
+  <div class="drp-presets" id="drpPresets">
+    <div class="drp-preset" data-preset="today" onclick="drpSelectPreset('today')">Hari Ini</div>
+    <div class="drp-preset" data-preset="last7" onclick="drpSelectPreset('last7')">7 Hari Terakhir</div>
+    <div class="drp-preset" data-preset="last30" onclick="drpSelectPreset('last30')">30 Hari Terakhir</div>
+    <div class="drp-preset" data-preset="last3m" onclick="drpSelectPreset('last3m')">3 Bulan Terakhir</div>
+    <div class="drp-preset" data-preset="last12m" onclick="drpSelectPreset('last12m')">12 Bulan Terakhir</div>
+    <div class="drp-preset" data-preset="mtd" onclick="drpSelectPreset('mtd')">Bulan Ini</div>
+    <div class="drp-preset" data-preset="ytd" onclick="drpSelectPreset('ytd')">Tahun Ini</div>
+    <div class="drp-preset" data-preset="all" onclick="drpSelectPreset('all')">Semua Waktu</div>
+  </div>
+  <!-- Calendars + footer -->
+  <div class="drp-cals">
+    <div class="drp-cals-row">
+      <!-- Calendar left -->
+      <div class="drp-cal" id="drpCalLeft">
+        <div class="drp-cal-hd">
+          <button class="drp-cal-nav" onclick="drpNavMonth(-1)">&#8249;</button>
+          <div class="drp-cal-title" id="drpTitleLeft">—</div>
+          <div style="width:26px;"></div>
+        </div>
+        <div class="drp-cal-grid" id="drpGridLeft"></div>
+      </div>
+      <!-- Calendar right -->
+      <div class="drp-cal" id="drpCalRight">
+        <div class="drp-cal-hd">
+          <div style="width:26px;"></div>
+          <div class="drp-cal-title" id="drpTitleRight">—</div>
+          <button class="drp-cal-nav" onclick="drpNavMonth(1)">&#8250;</button>
+        </div>
+        <div class="drp-cal-grid" id="drpGridRight"></div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <div class="drp-footer">
+      <div class="drp-range-lbl" id="drpRangeLbl">Pilih tanggal awal</div>
+      <div class="drp-footer-btns">
+        <button class="btn btn-ghost btn-sm" onclick="closeDRP()">Batal</button>
+        <button class="btn btn-primary btn-sm" onclick="drpApply()">Terapkan</button>
+      </div>
+    </div>
   </div>
 </div>
 <script>
@@ -2298,13 +2396,8 @@ function toggleArsipView(on){
 // FILTER
 function getFilteredTrades(){
   const akun=document.getElementById('ctrlAkun').value;
-  const periode=document.getElementById('ctrlPeriode').value;
   const from=document.getElementById('dateFrom').value;
   const to=document.getElementById('dateTo').value;
-  const today=new Date().toISOString().slice(0,10);
-  const d=new Date();d.setDate(d.getDate()-d.getDay()+1);
-  const weekStart=d.toISOString().slice(0,10);
-  const monthStart=new Date().toISOString().slice(0,7)+'-01';
   // Kumpulkan nama akun yang diarsipkan
   const arsipNames=new Set(APP.akuns.filter(a=>a.status==='inactive').map(a=>a.name));
   return APP.trades.filter(t=>{
@@ -2314,10 +2407,8 @@ function getFilteredTrades(){
     // Jika filter akun = "(arsip)" match, strip suffix
     const filterAkun=akun==='all'?'all':akun.replace(' (arsip)','');
     if(filterAkun!=='all'&&t.akun!==filterAkun)return false;
-    if(periode==='today'&&td!==today)return false;
-    if(periode==='week'&&td<weekStart)return false;
-    if(periode==='month'&&td<monthStart)return false;
-    if(periode==='custom'){if(from&&td<from)return false;if(to&&td>to)return false;}
+    if(from&&td<from)return false;
+    if(to&&td>to)return false;
     return true;
   });
 }
@@ -3298,7 +3389,254 @@ function saveRiskRules(){
   APP.risk = { maxDailyLoss, maxTradeLoss, maxTrades };
   cloudSync('saveRisk', { risk: APP.risk }, '✅ Risk rules disimpan ke cloud!');
 }
-function onPeriodeChange(){const v=document.getElementById('ctrlPeriode').value;const wrap=document.getElementById('customDateWrap');wrap.style.display=v==='custom'?'flex':'none';if(v!=='custom')updateAll();}
+// ── DATE RANGE PICKER ──────────────────────────────────────
+const DRP = {
+  target: null,       // 'main' | 'journal'
+  startDate: null,    // YYYY-MM-DD
+  endDate: null,
+  hoverDate: null,
+  selecting: 0,       // 0=idle, 1=picking start, 2=picking end
+  viewYear: 0,
+  viewMonth: 0,       // left calendar month (right = +1)
+  preset: 'all',      // current preset key
+};
+
+const DRP_PRESETS = {
+  today:   () => { const d=_drpToday(); return {from:d, to:d}; },
+  last7:   () => { return {from:_drpDaysAgo(6), to:_drpToday()}; },
+  last30:  () => { return {from:_drpDaysAgo(29), to:_drpToday()}; },
+  last3m:  () => { const n=new Date();n.setMonth(n.getMonth()-3);return {from:_drpFmt(n),to:_drpToday()}; },
+  last12m: () => { const n=new Date();n.setFullYear(n.getFullYear()-1);return {from:_drpFmt(n),to:_drpToday()}; },
+  mtd:     () => { const n=new Date();return {from:n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-01',to:_drpToday()}; },
+  ytd:     () => { return {from:new Date().getFullYear()+'-01-01', to:_drpToday()}; },
+  all:     () => { return {from:'', to:''}; },
+};
+
+const DRP_LABELS = {
+  today:'Hari Ini', last7:'7 Hari Terakhir', last30:'30 Hari Terakhir',
+  last3m:'3 Bulan Terakhir', last12m:'12 Bulan Terakhir', mtd:'Bulan Ini',
+  ytd:'Tahun Ini', all:'Semua Waktu',
+};
+
+const MONTH_ID = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Ags','Sep','Okt','Nov','Des'];
+
+function _drpToday(){ return new Date().toISOString().slice(0,10); }
+function _drpDaysAgo(n){ const d=new Date();d.setDate(d.getDate()-n);return _drpFmt(d); }
+function _drpFmt(d){ return d.toISOString().slice(0,10); }
+function _drpParse(s){ const [y,m,dd]=s.split('-').map(Number);return new Date(y,m-1,dd); }
+
+function openDRP(target) {
+  DRP.target = target;
+  const now = new Date();
+  DRP.viewYear = now.getFullYear();
+  DRP.viewMonth = now.getMonth(); // left month
+
+  // Load current values
+  const fromId = target==='main'?'dateFrom':'jDateFrom';
+  const toId   = target==='main'?'dateTo':'jDateTo';
+  DRP.startDate = document.getElementById(fromId).value || null;
+  DRP.endDate   = document.getElementById(toId).value || null;
+  DRP.selecting = 0;
+  DRP.hoverDate = null;
+
+  // Position popup under the button
+  const btnId = target==='main'?'mainDrpBtn':'jDrpBtn';
+  const btn = document.getElementById(btnId);
+  const rect = btn.getBoundingClientRect();
+  const popup = document.getElementById('drpPopup');
+  popup.style.top = (rect.bottom + 6) + 'px';
+  // Align left, but keep in viewport
+  let left = rect.left;
+  popup.style.left = left + 'px';
+  popup.style.right = 'auto';
+
+  // Show
+  document.getElementById('drpOverlay').style.display = 'block';
+  popup.classList.add('open');
+
+  // Highlight active preset
+  document.querySelectorAll('.drp-preset').forEach(el => {
+    el.classList.toggle('drp-preset-active', el.dataset.preset === DRP.preset);
+  });
+
+  _drpRender();
+
+  // After render, fix overflow
+  requestAnimationFrame(() => {
+    const pr = popup.getBoundingClientRect();
+    if(pr.right > window.innerWidth - 8) {
+      popup.style.left = 'auto';
+      popup.style.right = '8px';
+    }
+    if(pr.bottom > window.innerHeight - 8) {
+      popup.style.top = (rect.top - pr.height - 6) + 'px';
+    }
+  });
+}
+
+function closeDRP() {
+  document.getElementById('drpOverlay').style.display = 'none';
+  document.getElementById('drpPopup').classList.remove('open');
+}
+
+function drpSelectPreset(key) {
+  DRP.preset = key;
+  const range = DRP_PRESETS[key]();
+  DRP.startDate = range.from || null;
+  DRP.endDate   = range.to   || null;
+  DRP.selecting = 0;
+  DRP.hoverDate = null;
+
+  document.querySelectorAll('.drp-preset').forEach(el => {
+    el.classList.toggle('drp-preset-active', el.dataset.preset === key);
+  });
+
+  _drpRender();
+  _drpUpdateFooter();
+}
+
+function drpNavMonth(dir) {
+  DRP.viewMonth += dir;
+  if(DRP.viewMonth > 11){ DRP.viewMonth=0; DRP.viewYear++; }
+  if(DRP.viewMonth < 0){ DRP.viewMonth=11; DRP.viewYear--; }
+  _drpRender();
+}
+
+function drpDayClick(dateStr) {
+  if(DRP.selecting === 0 || DRP.selecting === 2) {
+    // Start new selection
+    DRP.startDate = dateStr;
+    DRP.endDate = null;
+    DRP.selecting = 1;
+    // Clear preset since user is picking custom
+    DRP.preset = 'custom';
+    document.querySelectorAll('.drp-preset').forEach(el => el.classList.remove('drp-preset-active'));
+  } else {
+    // End selection
+    if(dateStr < DRP.startDate) {
+      DRP.endDate = DRP.startDate;
+      DRP.startDate = dateStr;
+    } else {
+      DRP.endDate = dateStr;
+    }
+    DRP.selecting = 2;
+  }
+  _drpRender();
+  _drpUpdateFooter();
+}
+
+function drpDayHover(dateStr) {
+  if(DRP.selecting === 1) {
+    DRP.hoverDate = dateStr;
+    _drpRender();
+  }
+}
+
+function _drpRender() {
+  const rightYear = DRP.viewMonth === 11 ? DRP.viewYear + 1 : DRP.viewYear;
+  const rightMonth = (DRP.viewMonth + 1) % 12;
+  document.getElementById('drpTitleLeft').textContent  = MONTH_ID[DRP.viewMonth] + ', ' + DRP.viewYear;
+  document.getElementById('drpTitleRight').textContent = MONTH_ID[rightMonth] + ', ' + rightYear;
+  _drpBuildGrid('drpGridLeft', DRP.viewYear, DRP.viewMonth);
+  _drpBuildGrid('drpGridRight', rightYear, rightMonth);
+  _drpUpdateFooter();
+}
+
+function _drpBuildGrid(gridId, year, month) {
+  const grid = document.getElementById(gridId);
+  const today = _drpToday();
+  const dows = ['S','S','R','K','J','S','M']; // Mon-Sun Indonesian
+  let html = dows.map(d=>`<div class="drp-dow">${d}</div>`).join('');
+
+  const firstDay = new Date(year, month, 1);
+  // Adjust so week starts Monday (0=Mon…6=Sun)
+  let startDow = (firstDay.getDay() + 6) % 7;
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const prevDays = new Date(year, month, 0).getDate();
+
+  // Effective range for highlighting (consider hover)
+  const effEnd = DRP.selecting === 1 && DRP.hoverDate
+    ? (DRP.hoverDate >= DRP.startDate ? DRP.hoverDate : DRP.startDate)
+    : DRP.endDate;
+  const effStart = DRP.selecting === 1 && DRP.hoverDate
+    ? (DRP.hoverDate < DRP.startDate ? DRP.hoverDate : DRP.startDate)
+    : DRP.startDate;
+
+  // Prev month trailing days
+  for(let i = startDow - 1; i >= 0; i--) {
+    const d = prevDays - i;
+    html += `<div class="drp-day drp-day-other">${d}</div>`;
+  }
+
+  for(let d = 1; d <= daysInMonth; d++) {
+    const ds = year+'-'+String(month+1).padStart(2,'0')+'-'+String(d).padStart(2,'0');
+    let cls = 'drp-day';
+    if(ds === today) cls += ' drp-day-today';
+    const isStart = ds === DRP.startDate;
+    const isEnd   = ds === effEnd;
+    const inRange = effStart && effEnd && ds > effStart && ds < effEnd;
+    if(isStart && isEnd) cls += ' drp-day-start drp-day-end';
+    else if(isStart) cls += ' drp-day-start';
+    else if(isEnd)   cls += ' drp-day-end';
+    else if(inRange) cls += ' drp-day-in-range';
+    html += `<div class="${cls}" onclick="drpDayClick('${ds}')" onmouseenter="drpDayHover('${ds}')">${d}</div>`;
+  }
+
+  // Fill trailing
+  const totalCells = Math.ceil((startDow + daysInMonth) / 7) * 7;
+  let nd = 1;
+  for(let i = startDow + daysInMonth; i < totalCells; i++) {
+    html += `<div class="drp-day drp-day-other">${nd++}</div>`;
+  }
+
+  grid.innerHTML = html;
+}
+
+function _drpUpdateFooter() {
+  const lbl = document.getElementById('drpRangeLbl');
+  if(!DRP.startDate && !DRP.endDate) {
+    lbl.innerHTML = DRP.preset === 'all' ? '<b>Semua Waktu</b>' : 'Pilih tanggal awal';
+  } else if(DRP.startDate && !DRP.endDate) {
+    lbl.innerHTML = 'Dari: <b>' + _drpFormatDisplay(DRP.startDate) + '</b> — pilih akhir';
+  } else {
+    lbl.innerHTML = '<b>' + _drpFormatDisplay(DRP.startDate) + '</b> s/d <b>' + _drpFormatDisplay(DRP.endDate) + '</b>';
+  }
+}
+
+function _drpFormatDisplay(ds) {
+  if(!ds) return '—';
+  const [y,m,d] = ds.split('-');
+  return d + ' ' + MONTH_ID[parseInt(m)-1] + ' ' + y;
+}
+
+function drpApply() {
+  const fromId = DRP.target==='main'?'dateFrom':'jDateFrom';
+  const toId   = DRP.target==='main'?'dateTo':'jDateTo';
+  document.getElementById(fromId).value = DRP.startDate || '';
+  document.getElementById(toId).value   = DRP.endDate   || '';
+
+  // Update button label
+  const labelId = DRP.target==='main'?'mainDrpLabel':'jDrpLabel';
+  const btnId   = DRP.target==='main'?'mainDrpBtn':'jDrpBtn';
+  let displayLabel;
+  if(DRP.preset && DRP.preset !== 'custom') {
+    displayLabel = DRP_LABELS[DRP.preset] || 'Semua Waktu';
+  } else if(DRP.startDate && DRP.endDate) {
+    displayLabel = _drpFormatDisplay(DRP.startDate) + ' – ' + _drpFormatDisplay(DRP.endDate);
+  } else if(DRP.startDate) {
+    displayLabel = 'Dari ' + _drpFormatDisplay(DRP.startDate);
+  } else {
+    displayLabel = 'Semua Waktu';
+  }
+  document.getElementById(labelId).textContent = displayLabel;
+  document.getElementById(btnId).classList.toggle('drp-active', DRP.preset !== 'all' || !!DRP.startDate);
+
+  closeDRP();
+
+  // Trigger update
+  if(DRP.target === 'main') updateAll();
+  else renderJournal();
+}
 const _toastQueue=[];let _toastRunning=false;
 function showToast(msg,type=''){
   _toastQueue.push({msg,type});
