@@ -547,6 +547,14 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .sh-key{background:var(--bg3);border:1px solid var(--bdr);padding:1px 5px;border-radius:3px;font-family:var(--fn-m);font-size:9.5px;color:var(--txt1);}
 /* ANIMATIONS */
 @keyframes fadeInUp{from{opacity:0;transform:translateY(12px);}to{opacity:1;transform:translateY(0);}}
+@keyframes fadeInLeft{from{opacity:0;transform:translateX(-14px);}to{opacity:1;transform:translateX(0);}}
+@keyframes scaleIn{from{opacity:0;transform:scale(.92);}to{opacity:1;transform:scale(1);}}
+/* Kelas helper untuk replay animasi via JS */
+.anim-kpi{animation:fadeInUp .38s cubic-bezier(.16,1,.3,1) both;}
+.anim-panel{animation:fadeInUp .42s cubic-bezier(.16,1,.3,1) both;}
+.anim-metric{animation:scaleIn .32s cubic-bezier(.16,1,.3,1) both;}
+.anim-row{animation:fadeInLeft .3s cubic-bezier(.16,1,.3,1) both;}
+/* Default first-load KPI animation */
 .kpi{animation:fadeInUp .35s ease both;}
 .kpi:nth-child(1){animation-delay:.04s;}.kpi:nth-child(2){animation-delay:.08s;}
 .kpi:nth-child(3){animation-delay:.12s;}.kpi:nth-child(4){animation-delay:.16s;}
@@ -2055,6 +2063,57 @@ const _URL_ROUTE = {
   '/setting/about': { page:'settings', sec:'about' },
 };
 
+// ── ANIMASI HALAMAN — replay saat navigasi ─────────────────────
+function _triggerPageAnimations(page) {
+  const pageEl = document.getElementById('page-' + page);
+  if (!pageEl) return;
+
+  // Helper: reset & replay animasi dengan delay per-index
+  function _replay(els, animClass, delayStep, baseDelay) {
+    els.forEach((el, i) => {
+      el.classList.remove(animClass);
+      void el.offsetWidth; // force reflow
+      el.style.animationDelay = (baseDelay + i * delayStep).toFixed(3) + 's';
+      el.classList.add(animClass);
+      // Bersihkan setelah animasi selesai supaya tidak konflik hover
+      el.addEventListener('animationend', () => {
+        el.classList.remove(animClass);
+        el.style.animationDelay = '';
+      }, { once: true });
+    });
+  }
+
+  if (page === 'dashboard') {
+    _replay([...pageEl.querySelectorAll('.kpi')], 'anim-kpi', 0.055, 0.02);
+    _replay([...pageEl.querySelectorAll('.panel')], 'anim-panel', 0.06, 0.05);
+  }
+
+  if (page === 'analysis') {
+    // metric-card diisi dinamis oleh renderAnalysis → tunda sedikit
+    setTimeout(() => {
+      _replay([...pageEl.querySelectorAll('.metric-card')], 'anim-metric', 0.045, 0.02);
+      _replay([...pageEl.querySelectorAll('.panel')], 'anim-panel', 0.065, 0.04);
+      // Replay Chart.js animations
+      ['anEquity','anDist','anDay','anDD'].forEach(k => {
+        if (APP.charts[k]) {
+          try { APP.charts[k].reset(); APP.charts[k].update(); } catch(e){}
+        }
+      });
+    }, 60);
+  }
+
+  if (page === 'journal') {
+    _replay([...pageEl.querySelectorAll('.panel')], 'anim-panel', 0.05, 0.04);
+    setTimeout(() => {
+      _replay([...pageEl.querySelectorAll('.data-tbl tbody tr')], 'anim-row', 0.025, 0.03);
+    }, 80);
+  }
+
+  if (page === 'settings') {
+    _replay([...pageEl.querySelectorAll('.panel, .s-sec.active .panel')], 'anim-panel', 0.06, 0.03);
+  }
+}
+
 function router(){
   const path = window.location.pathname.replace(/\/$/, '') || '/';
   const route = _URL_ROUTE[path] || { page:'dashboard' };
@@ -2082,6 +2141,8 @@ function _applyPage(page){
   if(page==='analysis')renderAnalysis();
   if(page==='journal')renderJournal();
   if(page==='settings')renderSettings();
+  // Replay animasi setiap kali halaman dibuka
+  requestAnimationFrame(()=>_triggerPageAnimations(page));
 }
 
 function _applySec(id, el, push){
@@ -2494,6 +2555,8 @@ function updateAll(){
   const stPnlEl=document.getElementById('st-pnl');if(stPnlEl){stPnlEl.className=(stats.netPnl>=0?'v-green':'v-red')+' st-val';}
   updateWLCard(stats);
   renderTopPairs(trades);renderAkunTable();renderHariGrid(trades);renderPerfMetrics(stats,trades);renderEquityChart(trades);renderGrowthChart();renderRekap();
+  // Update analisis jika sedang aktif (fix filter akun)
+  if(document.getElementById('page-analysis').classList.contains('active'))renderAnalysis();
 }
 
 function renderTopPairs(trades){
