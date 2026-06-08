@@ -1392,7 +1392,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
           <thead><tr>
             <th style="width:32px;"><input type="checkbox" id="jSelectAll" onchange="toggleSelectAll(this)"></th>
             <th onclick="jSort('id')"># ↓</th><th onclick="jSort('date')">Tanggal</th><th onclick="jSort('akun')">Akun</th><th onclick="jSort('pair')">Pair</th>
-            <th class="td-c" onclick="jSort('dir')">Arah</th><th class="td-c" onclick="jSort('lot')">Lot</th><th class="td-c">Entry</th><th class="td-c">SL</th><th class="td-c">Exit/TP</th>
+            <th class="td-c" onclick="jSort('dir')">Arah</th><th class="td-c" onclick="jSort('lot')">Lot</th><th class="td-c">Entry</th><th class="td-c">SL</th><th class="td-c" onclick="jSort('tp')" title="Take Profit — dasar kalkulasi RR">TP</th><th class="td-c" onclick="jSort('exit')" title="Harga exit aktual">Exit</th>
             <th class="td-c" onclick="jSort('pnlRp')">PnL (Rp)</th><th class="td-c" onclick="jSort('pnlUSD')">PnL (USD)</th>
             <th class="td-c" onclick="jSort('fee')" title="Fee/Komisi">Fee (Rp)</th>
             <th class="td-c" onclick="jSort('rr')" title="Risk/Reward">RR</th>
@@ -1561,7 +1561,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
             <p style="font-size:11px;color:var(--txt2);margin-bottom:8px;">Import trade dari file <b>.csv</b> — cocok untuk restore dari export CSV atau spreadsheet. Trade dengan ID yang sama akan diperbarui.</p>
             <div style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:9px 12px;margin-bottom:12px;font-size:10.5px;color:var(--txt1);">
               📋 Kolom yang diperlukan (header baris 1):<br>
-              <code style="font-family:var(--fn-m);font-size:9.5px;color:var(--c-cyan);">ID, Tanggal, Akun, Pair, Arah, Lot, Entry, SL, Exit/TP, PnL USD, PnL Rp, Fee (Rp), RR, Hasil, Setup, Catatan</code>
+              <code style="font-family:var(--fn-m);font-size:9.5px;color:var(--c-cyan);">ID, Tanggal, Akun, Pair, Arah, Lot, Entry, SL, TP, Exit, PnL USD, PnL Rp, Fee (Rp), RR, Hasil, Setup, Catatan</code>
             </div>
             <div style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--c-cyan)'" onmouseleave="this.style.borderColor='var(--bdr)'" onclick="document.getElementById('importCSVFile').click()">
               <div style="font-size:28px;margin-bottom:8px;">📄</div>
@@ -1634,20 +1634,21 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir" onchange="calcPnL()"><option>BUY</option><option>SELL</option></select></div>
       <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot" step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">Entry Price</label><input type="number" class="form-in" id="fm-entry" step="0.00001" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in" id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR & Hasil" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Exit / TP Price</label><input type="number" class="form-in" id="fm-exit" step="0.00001" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number" class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto" oninput="onManualPnL()"></div>
+      <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in" id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">TP <span style="color:var(--c-green2);font-weight:600;font-size:9px;">— Take Profit, dasar kalkulasi RR</span></label><input type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">Exit Price <span style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span><span style="color:var(--txt2);font-weight:400;font-size:9px;"> — harga aktual keluar posisi</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001" placeholder="Harga exit aktual — wajib diisi" oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);" onfocus="this.style.borderColor='var(--c-blue)'" onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
+      <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number" class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()"></div>
       <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number" class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">RR <span style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL/Exit</span></label>
+      <div class="form-field"><label class="form-lbl">RR <span style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL/<b style="color:var(--c-green2)">TP</b></span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
           <input type="hidden" id="fm-rr">
         </div>
       </div>
-      <div class="form-field"><label class="form-lbl">Hasil <span style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari PnL / harga</span></label>
+      <div class="form-field full"><label class="form-lbl">Hasil <span style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan harga)</span></label>
         <div class="form-in" id="fm-result-display" style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
           <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
-          <span style="font-size:10px;color:var(--txt2);">Terisi saat harga / PnL diisi</span>
+          <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
         </div>
         <input type="hidden" id="fm-result" value="BE">
       </div>
@@ -1978,6 +1979,7 @@ function setResultDisplay(result){
 function calcAutoRRAndResult(){
   const entry=parseFloat(document.getElementById('fm-entry').value);
   const sl=parseFloat(document.getElementById('fm-sl').value);
+  const tp=parseFloat(document.getElementById('fm-tp').value);
   const exit_=parseFloat(document.getElementById('fm-exit').value);
   const dir=document.getElementById('fm-dir').value;
   if(!entry||!exit_){
@@ -1985,18 +1987,21 @@ function calcAutoRRAndResult(){
     document.getElementById('fm-rr').value='';
     return;
   }
-  // AUTO RESULT from entry vs exit (always works even without SL)
+  // AUTO RESULT from entry vs EXIT (selalu berdasarkan EXIT)
   const moved=dir==='BUY'?(exit_-entry):(entry-exit_);
   const eps=entry*0.000001; // tiny epsilon for BE detection
   let result=Math.abs(moved)<eps?'BE':moved>0?'WIN':'LOSS';
   setResultDisplay(result);
-  // AUTO RR — only if SL is provided
-  if(sl&&sl!==entry){
+  // AUTO RR — hanya jika SL DAN TP tersedia (RR = reward TP / risk SL)
+  if(sl&&sl!==entry&&tp&&tp!==entry){
     const risk=Math.abs(entry-sl);
-    const reward=Math.abs(exit_-entry);
+    const reward=Math.abs(tp-entry); // TP digunakan untuk RR, bukan Exit
     const rr=reward/risk;
     document.getElementById('fm-rr-display').value=rr.toFixed(2)+'R';
     document.getElementById('fm-rr').value=rr.toFixed(2);
+  } else if(!tp||tp===entry){
+    document.getElementById('fm-rr-display').value='— (isi TP)';
+    document.getElementById('fm-rr').value='';
   } else {
     document.getElementById('fm-rr-display').value='— (isi SL)';
     document.getElementById('fm-rr').value='';
@@ -2180,6 +2185,7 @@ function openAddModal(){
   document.getElementById('fm-pnl-usd').value='';
   document.getElementById('fm-entry').value='';
   document.getElementById('fm-sl').value='';
+  document.getElementById('fm-tp').value='';
   document.getElementById('fm-exit').value='';
   document.getElementById('fm-note').value='';
   document.getElementById('fm-fee').value='';
@@ -2209,6 +2215,7 @@ function openEditModal(id){
   document.getElementById('fm-lot').value=t.lot;
   document.getElementById('fm-entry').value=t.entry;
   document.getElementById('fm-sl').value=t.sl||'';
+  document.getElementById('fm-tp').value=t.tp||'';
   document.getElementById('fm-exit').value=t.exit;
   // Kosongkan override PnL agar RR, Hasil, dan estimasi PnL dihitung ulang
   // secara otomatis dari Entry/SL/Exit yang baru diisi. User bisa isi manual
@@ -2248,6 +2255,8 @@ function renderSetupPicker(selected=[]){
 function getSelectedSetups(){return[...document.querySelectorAll('#fm-setup-picker .setup-pick-chip.selected')].map(el=>el.textContent.trim());}
 
 function saveTrade(){
+  const exitVal=parseFloat(document.getElementById('fm-exit').value)||0;
+  if(!exitVal){return showToast('❌ Exit Price wajib diisi!','error');}
   const manual=document.getElementById('fm-pnl-usd').value;
   const pnlUSD=manual!==''?parseFloat(manual)||0:calcPnLAuto();
   const grossRp=Math.round(pnlUSD*APP.kurs);
@@ -2261,7 +2270,8 @@ function saveTrade(){
     lot:parseFloat(document.getElementById('fm-lot').value)||0.01,
     entry:parseFloat(document.getElementById('fm-entry').value)||0,
     sl:parseFloat(document.getElementById('fm-sl').value)||0,
-    exit:parseFloat(document.getElementById('fm-exit').value)||0,
+    tp:parseFloat(document.getElementById('fm-tp').value)||0,
+    exit:exitVal,
     pnlUSD,pnlRp,fee,
     rr:parseFloat(document.getElementById('fm-rr').value)||0,
     result:document.getElementById('fm-result').value,
@@ -2926,6 +2936,7 @@ function renderJournal(){
     const pnlUSDStr=(t.pnlUSD>=0?'+':'')+'$'+t.pnlUSD.toFixed(2);
     const feeStr=t.fee>0?'-Rp '+fmt(t.fee):'—';
     const rrStr=t.rr>0?t.rr.toFixed(1)+'R':'—';
+    const tpStr=t.tp>0?t.tp.toLocaleString('id',{maximumFractionDigits:5}):'—';
     const sel=APP.jSelected.has(t.id);
     return`<tr class="${sel?'row-sel':''}">
     <td><input type="checkbox" ${sel?'checked':''} onchange="toggleJSelect(${t.id},this)"></td>
@@ -2937,6 +2948,7 @@ function renderJournal(){
     <td class="td-c td-m">${t.lot}</td>
     <td class="td-c td-m v-muted">${t.entry.toLocaleString('id',{maximumFractionDigits:5})}</td>
     <td class="td-c td-m" style="color:var(--c-red2);font-family:var(--fn-m);font-size:10.5px;">${t.sl>0?t.sl.toLocaleString('id',{maximumFractionDigits:5}):'—'}</td>
+    <td class="td-c td-m" style="color:var(--c-green2);font-family:var(--fn-m);font-size:10.5px;">${tpStr}</td>
     <td class="td-c td-m v-muted">${t.exit.toLocaleString('id',{maximumFractionDigits:5})}</td>
     <td class="td-c td-m ${t.pnlRp>=0?'v-green':'v-red'}">${pnlStr}</td>
     <td class="td-c" style="font-family:var(--fn-m);font-size:10.5px;color:var(--txt2);">${pnlUSDStr}</td>
@@ -2951,7 +2963,7 @@ function renderJournal(){
       <button class="btn btn-ghost btn-icon btn-sm" onclick="duplicateTrade(${t.id})" title="Duplikat trade ini" style="color:var(--c-cyan);border-color:rgba(34,211,238,.2);">⧉</button>
       <button class="btn btn-danger btn-icon btn-sm" onclick="deleteTrade(${t.id})" title="Hapus">🗑</button>
     </td></tr>`;
-  }).join('')||`<tr><td colspan="18" style="padding:24px;text-align:center;color:var(--txt2);">Tidak ada data trade</td></tr>`;
+  }).join('')||`<tr><td colspan="19" style="padding:24px;text-align:center;color:var(--txt2);">Tidak ada data trade</td></tr>`;
   const pgBtns=document.getElementById('jPagination');
   let pgH=`<button class="pg-btn" onclick="goJPage(${APP.jPage-1})" ${APP.jPage===1?'disabled':''}>◀</button>`;
   const s2=Math.max(1,APP.jPage-2),e2=Math.min(total,APP.jPage+2);
@@ -2988,7 +3000,7 @@ function viewDetail(id){
   const p=getPair(t.pair);const col=t.pnlRp>=0?'var(--c-green2)':'var(--c-red2)';
   document.getElementById('detailContent').innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['Exit / TP',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
+  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['TP',`<span style="font-family:var(--fn-m);color:var(--c-green2)">${t.tp>0?t.tp:'—'}</span>`],['Exit',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
   </div>
   <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--r8);padding:11px 13px;margin-bottom:12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Catatan</div><div style="font-size:12px;color:var(--txt1);">${t.note||'Tidak ada catatan.'}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="openEditModal(${t.id});closeModal('detailModal')">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="closeModal('detailModal')">Tutup</button></div>`;
@@ -3238,9 +3250,9 @@ function populateCtrlAkun(){
 }
 
 // EXPORT/IMPORT
-function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.dir,t.lot,t.entry,t.sl||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,getSetupArr(t).join('|'),'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
+function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','TP','Exit','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.dir,t.lot,t.entry,t.sl||'',t.tp||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,getSetupArr(t).join('|'),'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
 function exportJSON(){const data={version:'3.0',exported:new Date().toISOString(),kurs:APP.kurs,pairs:APP.pairs,setups:APP.setups,akuns:APP.akuns,trades:APP.trades};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='forex-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();showToast('📄 JSON backup berhasil!');}
-function importData(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.trades)APP.trades=data.trades;if(data.pairs)APP.pairs=data.pairs;if(data.setups)APP.setups=data.setups;if(data.akuns)APP.akuns=data.akuns;if(data.kurs)APP.kurs=data.kurs;if(data.kursHistory)APP.kursHistory=data.kursHistory;APP.trades.forEach(t=>{if(!t.pnlRp)t.pnlRp=Math.round(t.pnlUSD*APP.kurs);});updateAll();renderSettings();showToast('✅ Data berhasil diimport! Menyinkronkan ke cloud...');
+function importData(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.trades)APP.trades=data.trades;if(data.pairs)APP.pairs=data.pairs;if(data.setups)APP.setups=data.setups;if(data.akuns)APP.akuns=data.akuns;if(data.kurs)APP.kurs=data.kurs;if(data.kursHistory)APP.kursHistory=data.kursHistory;APP.trades.forEach(t=>{if(!t.pnlRp)t.pnlRp=Math.round(t.pnlUSD*APP.kurs);if(t.tp===undefined||t.tp===null)t.tp=0;});updateAll();renderSettings();showToast('✅ Data berhasil diimport! Menyinkronkan ke cloud...');
   // Push semua ke cloud
   setCloudPill('saving');
   api('replaceAll',{data:{trades:APP.trades,kurs:APP.kurs,kursHistory:APP.kursHistory,pairs:APP.pairs,setups:APP.setups,akuns:APP.akuns}})
@@ -3283,7 +3295,8 @@ function importCSV(input){
         lot:header.findIndex(h=>h.includes('lot')),
         entry:header.findIndex(h=>h.includes('entry')),
         sl:header.findIndex(h=>h==='sl'||h.includes('stoploss')||h.includes('stop')),
-        exit:header.findIndex(h=>h.includes('exit')||h.includes('tp')),
+        tp:header.findIndex(h=>h==='tp'||h.includes('takeprofit')||h.includes('target')),
+        exit:header.findIndex(h=>h==='exit'||h.includes('exittp')||h==='exittp'),
         pnlUSD:header.findIndex(h=>h.includes('pnlusd')||h.includes('pnl usd')||h.includes('usd')),
         pnlRp:header.findIndex(h=>h.includes('pnlrp')||h.includes('pnl rp')||h.includes('pnlrpiah')),
         fee:header.findIndex(h=>h.includes('fee')||h.includes('komisi')),
@@ -3323,6 +3336,7 @@ function importCSV(input){
           lot:parseFloat(get(cols,'lot'))||0.01,
           entry:parseFloat(get(cols,'entry'))||0,
           sl:parseFloat(get(cols,'sl'))||0,
+          tp:parseFloat(get(cols,'tp'))||0,
           exit:parseFloat(get(cols,'exit'))||0,
           pnlUSD,pnlRp,fee,rr,result,
           setup:get(cols,'setup',''),
@@ -3419,6 +3433,7 @@ function applyCloudData(data) {
   APP.trades.forEach(t => {
     t.date  = normalizeDate(t.date);
     if (!t.pnlRp) t.pnlRp = Math.round(t.pnlUSD * APP.kurs);
+    if (t.tp === undefined || t.tp === null) t.tp = 0;
   });
 }
 
