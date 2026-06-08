@@ -1271,12 +1271,6 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
         </div>
       </div>
     </div>
-    <!-- REKAP AKUN -->
-    <div class="panel">
-      <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Rekap Per Akun (Rp)</div></div>
-      <div style="overflow-x:auto;"><table class="data-tbl"><thead><tr><th>Nama Akun</th><th class="td-c">Modal (Rp)</th><th class="td-c">Net PnL (Rp)</th><th class="td-c">Return %</th><th class="td-c">Win Rate</th><th class="td-c">Trades</th><th class="td-c">PF</th><th class="td-c">Equity Aktif</th></tr></thead>
-      <tbody id="akunTableBody"></tbody></table></div>
-    </div>
     <!-- HARI GRID -->
     <div class="panel">
       <div class="panel-hd"><div class="panel-title"><div class="dot dot-green"></div>Analisa PnL Per Hari (Rp)</div></div>
@@ -1289,6 +1283,12 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 <div class="page" id="page-analysis">
   <div class="main">
     <div style="font-family:var(--fn-h);font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;">📈 Analisis Mendalam <span style="font-size:12px;font-family:var(--fn);font-weight:400;color:var(--txt2);">— Deep Performance Analytics</span></div>
+    <!-- REKAP AKUN -->
+    <div class="panel">
+      <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Rekap Per Akun</div></div>
+      <div style="overflow-x:auto;"><table class="data-tbl"><thead><tr><th>Nama Akun</th><th class="td-c">Currency</th><th class="td-c">Balance</th><th class="td-c">Modal (Rp)</th><th class="td-c">Net PnL</th><th class="td-c">Return %</th><th class="td-c">Win Rate</th><th class="td-c">Trades</th><th class="td-c">PF</th><th class="td-c">Equity Aktif</th></tr></thead>
+      <tbody id="akunTableBody"></tbody></table></div>
+    </div>
     <div class="g8" id="analysisMetrics"></div>
     <div class="g2">
       <div class="panel">
@@ -1504,7 +1504,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
           <div class="s-card-hd"><span style="font-size:18px;">👤</span><div class="s-card-title">Manajemen Akun Trading</div>
             <div style="margin-left:auto;"><button class="btn btn-gold btn-sm" onclick="openAddAkunModal()">＋ Tambah Akun</button></div>
           </div>
-          <div style="overflow-x:auto;"><table class="manager-table"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Modal Awal (Rp)</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
+          <div style="overflow-x:auto;"><table class="manager-table"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Currency</th><th>Balance</th><th>Modal (Rp)</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
           <tbody id="akunManagerBody"></tbody></table></div>
         </div>
         <!-- ARSIP PANEL -->
@@ -1521,7 +1521,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
                 <div class="arsip-panel-title">Daftar Arsip</div>
                 <span class="arsip-count" id="arsipCount">0</span>
               </div>
-              <div style="overflow-x:auto;"><table class="manager-table" id="arsipTable" style="display:none;"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Modal Awal (Rp)</th><th>Tipe</th><th>Aksi</th></tr></thead>
+              <div style="overflow-x:auto;"><table class="manager-table" id="arsipTable" style="display:none;"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Currency</th><th>Balance</th><th>Modal (Rp)</th><th>Tipe</th><th>Aksi</th></tr></thead>
               <tbody id="arsipManagerBody"></tbody></table></div>
               <div class="arsip-empty" id="arsipEmpty"><div class="arsip-empty-ico">🗃️</div><div style="font-weight:600;margin-bottom:4px;">Belum Ada Akun Diarsipkan</div><div style="font-size:10px;">Klik 🗑 pada akun aktif lalu pilih "Arsipkan"</div></div>
             </div>
@@ -1790,8 +1790,10 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
     <div class="form-grid">
       <div class="form-field full"><label class="form-lbl">Nama Akun</label><input type="text" class="form-in" id="am-name" placeholder="SCALPING ONE"></div>
       <div class="form-field"><label class="form-lbl">Broker</label><input type="text" class="form-in" id="am-broker" placeholder="XM Global"></div>
-      <div class="form-field"><label class="form-lbl">Modal Awal (Rp)</label><input type="number" class="form-in" id="am-modal" value="800000"></div>
       <div class="form-field"><label class="form-lbl">Tipe</label><select class="form-in" id="am-type"><option value="live">LIVE</option><option value="demo">DEMO</option><option value="cent">CENT</option></select></div>
+      <div class="form-field"><label class="form-lbl">Currency</label><select class="form-in" id="am-currency" onchange="calcAkunModal()"><option value="IDR">IDR (Rupiah)</option><option value="USD">USD — US$ (Dolar AS)</option><option value="USC">USC — US¢ (Sen Dolar AS)</option></select></div>
+      <div class="form-field"><label class="form-lbl" id="am-balance-lbl">Balance</label><input type="number" class="form-in" id="am-balance" value="0" step="0.01" oninput="calcAkunModal()" placeholder="Nominal sesuai currency"></div>
+      <div class="form-field full"><label class="form-lbl">Modal Ekuivalen (Rp) <span style="font-size:9px;color:var(--txt2);font-weight:400;">— otomatis dari balance × kurs</span></label><input type="number" class="form-in" id="am-modal" readonly style="opacity:.65;cursor:not-allowed;" value="0"></div>
     </div>
     <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('akunModal')">Batal</button><button class="btn btn-gold" onclick="saveAkun()">💾 Simpan Akun</button></div>
   </div>
@@ -1873,8 +1875,8 @@ const APP={
   ],
   setups:['Scalping','Swing','Breakout','Retest','News Play','Reversal','Trend Following'],
   akuns:[
-    {name:'SCALPING ONE',broker:'XM Global',modal:800000,type:'live',status:true},
-    {name:'BACKTEST v5.m',broker:'Demo Account',modal:800000,type:'demo',status:true},
+    {name:'SCALPING ONE',broker:'XM Global',currency:'USD',balance:50,modal:800000,type:'live',status:true},
+    {name:'BACKTEST v5.m',broker:'Demo Account',currency:'IDR',balance:800000,modal:800000,type:'demo',status:true},
   ],
   trades:[],
   risk:{ maxDailyLoss:500000, maxTradeLoss:200000, maxTrades:10 },
@@ -2332,12 +2334,48 @@ function savePair(){
 function deletePair(idx){if(!confirm('Hapus pair '+APP.pairs[idx].name+'?'))return;APP.pairs.splice(idx,1);renderPairManager();cloudSync('savePairs',{pairs:APP.pairs});}
 
 // AKUN MODAL
+// ── CURRENCY helpers ──────────────────────────────────────
+function currencySymbol(cur){return cur==='USD'?'US$':cur==='USC'?'US¢':'Rp';}
+function currencyLabel(cur){return cur==='USD'?'USD (US$)':cur==='USC'?'USC (US¢)':'IDR (Rp)';}
+/** Konversi balance ke Rp berdasarkan currency */
+function calcAkunModalVal(currency, balance){
+  const k=APP.kurs||17223;
+  if(currency==='USD') return Math.round(balance*k);
+  if(currency==='USC') return Math.round((balance/100)*k);
+  return Math.round(balance); // IDR
+}
+/** Hitung & tampilkan modal ekuivalen di form modal */
+function calcAkunModal(){
+  const currency=document.getElementById('am-currency')?.value||'IDR';
+  const balance=parseFloat(document.getElementById('am-balance')?.value)||0;
+  const sym=currencySymbol(currency);
+  const lbl=document.getElementById('am-balance-lbl');
+  if(lbl)lbl.textContent='Balance ('+sym+')';
+  const modal=calcAkunModalVal(currency,balance);
+  const el=document.getElementById('am-modal');
+  if(el)el.value=modal;
+}
+/** Format net PnL sesuai currency akun (menggunakan pnlUSD dari trades) */
+function fmtAkunPnl(currency, pnlUSD, pnlRp){
+  if(currency==='USD') return (pnlUSD>=0?'+':'')+'US$'+(pnlUSD).toFixed(2);
+  if(currency==='USC'){const usc=pnlUSD*100;return (usc>=0?'+':'')+'US¢'+(usc).toFixed(2);}
+  return (pnlRp>=0?'+':'-')+'Rp '+fmt(Math.abs(pnlRp));
+}
+/** Format balance/equity sesuai currency */
+function fmtAkunVal(currency, valUSD, valRp){
+  if(currency==='USD') return 'US$'+valUSD.toFixed(2);
+  if(currency==='USC') return 'US¢'+(valUSD*100).toFixed(2);
+  return 'Rp '+fmt(valRp);
+}
 function openAddAkunModal(){
   APP.editAkunIdx=null;
   document.getElementById('akunModalTitle').textContent='👤 Tambah Akun';
   ['am-name','am-broker'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('am-currency').value='IDR';
+  document.getElementById('am-balance').value=800000;
   document.getElementById('am-modal').value=800000;
   document.getElementById('am-type').value='live';
+  calcAkunModal();
   openModal('akunModal');
 }
 function openEditAkunModal(idx){
@@ -2345,14 +2383,20 @@ function openEditAkunModal(idx){
   document.getElementById('akunModalTitle').textContent='✏️ Edit: '+a.name;
   document.getElementById('am-name').value=a.name;
   document.getElementById('am-broker').value=a.broker;
+  document.getElementById('am-currency').value=a.currency||'IDR';
+  document.getElementById('am-balance').value=a.balance!==undefined?a.balance:a.modal;
   document.getElementById('am-modal').value=a.modal;
   document.getElementById('am-type').value=a.type;
+  calcAkunModal();
   openModal('akunModal');
 }
 function saveAkun(){
   // Pertahankan status akun yang sudah ada saat edit (jangan reset akun arsip ke aktif)
   const existingStatus = APP.editAkunIdx !== null ? APP.akuns[APP.editAkunIdx].status : 'active';
-  const data={name:document.getElementById('am-name').value.trim(),broker:document.getElementById('am-broker').value.trim(),modal:parseInt(document.getElementById('am-modal').value)||0,type:document.getElementById('am-type').value,status:existingStatus};
+  const currency = document.getElementById('am-currency').value||'IDR';
+  const balance  = parseFloat(document.getElementById('am-balance').value)||0;
+  const modal    = calcAkunModalVal(currency, balance);
+  const data={name:document.getElementById('am-name').value.trim(),broker:document.getElementById('am-broker').value.trim(),currency,balance,modal,type:document.getElementById('am-type').value,status:existingStatus};
   if(!data.name)return showToast('❌ Nama akun tidak boleh kosong','error');
   if(APP.editAkunIdx!==null){APP.akuns[APP.editAkunIdx]=data;showToast('✅ Akun diperbarui!');}
   else{APP.akuns.push(data);showToast('✅ Akun ditambahkan!');}
@@ -2590,16 +2634,37 @@ function renderAkunTable(){
   const visibleAkuns=APP.showArsip?APP.akuns:APP.akuns.filter(a=>a.status!=='inactive');
   document.getElementById('akunTableBody').innerHTML=visibleAkuns.map(a=>{
     const trd=APP.trades.filter(t=>t.akun===a.name);
-    const s=calcStats(trd);const eq=a.modal+s.netPnl;const ret=a.modal>0?s.netPnl/a.modal*100:0;
+    const s=calcStats(trd);
+    const cur=a.currency||'IDR';
+    const sym=currencySymbol(cur);
+    // Net PnL sesuai currency
+    const netPnlUSD=trd.reduce((acc,t)=>acc+(t.pnlUSD||0),0);
+    const netPnlDisp=(cur==='USD')?netPnlUSD:(cur==='USC')?netPnlUSD*100:null;
+    const netPnlRp=s.netPnl;
+    const netPnlStr=netPnlDisp!==null?((netPnlDisp>=0?'+':'')+sym+Math.abs(netPnlDisp).toFixed(2)):((netPnlRp>=0?'+':'-')+'Rp '+fmt(Math.abs(netPnlRp)));
+    const netPnlClass=((netPnlDisp!==null?netPnlDisp:netPnlRp)>=0)?'v-green':'v-red';
+    // Balance
+    const balanceVal=a.balance!==undefined?a.balance:(cur==='IDR'?a.modal:0);
+    const balanceStr=sym+(cur==='IDR'?fmt(balanceVal):balanceVal.toFixed(2));
+    // Equity = balance + net pnl (dalam currency yg sama)
+    const eqUSD=(cur==='USD'?balanceVal:cur==='USC'?balanceVal/100:0)+netPnlUSD;
+    const eqRp=a.modal+netPnlRp;
+    const eqStr=(cur==='USD')?'US$'+eqUSD.toFixed(2):(cur==='USC')?'US¢'+(eqUSD*100).toFixed(2):'Rp '+fmt(eqRp);
+    // Return % berdasarkan balance
+    const baseVal=(cur==='USD'||cur==='USC')?balanceVal:a.modal;
+    const returnPnl=(cur==='USD')?netPnlUSD:(cur==='USC')?netPnlUSD*100:netPnlRp;
+    const ret=baseVal>0?returnPnl/baseVal*100:0;
     const isArsip=a.status==='inactive';
-    return`<tr style="background:${a.type==='live'&&!isArsip?'rgba(79,142,247,.04)':'rgba(167,139,250,.03)'};${isArsip?'opacity:.7;':''}"}>
+    return`<tr style="background:${a.type==='live'&&!isArsip?'rgba(79,142,247,.04)':'rgba(167,139,250,.03)'};${isArsip?'opacity:.7;':''}">
     <td style="font-weight:700;color:${isArsip?'var(--c-purple)':a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}${isArsip?'<span style="font-size:9px;background:var(--c-purple-d);color:var(--c-purple);padding:1px 5px;border-radius:4px;margin-left:5px;">ARSIP</span>':''}</td>
-    <td class="td-c td-m">Rp ${fmt(a.modal)}</td>
-    <td class="td-c td-m ${s.netPnl>=0?'v-green':'v-red'}">${s.netPnl>=0?'+':'-'}Rp ${fmt(s.netPnl)}</td>
-    <td class="td-c"><span class="${s.netPnl>=0?'v-green':'v-red'}" style="font-family:var(--fn-m);">${ret>=0?'+':''}${ret.toFixed(2)}%</span></td>
+    <td class="td-c"><span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:4px;background:${cur==='USD'?'rgba(34,211,238,.12)':cur==='USC'?'rgba(167,139,250,.12)':'rgba(245,197,24,.1)'};color:${cur==='USD'?'var(--c-cyan)':cur==='USC'?'var(--c-purple)':'var(--c-gold)'};">${sym} ${cur}</span></td>
+    <td class="td-c td-m" style="color:var(--c-gold);">${balanceStr}</td>
+    <td class="td-c td-m" style="color:var(--txt2);">Rp ${fmt(a.modal)}</td>
+    <td class="td-c td-m ${netPnlClass}" style="font-family:var(--fn-m);">${netPnlStr}</td>
+    <td class="td-c"><span class="${ret>=0?'v-green':'v-red'}" style="font-family:var(--fn-m);">${ret>=0?'+':''}${ret.toFixed(2)}%</span></td>
     <td class="td-c v-green" style="font-family:var(--fn-m);">${fmtPct(s.wr)}</td>
     <td class="td-c td-m">${s.total}</td><td class="td-c td-m">${s.pf===Infinity?'∞':s.pf.toFixed(2)}</td>
-    <td class="td-c td-m v-cyan">Rp ${fmt(eq)}</td></tr>`;
+    <td class="td-c td-m v-cyan" style="font-family:var(--fn-m);">${eqStr}</td></tr>`;
   }).join('');
 }
 
@@ -3208,7 +3273,10 @@ function renderAkunManager(){
   const active=APP.akuns.filter(a=>a.status!=='inactive');
   document.getElementById('akunManagerBody').innerHTML=active.map((a,_i)=>{
     const realIdx=APP.akuns.indexOf(a);
-    return`<tr><td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td class="td-m" style="color:var(--c-gold);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td><span style="background:var(--c-green-d);color:var(--c-green2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">✓ Aktif</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditAkunModal(${realIdx})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteAkun(${realIdx})">🗑</button></td></tr>`;
+    const cur=a.currency||'IDR';const sym=currencySymbol(cur);
+    const balVal=a.balance!==undefined?a.balance:(cur==='IDR'?a.modal:0);
+    const balStr=sym+(cur==='IDR'?fmt(balVal):balVal.toFixed(2));
+    return`<tr><td style="font-weight:700;color:${a.type==='live'?'var(--c-gold)':'#60a5fa'};">${a.name}</td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${cur==='USD'?'rgba(34,211,238,.12)':cur==='USC'?'rgba(167,139,250,.12)':'rgba(245,197,24,.1)'};color:${cur==='USD'?'var(--c-cyan)':cur==='USC'?'var(--c-purple)':'var(--c-gold)'};">${sym} ${cur}</span></td><td class="td-m" style="color:var(--c-gold);">${balStr}</td><td class="td-m" style="color:var(--txt2);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td><span style="background:var(--c-green-d);color:var(--c-green2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;">✓ Aktif</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="openEditAkunModal(${realIdx})">✏️ Edit</button> <button class="btn btn-danger btn-sm" onclick="deleteAkun(${realIdx})">🗑</button></td></tr>`;
   }).join('');
   renderArchivedAkuns();populateCtrlAkun();
 }
@@ -3224,7 +3292,10 @@ function renderArchivedAkuns(){
   emptyEl.style.display='none';tableEl.style.display='table';
   bodyEl.innerHTML=archived.map((a,_i)=>{
     const realIdx=APP.akuns.indexOf(a);
-    return`<tr style="opacity:.85;"><td style="font-weight:700;color:var(--c-purple);">${a.name} <span style="font-size:9px;font-weight:600;background:var(--c-purple-d);color:var(--c-purple);padding:1px 6px;border-radius:4px;margin-left:4px;">ARSIP</span></td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td class="td-m" style="color:var(--txt1);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="unarsipAkun(${realIdx})" title="Aktifkan kembali">♻️ Aktifkan</button> <button class="btn btn-danger btn-sm" onclick="deletePermanentArsip(${realIdx})">🗑</button></td></tr>`;
+    const cur=a.currency||'IDR';const sym=currencySymbol(cur);
+    const balVal=a.balance!==undefined?a.balance:(cur==='IDR'?a.modal:0);
+    const balStr=sym+(cur==='IDR'?fmt(balVal):balVal.toFixed(2));
+    return`<tr style="opacity:.85;"><td style="font-weight:700;color:var(--c-purple);">${a.name} <span style="font-size:9px;font-weight:600;background:var(--c-purple-d);color:var(--c-purple);padding:1px 6px;border-radius:4px;margin-left:4px;">ARSIP</span></td><td style="color:var(--txt2);font-size:11px;">${a.broker}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${cur==='USD'?'rgba(34,211,238,.12)':cur==='USC'?'rgba(167,139,250,.12)':'rgba(245,197,24,.1)'};color:${cur==='USD'?'var(--c-cyan)':cur==='USC'?'var(--c-purple)':'var(--c-gold)'};">${sym} ${cur}</span></td><td class="td-m" style="color:var(--txt1);">${balStr}</td><td class="td-m" style="color:var(--txt2);">Rp ${fmt(a.modal)}</td><td><span style="font-size:10px;font-weight:700;padding:2px 7px;border-radius:4px;background:${a.type==='live'?'var(--c-blue-d)':a.type==='demo'?'var(--c-purple-d)':'var(--c-green-d)'};color:${a.type==='live'?'#60a5fa':a.type==='demo'?'var(--c-purple)':'var(--c-green2)'};">${a.type.toUpperCase()}</span></td><td style="white-space:nowrap;"><button class="btn btn-ghost btn-sm" onclick="unarsipAkun(${realIdx})" title="Aktifkan kembali">♻️ Aktifkan</button> <button class="btn btn-danger btn-sm" onclick="deletePermanentArsip(${realIdx})">🗑</button></td></tr>`;
   }).join('');
 }
 function deletePermanentArsip(idx){
@@ -3434,6 +3505,11 @@ function applyCloudData(data) {
     t.date  = normalizeDate(t.date);
     if (!t.pnlRp) t.pnlRp = Math.round(t.pnlUSD * APP.kurs);
     if (t.tp === undefined || t.tp === null) t.tp = 0;
+  });
+  // Normalisasi field baru akun (currency & balance)
+  APP.akuns.forEach(a => {
+    if (!a.currency) a.currency = 'IDR';
+    if (a.balance === undefined || a.balance === null) a.balance = a.modal || 0;
   });
 }
 
