@@ -1984,23 +1984,17 @@ function calcAutoRRAndResult(){
   const tp=parseFloat(document.getElementById('fm-tp').value);
   const exit_=parseFloat(document.getElementById('fm-exit').value);
   const dir=document.getElementById('fm-dir').value;
-  if(!entry||!exit_){
-    document.getElementById('fm-rr-display').value='—';
-    document.getElementById('fm-rr').value='';
-    return;
-  }
-  // AUTO RESULT from entry vs EXIT (selalu berdasarkan EXIT)
-  const moved=dir==='BUY'?(exit_-entry):(entry-exit_);
-  const eps=entry*0.000001; // tiny epsilon for BE detection
-  let result=Math.abs(moved)<eps?'BE':moved>0?'WIN':'LOSS';
-  setResultDisplay(result);
-  // AUTO RR — hanya jika SL DAN TP tersedia (RR = reward TP / risk SL)
-  if(sl&&sl!==entry&&tp&&tp!==entry){
+
+  // AUTO RR — independen dari EXIT, cukup ENTRY + SL + TP
+  if(entry&&sl&&sl!==entry&&tp&&tp!==entry){
     const risk=Math.abs(entry-sl);
     const reward=Math.abs(tp-entry); // TP digunakan untuk RR, bukan Exit
     const rr=reward/risk;
     document.getElementById('fm-rr-display').value=rr.toFixed(2)+'R';
     document.getElementById('fm-rr').value=rr.toFixed(2);
+  } else if(!entry){
+    document.getElementById('fm-rr-display').value='—';
+    document.getElementById('fm-rr').value='';
   } else if(!tp||tp===entry){
     document.getElementById('fm-rr-display').value='— (isi TP)';
     document.getElementById('fm-rr').value='';
@@ -2008,6 +2002,13 @@ function calcAutoRRAndResult(){
     document.getElementById('fm-rr-display').value='— (isi SL)';
     document.getElementById('fm-rr').value='';
   }
+
+  // AUTO RESULT — tetap butuh EXIT, selalu berdasarkan EXIT vs ENTRY
+  if(!entry||!exit_) return;
+  const moved=dir==='BUY'?(exit_-entry):(entry-exit_);
+  const eps=entry*0.000001; // tiny epsilon for BE detection
+  let result=Math.abs(moved)<eps?'BE':moved>0?'WIN':'LOSS';
+  setResultDisplay(result);
 }
 
 function calcPnL(){
