@@ -204,6 +204,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .res-win{background:var(--c-green-d);color:var(--c-green2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;}
 .res-loss{background:var(--c-red-d);color:var(--c-red2);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;}
 .res-be{background:rgba(255,255,255,.06);color:var(--txt1);padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;}
+.res-open{background:var(--c-blue-d);color:#60a5fa;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;display:inline-block;}
 .dir-buy{color:#60a5fa;font-family:var(--fn-m);font-weight:700;font-size:10.5px;}
 .dir-sell{color:var(--c-red2);font-family:var(--fn-m);font-weight:700;font-size:10.5px;}
 /* DONUT */
@@ -1633,10 +1634,10 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair" onchange="onPairChange()"></select></div>
       <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir" onchange="calcPnL()"><option>BUY</option><option>SELL</option></select></div>
       <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot" step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Entry Price</label><input type="number" class="form-in" id="fm-entry" step="0.00001" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">Entry Price <span style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number" class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi" oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);" onfocus="this.style.borderColor='var(--c-blue)'" onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
       <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in" id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">TP <span style="color:var(--c-green2);font-weight:600;font-size:9px;">— Take Profit, dasar kalkulasi RR</span></label><input type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Exit Price <span style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span><span style="color:var(--txt2);font-weight:400;font-size:9px;"> — harga aktual keluar posisi</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001" placeholder="Harga exit aktual — wajib diisi" oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);" onfocus="this.style.borderColor='var(--c-blue)'" onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
+      <div class="form-field"><label class="form-lbl">Exit Price <span style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001" placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number" class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()"></div>
       <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number" class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">RR <span style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL/<b style="color:var(--c-green2)">TP</b></span></label>
@@ -1950,6 +1951,7 @@ function calcPnLAuto(){
   const pair=getPair(document.getElementById('fm-pair').value);
   const entry=parseFloat(document.getElementById('fm-entry').value)||0;
   const exit_=parseFloat(document.getElementById('fm-exit').value)||0;
+  if(!entry||!exit_)return 0; // posisi masih OPEN — belum ada Exit, PnL belum bisa dihitung
   const lot=parseFloat(document.getElementById('fm-lot').value)||0;
   const dir=document.getElementById('fm-dir').value;
   const diff=dir==='BUY'?(exit_-entry):(entry-exit_);
@@ -1972,7 +1974,7 @@ function setResultDisplay(result){
   document.getElementById('fm-result').value=val;
   const badge=document.getElementById('fm-result-badge');
   if(!badge)return;
-  badge.className=val==='WIN'?'res-win':val==='LOSS'?'res-loss':'res-be';
+  badge.className=val==='WIN'?'res-win':val==='LOSS'?'res-loss':val==='OPEN'?'res-open':'res-be';
   badge.textContent=val;
   const hint=badge.nextElementSibling;
   if(hint)hint.style.display=val?'none':'inline';
@@ -2003,8 +2005,9 @@ function calcAutoRRAndResult(){
     document.getElementById('fm-rr').value='';
   }
 
-  // AUTO RESULT — tetap butuh EXIT, selalu berdasarkan EXIT vs ENTRY
-  if(!entry||!exit_) return;
+  // AUTO RESULT — jika ENTRY sudah diisi tapi EXIT masih kosong, posisi dianggap OPEN
+  if(!entry) return;
+  if(!exit_){ setResultDisplay('OPEN'); return; }
   const moved=dir==='BUY'?(exit_-entry):(entry-exit_);
   const eps=entry*0.000001; // tiny epsilon for BE detection
   let result=Math.abs(moved)<eps?'BE':moved>0?'WIN':'LOSS';
@@ -2201,7 +2204,7 @@ function openAddModal(){
   // Reset hasil badge
   const badge=document.getElementById('fm-result-badge');
   if(badge){badge.className='res-be';badge.textContent='—';}
-  document.getElementById('fm-result').value='BE';
+  document.getElementById('fm-result').value='OPEN';
   populateTradeForm();
   openModal('tradeModal');
 }
@@ -2219,7 +2222,7 @@ function openEditModal(id){
   document.getElementById('fm-entry').value=t.entry;
   document.getElementById('fm-sl').value=t.sl||'';
   document.getElementById('fm-tp').value=t.tp||'';
-  document.getElementById('fm-exit').value=t.exit;
+  document.getElementById('fm-exit').value=t.exit||'';
   // Kosongkan override PnL agar RR, Hasil, dan estimasi PnL dihitung ulang
   // secara otomatis dari Entry/SL/Exit yang baru diisi. User bisa isi manual
   // field Override PnL USD jika diperlukan setelah modal terbuka.
@@ -2258,8 +2261,9 @@ function renderSetupPicker(selected=[]){
 function getSelectedSetups(){return[...document.querySelectorAll('#fm-setup-picker .setup-pick-chip.selected')].map(el=>el.textContent.trim());}
 
 function saveTrade(){
+  const entryVal=parseFloat(document.getElementById('fm-entry').value)||0;
+  if(!entryVal){return showToast('❌ Entry Price wajib diisi!','error');}
   const exitVal=parseFloat(document.getElementById('fm-exit').value)||0;
-  if(!exitVal){return showToast('❌ Exit Price wajib diisi!','error');}
   const manual=document.getElementById('fm-pnl-usd').value;
   const pnlUSD=manual!==''?parseFloat(manual)||0:calcPnLAuto();
   const grossRp=Math.round(pnlUSD*APP.kurs);
@@ -2530,9 +2534,11 @@ function getFilteredTrades(){
 }
 
 function calcStats(trades){
-  const wins=trades.filter(t=>t.result==='WIN');
-  const losses=trades.filter(t=>t.result==='LOSS');
-  const bes=trades.filter(t=>t.result==='BE');
+  const opens=trades.filter(t=>t.result==='OPEN');
+  const closed=trades.filter(t=>t.result!=='OPEN');
+  const wins=closed.filter(t=>t.result==='WIN');
+  const losses=closed.filter(t=>t.result==='LOSS');
+  const bes=closed.filter(t=>t.result==='BE');
   const totalFee=trades.reduce((s,t)=>s+(t.fee||0),0);
   const netPnl=trades.reduce((s,t)=>s+t.pnlRp,0);
   const winPnl=wins.reduce((s,t)=>s+t.pnlRp,0);
@@ -2541,8 +2547,8 @@ function calcStats(trades){
   const avgWin=wins.length?winPnl/wins.length:0;
   const avgLoss=losses.length?lossPnl/losses.length:0;
   const wlRatio=avgLoss>0?avgWin/avgLoss:Infinity;
-  const wr=trades.length?wins.length/trades.length*100:0;
-  return{wins:wins.length,losses:losses.length,bes:bes.length,total:trades.length,netPnl,winPnl,lossPnl,pf,avgWin,avgLoss,wlRatio,wr,totalFee};
+  const wr=closed.length?wins.length/closed.length*100:0;
+  return{wins:wins.length,losses:losses.length,bes:bes.length,open:opens.length,total:closed.length,netPnl,winPnl,lossPnl,pf,avgWin,avgLoss,wlRatio,wr,totalFee};
 }
 
 function updateWLCard(stats){
@@ -2597,7 +2603,7 @@ function updateAll(){
   const kEqEl=document.getElementById('kEquity');if(kEqEl)kEqEl.style.color=equity>=0?'#60a5fa':'var(--c-red2)';
   g('kPnlSub','Avg: '+fmtRp(stats.total?stats.netPnl/stats.total:0));
   g('kWR',fmtPct(stats.wr));g('kWRsub',stats.wins+' win / '+stats.total+' trade');
-  g('kPF',stats.pf===Infinity?'∞':stats.pf.toFixed(2));g('kTotal',stats.total);
+  g('kPF',stats.pf===Infinity?'∞':stats.pf.toFixed(2));g('kTotal',stats.total);g('kOpen',stats.open);
   g('kWL',stats.wlRatio===Infinity?'∞':stats.wlRatio.toFixed(2));
   g('kReturn',(ret>=0?'+':'')+fmtPct(ret));g('kModal',fmtRp(modal));
   g('st-win',stats.wins);g('st-loss',stats.losses);g('st-be',stats.bes);
@@ -3015,12 +3021,12 @@ function renderJournal(){
     <td class="td-c td-m v-muted">${t.entry.toLocaleString('id',{maximumFractionDigits:5})}</td>
     <td class="td-c td-m" style="color:var(--c-red2);font-family:var(--fn-m);font-size:10.5px;">${t.sl>0?t.sl.toLocaleString('id',{maximumFractionDigits:5}):'—'}</td>
     <td class="td-c td-m" style="color:var(--c-green2);font-family:var(--fn-m);font-size:10.5px;">${tpStr}</td>
-    <td class="td-c td-m v-muted">${t.exit.toLocaleString('id',{maximumFractionDigits:5})}</td>
+    <td class="td-c td-m v-muted">${t.exit>0?t.exit.toLocaleString('id',{maximumFractionDigits:5}):'—'}</td>
     <td class="td-c td-m ${t.pnlRp>=0?'v-green':'v-red'}">${pnlStr}</td>
     <td class="td-c" style="font-family:var(--fn-m);font-size:10.5px;color:var(--txt2);">${pnlUSDStr}</td>
     <td class="td-c td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.fee>0?'var(--c-gold)':'var(--txt2)'};">${feeStr}</td>
     <td class="td-c td-m" style="font-family:var(--fn-m);font-size:10.5px;color:${t.rr>0?'var(--c-cyan)':'var(--txt2)'};">${rrStr}</td>
-    <td class="td-c"><span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span></td>
+    <td class="td-c"><span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':t.result==='OPEN'?'res-open':'res-be'}">${t.result}</span></td>
     <td><div class="setup-multi-chips">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2);font-size:10px;">—</span>'}</div></td>
     <td style="font-size:10.5px;color:var(--txt2);max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${t.note}">${t.note||'—'}</td>
     <td class="td-c" style="white-space:nowrap;">
@@ -3066,7 +3072,7 @@ function viewDetail(id){
   const p=getPair(t.pair);const col=t.pnlRp>=0?'var(--c-green2)':'var(--c-red2)';
   document.getElementById('detailContent').innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['TP',`<span style="font-family:var(--fn-m);color:var(--c-green2)">${t.tp>0?t.tp:'—'}</span>`],['Exit',`<span class="td-m">${t.exit}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
+  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['TP',`<span style="font-family:var(--fn-m);color:var(--c-green2)">${t.tp>0?t.tp:'—'}</span>`],['Exit',`<span class="td-m">${t.exit>0?t.exit:'—'}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':t.result==='OPEN'?'res-open':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
   </div>
   <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--r8);padding:11px 13px;margin-bottom:12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Catatan</div><div style="font-size:12px;color:var(--txt1);">${t.note||'Tidak ada catatan.'}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="openEditModal(${t.id});closeModal('detailModal')">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="closeModal('detailModal')">Tutup</button></div>`;
@@ -3396,7 +3402,8 @@ function importCSV(input){
         const fee=parseInt(get(cols,'fee'))||0;
         const rr=parseFloat(get(cols,'rr'))||0;
         const rawResult=get(cols,'result').toUpperCase();
-        const result=['WIN','LOSS','BE'].includes(rawResult)?rawResult:(pnlRp>0?'WIN':pnlRp<0?'LOSS':'BE');
+        const exitCSV=parseFloat(get(cols,'exit'))||0;
+        const result=['WIN','LOSS','BE','OPEN'].includes(rawResult)?rawResult:(!exitCSV?'OPEN':pnlRp>0?'WIN':pnlRp<0?'LOSS':'BE');
         const rawDir=get(cols,'dir').toUpperCase();
         const dir=['BUY','SELL'].includes(rawDir)?rawDir:'BUY';
         const trade={
