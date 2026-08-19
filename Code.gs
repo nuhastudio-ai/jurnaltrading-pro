@@ -1,5 +1,5 @@
 // ============================================================
-//  FOREX JOURNAL PRO — Google Apps Script Backend v3.0
+//  FOREX JOURNAL PRO — Google Apps Script Backend v3.2
 //  Koneksikan HTML Dashboard dengan Google Spreadsheet
 //
 //  CARA DEPLOY:
@@ -26,12 +26,16 @@ const SH = {
 };
 
 // ─── Header Kolom ─────────────────────────────────────────
+// JURNAL v3.1: EXIT dan TP dipisah
+// JURNAL v3.3: tambah kolom TF (Timeframe) di akhir — posisi ditaruh di akhir
+//              supaya migrasi kolom baru (auto-append) tidak menggeser data lama
+// AKUN   v3.2: tambah Currency dan Balance
 const HEADERS = {
-  JURNAL  : ['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan','TF'],
+  JURNAL  : ['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','TP','Exit','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan','TF'],
   KURS    : ['Tanggal','Nilai'],
   PAIRS   : ['Nama','Tipe','Multiplier','Pip','Warna','Deskripsi'],
   SETUPS  : ['Nama'],
-  AKUN    : ['Nama','Broker','Modal','Tipe','Status'],
+  AKUN    : ['Nama','Broker','Currency','Balance','Modal','Tipe','Status'],
   RISK    : ['Key','Value']
 };
 
@@ -85,7 +89,107 @@ function getSS() {
 }
 
 /**
+ * MIGRASI SCHEMA JURNAL v3.0 → v3.1
+ * Kolom 'Exit/TP' → TP + Exit
+ */
+function migrateJurnalSchema(sh) {
+  if (!sh) return;
+  const lastCol = sh.getLastColumn();
+  if (lastCol < 1) return;
+  const headerRow = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+  const exitTpIdx = headerRow.indexOf('Exit/TP');
+  if (exitTpIdx === -1) {
+    Logger.log('migrateJurnalSchema: Tidak ditemukan kolom "Exit/TP" — sudah termigrasi.');
+    return;
+  }
+  const exitTpCol = exitTpIdx + 1;
+  sh.insertColumnBefore(exitTpCol);
+  const tpHeaderCell = sh.getRange(1, exitTpCol);
+  tpHeaderCell.setValue('TP'); // TP = Rencana Take Profit
+  tpHeaderCell.setFontWeight('bold');
+  tpHeaderCell.setBackground(HEADER_STYLE.bg);
+  tpHeaderCell.setFontColor(HEADER_STYLE.fg);
+  sh.getRange(1, exitTpCol + 1).setValue('Exit');
+  Logger.log('migrateJurnalSchema: Berhasil! Kolom TP ditambahkan.');
+}
+
+/**
+ * MIGRASI SCHEMA AKUN v3.1 → v3.2
+ *
+ * Schema lama : ['Nama','Broker','Modal','Tipe','Status']
+ * Schema baru : ['Nama','Broker','Currency','Balance','Modal','Tipe','Status']
+ *
+ * Langkah migrasi:
+ * 1. Cek apakah kolom 'Currency' sudah ada → sudah migrasi, skip
+ * 2. Cek apakah kolom ke-3 adalah 'Modal' (schema lama) → lakukan migrasi
+ *    - Insert 2 kolom baru sebelum kolom 'Modal' (kolom 3)
+ *    - Set header 'Currency' di kolom 3, 'Balance' di kolom 4
+ *    - Isi default: Currency = 'IDR', Balance = nilai Modal lama
+ *    - Kolom Modal (sekarang kolom 5) tetap berisi nilai aslinya
+ */
+function migrateAkunSchema(sh) {
+  if (!sh) return;
+  const lastCol = sh.getLastColumn();
+  if (lastCol < 1) return;
+
+  const headerRow = sh.getRange(1, 1, 1, lastCol).getValues()[0];
+
+  // Sudah ada 'Currency' → schema baru, tidak perlu migrasi
+  if (headerRow.indexOf('Currency') !== -1) {
+    Logger.log('migrateAkunSchema: Schema AKUN sudah v3.2 — tidak perlu migrasi.');
+    return;
+  }
+
+  // Cek schema lama: kolom ke-3 (index 2) adalah 'Modal'
+  const modalOldIdx = headerRow.indexOf('Modal');
+  if (modalOldIdx === -1) {
+    Logger.log('migrateAkunSchema: Kolom "Modal" tidak ditemukan — schema tidak dikenali, skip.');
+    return;
+  }
+
+  const modalOldCol = modalOldIdx + 1; // 1-based
+
+  // Baca semua data sebelum insert kolom (untuk isi default Balance)
+  const lastRow = sh.getLastRow();
+
+  // Insert 2 kolom baru sebelum kolom Modal
+  sh.insertColumnsBefore(modalOldCol, 2);
+
+  // Set header Currency (kolom modalOldCol) dan Balance (kolom modalOldCol+1)
+  const currencyHdr = sh.getRange(1, modalOldCol);
+  currencyHdr.setValue('Currency');
+  currencyHdr.setFontWeight('bold');
+  currencyHdr.setBackground(HEADER_STYLE.bg);
+  currencyHdr.setFontColor(HEADER_STYLE.fg);
+
+  const balanceHdr = sh.getRange(1, modalOldCol + 1);
+  balanceHdr.setValue('Balance');
+  balanceHdr.setFontWeight('bold');
+  balanceHdr.setBackground(HEADER_STYLE.bg);
+  balanceHdr.setFontColor(HEADER_STYLE.fg);
+
+  // Isi data default untuk setiap baris data (baris ke-2 dst)
+  // Currency = 'IDR', Balance = nilai Modal (kolom Modal sekarang bergeser ke modalOldCol+2)
+  if (lastRow > 1) {
+    const modalNewCol = modalOldCol + 2; // Modal sekarang ada di kolom ini setelah insert 2 kolom
+    for (let row = 2; row <= lastRow; row++) {
+      const rowData = sh.getRange(row, 1, 1, sh.getLastColumn()).getValues()[0];
+      // Pastikan baris tidak kosong
+      if (rowData.some(cell => cell !== '' && cell !== null && cell !== undefined)) {
+        const modalVal = sh.getRange(row, modalNewCol).getValue();
+        sh.getRange(row, modalOldCol).setValue('IDR');      // Currency default = IDR
+        sh.getRange(row, modalOldCol + 1).setValue(modalVal); // Balance = Modal lama
+      }
+    }
+  }
+
+  Logger.log('migrateAkunSchema: Berhasil! Kolom Currency & Balance ditambahkan. Data lama: Currency=IDR, Balance=Modal.');
+}
+
+/**
  * Ambil sheet, buat jika belum ada, pastikan header ada.
+ * Kolom header baru yang belum ada di sheet lama (mis. 'TF') akan otomatis
+ * ditambahkan di kolom paling akhir, supaya posisi kolom data lama tidak bergeser.
  */
 function getOrCreateSheet(name, headers) {
   const ss = getSS();
@@ -97,7 +201,6 @@ function getOrCreateSheet(name, headers) {
   }
 
   if (sh.getLastRow() === 0) {
-    // Sheet kosong — buat header dari awal
     sh.appendRow(headers);
     const hdr = sh.getRange(1, 1, 1, headers.length);
     hdr.setFontWeight(HEADER_STYLE.bold ? 'bold' : 'normal');
@@ -106,9 +209,6 @@ function getOrCreateSheet(name, headers) {
     sh.setFrozenRows(1);
     Logger.log('Header sheet "' + name + '" dibuat.');
   } else {
-    // Sheet sudah ada: cek apakah ada kolom header yang kurang.
-    // Terjadi jika kolom baru ditambahkan ke HEADERS setelah sheet dibuat
-    // (misal: kolom 'Status' di AKUN tidak ada karena dibuat versi lama).
     const existingCols = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
     if (existingCols.length < headers.length) {
       const missingHeaders = headers.slice(existingCols.length);
@@ -126,22 +226,29 @@ function getOrCreateSheet(name, headers) {
 }
 
 /**
- * Inisialisasi semua sheet sekaligus (auto-create jika belum ada).
+ * Inisialisasi semua sheet + jalankan migrasi schema.
  */
 function initSheets() {
+  const ss = getSS();
+
+  // ── Migrasi JURNAL v3.0 → v3.1 (Exit/TP → TP + Exit) ──
+  const jShExisting = ss.getSheetByName(SH.JURNAL);
+  if (jShExisting) migrateJurnalSchema(jShExisting);
+
+  // ── Migrasi AKUN v3.1 → v3.2 (tambah Currency & Balance) ──
+  const aShExisting = ss.getSheetByName(SH.AKUN);
+  if (aShExisting) migrateAkunSchema(aShExisting);
+
+  // ── Pastikan semua sheet ada & header lengkap (termasuk auto-tambah kolom TF) ──
   Object.keys(SH).forEach(key => getOrCreateSheet(SH[key], HEADERS[key]));
 }
 
 /**
  * Format nilai tanggal dari Google Sheets ke string ISO "YYYY-MM-DDTHH:mm".
- * Google Sheets mengembalikan sel tanggal sebagai Date object (bukan string),
- * sehingga String() langsung akan menghasilkan format yang tidak bisa dibaca
- * oleh datetime-local input maupun slice(0,10) di frontend.
  */
 function formatDateForApp(val) {
   if (!val || val === '') return '';
   if (val instanceof Date) {
-    // Gunakan timezone script, bukan UTC, agar jam lokal tetap benar
     return Utilities.formatDate(val, Session.getScriptTimeZone(), "yyyy-MM-dd'T'HH:mm");
   }
   const s = String(val).trim();
@@ -178,7 +285,7 @@ function clearDataRows(sh) {
 // ══════════════════════════════════════════════════════════
 
 function getAllData() {
-  initSheets(); // Auto-buat sheet jika belum ada
+  initSheets(); // Auto-buat sheet & jalankan migrasi schema jika diperlukan
   const ss = getSS();
 
   // ── JURNAL ──────────────────────────────────────────────
@@ -188,19 +295,20 @@ function getAllData() {
     date   : formatDateForApp(r['Tanggal']),
     akun   : String(r['Akun'])             || '',
     pair   : String(r['Pair'])             || '',
+    tf     : String(r['TF'] || ''),
     dir    : String(r['Arah'])             || 'BUY',
     lot    : parseFloat(r['Lot'])          || 0,
     entry  : parseFloat(r['Entry'])        || 0,
     sl     : parseFloat(r['SL'])           || 0,
-    exit   : parseFloat(r['Exit/TP'])      || 0,
+    tp     : parseFloat(r['TP'])           || 0,  // TP = Rencana Take Profit
+    exit   : parseFloat(r['Exit'])         || 0,  // Exit = harga keluar aktual, dasar RR jika terisi
     pnlUSD : parseFloat(r['PnL USD'])      || 0,
     pnlRp  : parseInt(r['PnL Rp'])         || 0,
     fee    : parseInt(r['Fee (Rp)'])       || 0,
-    rr     : parseFloat(r['RR'])           || 0,
+    rr     : parseFloat(r['RR'])           || 0,  // dihitung di client: pakai Exit jika ada, kalau tidak pakai TP
     result : String(r['Hasil'])            || 'WIN',
     setup  : String(r['Setup'])            || '',
-    note   : String(r['Catatan'])          || '',
-    tf     : String(r['TF'] || '')
+    note   : String(r['Catatan'])          || ''
   })).filter(t => t.id > 0).reverse(); // newest first
 
   // ── KURS ────────────────────────────────────────────────
@@ -211,7 +319,7 @@ function getAllData() {
       val  : parseInt(r['Nilai']) || 0
     }))
     .filter(k => k.val > 0)
-    .reverse(); // newest first
+    .reverse();
   const kurs = kursHistory.length ? kursHistory[0].val : 17223;
 
   // ── PAIRS ────────────────────────────────────────────────
@@ -231,23 +339,22 @@ function getAllData() {
     .map(r => String(r['Nama']))
     .filter(s => s && s !== 'undefined');
 
-  // ── AKUN ─────────────────────────────────────────────────
-  // Membaca dari raw values (bukan sheetToObjects) agar kolom Status tetap
-  // terbaca meski header-nya belum ada (sheet dibuat versi lama sebelum
-  // kolom Status ditambahkan). Index: 0=Nama,1=Broker,2=Modal,3=Tipe,4=Status
+  // ── AKUN v3.2 ────────────────────────────────────────────
+  // Schema baru: Nama, Broker, Currency, Balance, Modal, Tipe, Status
   const aSh = ss.getSheetByName(SH.AKUN);
   const akunRaw = (aSh && aSh.getLastRow() > 1)
-    ? aSh.getDataRange().getValues().slice(1) : [];
+    ? sheetToObjects(aSh) : [];
   const akuns = akunRaw
-    .filter(row => row.some(cell => cell !== ''  && cell !== null && cell !== undefined))
-    .map(row => ({
-      name   : String(row[0] || ''),
-      broker : String(row[1] || ''),
-      modal  : parseInt(row[2]) || 0,
-      type   : String(row[3] || ''),
-      status : (row[4] && String(row[4]).toLowerCase() === 'inactive') ? 'inactive' : 'active'
-    }))
-    .filter(a => a.name && a.name !== 'undefined');
+    .filter(r => r['Nama'] && String(r['Nama']).trim() !== '' && String(r['Nama']) !== 'undefined')
+    .map(r => ({
+      name     : String(r['Nama']     || ''),
+      broker   : String(r['Broker']   || ''),
+      currency : String(r['Currency'] || 'IDR'),      // ← baru
+      balance  : parseFloat(r['Balance']) || 0,       // ← baru
+      modal    : parseInt(r['Modal'])    || 0,
+      type     : String(r['Tipe']     || ''),
+      status   : (r['Status'] && String(r['Status']).toLowerCase() === 'inactive') ? 'inactive' : 'active'
+    }));
 
   // ── RISK ─────────────────────────────────────────────────
   const rSh = ss.getSheetByName(SH.RISK);
@@ -272,6 +379,7 @@ function saveTrade(trade) {
   const last = sh.getLastRow();
   const data = last > 0 ? sh.getDataRange().getValues() : [HEADERS.JURNAL];
 
+  // RR (trade.rr) sudah dihitung di client: pakai Exit jika diisi, kalau kosong pakai TP (rencana)
   const row = [
     parseInt(trade.id),
     trade.date,
@@ -281,21 +389,18 @@ function saveTrade(trade) {
     parseFloat(trade.lot)       || 0,
     parseFloat(trade.entry)     || 0,
     parseFloat(trade.sl)        || 0,
+    parseFloat(trade.tp)        || 0,
     parseFloat(trade.exit)      || 0,
     parseFloat(trade.pnlUSD)    || 0,
     parseInt(trade.pnlRp)       || 0,
     parseInt(trade.fee)         || 0,
     parseFloat(trade.rr)        || 0,
     trade.result,
-    // ← FIX: trade.setup bisa berupa JS array dari frontend (multi-select).
-    // Google Apps Script / Java akan mengubah array menjadi "[Ljava.lang.Object;@xxxxxxx"
-    // jika tidak di-serialize dulu ke string sebelum ditulis ke sel spreadsheet.
     Array.isArray(trade.setup) ? trade.setup.filter(Boolean).join(', ') : (trade.setup || ''),
     trade.note || '',
     trade.tf || ''
   ];
 
-  // Cek apakah trade sudah ada (update)
   for (let i = 1; i < data.length; i++) {
     if (parseInt(data[i][0]) === parseInt(trade.id)) {
       sh.getRange(i + 1, 1, 1, row.length).setValues([row]);
@@ -303,7 +408,6 @@ function saveTrade(trade) {
     }
   }
 
-  // Baru: tambahkan di baris baru
   sh.appendRow(row);
   return { ok: true, action: 'added', id: trade.id };
 }
@@ -314,7 +418,6 @@ function deleteTrade(id) {
   if (last <= 1) return { ok: true, note: 'Sheet kosong' };
 
   const data = sh.getDataRange().getValues();
-  // Iterasi dari bawah supaya index tidak geser saat delete
   for (let i = data.length - 1; i >= 1; i--) {
     if (parseInt(data[i][0]) === parseInt(id)) {
       sh.deleteRow(i + 1);
@@ -371,15 +474,20 @@ function saveSetups(setups) {
   return { ok: true };
 }
 
+/**
+ * Save akuns v3.2 — schema baru: Nama, Broker, Currency, Balance, Modal, Tipe, Status
+ */
 function saveAkuns(akuns) {
   const sh = getOrCreateSheet(SH.AKUN, HEADERS.AKUN);
   clearDataRows(sh);
   if (akuns && akuns.length > 0) {
-    sh.getRange(2, 1, akuns.length, 5).setValues(
+    sh.getRange(2, 1, akuns.length, 7).setValues(
       akuns.map(a => [
         a.name,
         a.broker,
-        parseInt(a.modal) || 0,
+        a.currency  || 'IDR',           // ← baru
+        parseFloat(a.balance) || 0,     // ← baru
+        parseInt(a.modal)   || 0,
         a.type,
         a.status === 'inactive' ? 'inactive' : 'active'
       ])
@@ -407,20 +515,17 @@ function saveRisk(risk) {
 function replaceAll(data) {
   initSheets();
 
-  // Trades
   if (data.trades) {
     deleteAllTrades();
-    // Simpan dari yang terlama supaya urutan di sheet benar
     const sorted = data.trades.slice().sort((a, b) => a.id - b.id);
     sorted.forEach(t => saveTrade(t));
   }
 
-  // Kurs History
   if (data.kurs || data.kursHistory) {
     const sh = getOrCreateSheet(SH.KURS, HEADERS.KURS);
     clearDataRows(sh);
     const history = data.kursHistory && data.kursHistory.length
-      ? data.kursHistory.slice().reverse() // oldest first ke sheet
+      ? data.kursHistory.slice().reverse()
       : [{ date: new Date().toLocaleDateString('id-ID', {day:'2-digit',month:'short',year:'numeric'}), val: data.kurs || 17223 }];
     history.forEach(k => sh.appendRow([k.date, parseInt(k.val)]));
   }
