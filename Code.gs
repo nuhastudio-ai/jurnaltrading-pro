@@ -27,7 +27,7 @@ const SH = {
 
 // ─── Header Kolom ─────────────────────────────────────────
 const HEADERS = {
-  JURNAL  : ['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],
+  JURNAL  : ['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','Exit/TP','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan','TF'],
   KURS    : ['Tanggal','Nilai'],
   PAIRS   : ['Nama','Tipe','Multiplier','Pip','Warna','Deskripsi'],
   SETUPS  : ['Nama'],
@@ -199,7 +199,8 @@ function getAllData() {
     rr     : parseFloat(r['RR'])           || 0,
     result : String(r['Hasil'])            || 'WIN',
     setup  : String(r['Setup'])            || '',
-    note   : String(r['Catatan'])          || ''
+    note   : String(r['Catatan'])          || '',
+    tf     : String(r['TF'] || '')
   })).filter(t => t.id > 0).reverse(); // newest first
 
   // ── KURS ────────────────────────────────────────────────
@@ -290,7 +291,8 @@ function saveTrade(trade) {
     // Google Apps Script / Java akan mengubah array menjadi "[Ljava.lang.Object;@xxxxxxx"
     // jika tidak di-serialize dulu ke string sebelum ditulis ke sel spreadsheet.
     Array.isArray(trade.setup) ? trade.setup.filter(Boolean).join(', ') : (trade.setup || ''),
-    trade.note || ''
+    trade.note || '',
+    trade.tf || ''
   ];
 
   // Cek apakah trade sudah ada (update)

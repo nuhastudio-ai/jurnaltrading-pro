@@ -1393,6 +1393,7 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
           <thead><tr>
             <th style="width:32px;"><input type="checkbox" id="jSelectAll" onchange="toggleSelectAll(this)"></th>
             <th onclick="jSort('id')"># ↓</th><th onclick="jSort('date')">Tanggal</th><th onclick="jSort('akun')">Akun</th><th onclick="jSort('pair')">Pair</th>
+            <th class="td-c" onclick="jSort('tf')">TF</th>
             <th class="td-c" onclick="jSort('dir')">Arah</th><th class="td-c" onclick="jSort('lot')">Lot</th><th class="td-c">Entry</th><th class="td-c">SL</th><th class="td-c" onclick="jSort('tp')" title="Take Profit — dasar kalkulasi RR">TP</th><th class="td-c" onclick="jSort('exit')" title="Harga exit aktual">Exit</th>
             <th class="td-c" onclick="jSort('pnlRp')">PnL (Rp)</th><th class="td-c" onclick="jSort('pnlUSD')">PnL (USD)</th>
             <th class="td-c" onclick="jSort('fee')" title="Fee/Komisi">Fee (Rp)</th>
@@ -1632,15 +1633,16 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
       <div class="form-field"><label class="form-lbl">Akun</label><select class="form-in" id="fm-akun"></select></div>
       <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="datetime-local" class="form-in" id="fm-date"></div>
       <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair" onchange="onPairChange()"></select></div>
+      <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf"><option value="1m">1m</option><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="4h">4h</option><option value="1D">1D</option></select></div>
       <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir" onchange="calcPnL()"><option>BUY</option><option>SELL</option></select></div>
       <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot" step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">Entry Price <span style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number" class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi" oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);" onfocus="this.style.borderColor='var(--c-blue)'" onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
       <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in" id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">TP <span style="color:var(--c-green2);font-weight:600;font-size:9px;">— Take Profit, dasar kalkulasi RR</span></label><input type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">TP <span style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">Exit Price <span style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001" placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
       <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number" class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()"></div>
       <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number" class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">RR <span style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL/<b style="color:var(--c-green2)">TP</b></span></label>
+      <div class="form-field"><label class="form-lbl">RR <span style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b style="color:var(--c-green2)">TP</b></span></label>
         <div style="display:flex;align-items:center;gap:8px;">
           <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
           <input type="hidden" id="fm-rr">
@@ -1987,18 +1989,19 @@ function calcAutoRRAndResult(){
   const exit_=parseFloat(document.getElementById('fm-exit').value);
   const dir=document.getElementById('fm-dir').value;
 
-  // AUTO RR — independen dari EXIT, cukup ENTRY + SL + TP
-  if(entry&&sl&&sl!==entry&&tp&&tp!==entry){
+  // AUTO RR — pakai EXIT jika sudah terisi, kalau belum pakai TP sebagai rencana
+  const rrTarget=exit_||tp;
+  if(entry&&sl&&sl!==entry&&rrTarget&&rrTarget!==entry){
     const risk=Math.abs(entry-sl);
-    const reward=Math.abs(tp-entry); // TP digunakan untuk RR, bukan Exit
+    const reward=Math.abs(rrTarget-entry); // Exit dipakai jika ada, jika tidak pakai TP
     const rr=reward/risk;
     document.getElementById('fm-rr-display').value=rr.toFixed(2)+'R';
     document.getElementById('fm-rr').value=rr.toFixed(2);
   } else if(!entry){
     document.getElementById('fm-rr-display').value='—';
     document.getElementById('fm-rr').value='';
-  } else if(!tp||tp===entry){
-    document.getElementById('fm-rr-display').value='— (isi TP)';
+  } else if(!rrTarget||rrTarget===entry){
+    document.getElementById('fm-rr-display').value='— (isi TP/Exit)';
     document.getElementById('fm-rr').value='';
   } else {
     document.getElementById('fm-rr-display').value='— (isi SL)';
@@ -2189,6 +2192,7 @@ function openAddModal(){
   const now=new Date();
   document.getElementById('fm-date').value=new Date(now.getTime()-now.getTimezoneOffset()*60000).toISOString().slice(0,16);
   document.getElementById('fm-pnl-usd').value='';
+  document.getElementById('fm-tf').value='15m';
   document.getElementById('fm-entry').value='';
   document.getElementById('fm-sl').value='';
   document.getElementById('fm-tp').value='';
@@ -2217,6 +2221,7 @@ function openEditModal(id){
   document.getElementById('fm-akun').value=t.akun;
   document.getElementById('fm-date').value=dateToInputVal(t.date);
   document.getElementById('fm-pair').value=t.pair;
+  document.getElementById('fm-tf').value=t.tf||'15m';
   document.getElementById('fm-dir').value=t.dir;
   document.getElementById('fm-lot').value=t.lot;
   document.getElementById('fm-entry').value=t.entry;
@@ -2273,6 +2278,7 @@ function saveTrade(){
     akun:document.getElementById('fm-akun').value,
     date:document.getElementById('fm-date').value,
     pair:document.getElementById('fm-pair').value,
+    tf:document.getElementById('fm-tf').value,
     dir:document.getElementById('fm-dir').value,
     lot:parseFloat(document.getElementById('fm-lot').value)||0.01,
     entry:parseFloat(document.getElementById('fm-entry').value)||0,
@@ -3016,6 +3022,7 @@ function renderJournal(){
     <td style="color:var(--txt1);white-space:nowrap;font-size:10.5px;">${formatDateDisplay(t.date)}</td>
     <td style="font-size:10.5px;color:#a5b4fc;">${t.akun}</td>
     <td><span class="chip ${p.color}">${t.pair}</span></td>
+    <td class="td-c" style="font-size:10.5px;color:var(--txt2);">${t.tf||'—'}</td>
     <td class="td-c"><span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span></td>
     <td class="td-c td-m">${t.lot}</td>
     <td class="td-c td-m v-muted">${t.entry.toLocaleString('id',{maximumFractionDigits:5})}</td>
@@ -3035,7 +3042,7 @@ function renderJournal(){
       <button class="btn btn-ghost btn-icon btn-sm" onclick="duplicateTrade(${t.id})" title="Duplikat trade ini" style="color:var(--c-cyan);border-color:rgba(34,211,238,.2);">⧉</button>
       <button class="btn btn-danger btn-icon btn-sm" onclick="deleteTrade(${t.id})" title="Hapus">🗑</button>
     </td></tr>`;
-  }).join('')||`<tr><td colspan="19" style="padding:24px;text-align:center;color:var(--txt2);">Tidak ada data trade</td></tr>`;
+  }).join('')||`<tr><td colspan="20" style="padding:24px;text-align:center;color:var(--txt2);">Tidak ada data trade</td></tr>`;
   const pgBtns=document.getElementById('jPagination');
   let pgH=`<button class="pg-btn" onclick="goJPage(${APP.jPage-1})" ${APP.jPage===1?'disabled':''}>◀</button>`;
   const s2=Math.max(1,APP.jPage-2),e2=Math.min(total,APP.jPage+2);
@@ -3072,7 +3079,7 @@ function viewDetail(id){
   const p=getPair(t.pair);const col=t.pnlRp>=0?'var(--c-green2)':'var(--c-red2)';
   document.getElementById('detailContent').innerHTML=`
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;">
-  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['TP',`<span style="font-family:var(--fn-m);color:var(--c-green2)">${t.tp>0?t.tp:'—'}</span>`],['Exit',`<span class="td-m">${t.exit>0?t.exit:'—'}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':t.result==='OPEN'?'res-open':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
+  ${[['Pair',`<span class="chip ${p.color}">${t.pair}</span>`],['Tanggal',`<span style="color:var(--txt1)">${formatDateDisplay(t.date)}</span>`],['Akun',`<span style="color:#a5b4fc">${t.akun}</span>`],['TF',`<span style="color:var(--txt1)">${t.tf||'—'}</span>`],['Arah',`<span class="${t.dir==='BUY'?'dir-buy':'dir-sell'}">${t.dir}</span>`],['Lot',`<span class="td-m">${t.lot}</span>`],['Setup',`<div class="setup-multi-chips" style="flex-wrap:wrap;">${getSetupArr(t).length?getSetupArr(t).map(s=>`<span class="setup-multi-chip">${s}</span>`).join(''):'<span style="color:var(--txt2)">—</span>'}</div>`],['Entry',`<span class="td-m">${t.entry}</span>`],['SL',`<span style="font-family:var(--fn-m);color:var(--c-red2)">${t.sl>0?t.sl:'—'}</span>`],['TP',`<span style="font-family:var(--fn-m);color:var(--c-green2)">${t.tp>0?t.tp:'—'}</span>`],['Exit',`<span class="td-m">${t.exit>0?t.exit:'—'}</span>`],['RR',`<span style="font-family:var(--fn-m);color:var(--c-cyan)">${t.rr>0?t.rr.toFixed(2)+'R':'—'}</span>`],['PnL USD',`<span style="font-family:var(--fn-m);color:${col}">${t.pnlUSD>=0?'+':''}$${t.pnlUSD.toFixed(2)}</span>`],['PnL Rp',`<span style="font-family:var(--fn-m);color:${col};font-weight:800">${t.pnlRp>=0?'+':'-'}Rp ${fmt(Math.abs(t.pnlRp))}</span>`],['Fee (Rp)',`<span style="font-family:var(--fn-m);color:var(--c-gold)">${t.fee>0?'-Rp '+fmt(t.fee):'Rp 0'}</span>`],['Hasil',`<span class="${t.result==='WIN'?'res-win':t.result==='LOSS'?'res-loss':t.result==='OPEN'?'res-open':'res-be'}">${t.result}</span>`]].map(([l,v])=>`<div style="background:rgba(255,255,255,.025);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;">${l}</div>${v}</div>`).join('')}
   </div>
   <div style="background:var(--bg0);border:1px solid var(--bdr);border-radius:var(--r8);padding:11px 13px;margin-bottom:12px;"><div style="font-size:9.5px;color:var(--txt2);font-weight:700;text-transform:uppercase;margin-bottom:5px;">Catatan</div><div style="font-size:12px;color:var(--txt1);">${t.note||'Tidak ada catatan.'}</div></div>
   <div style="display:flex;gap:8px;justify-content:flex-end;"><button class="btn btn-ghost btn-sm" onclick="openEditModal(${t.id});closeModal('detailModal')">✏️ Edit</button><button class="btn btn-ghost btn-sm" onclick="closeModal('detailModal')">Tutup</button></div>`;
@@ -3328,7 +3335,7 @@ function populateCtrlAkun(){
 }
 
 // EXPORT/IMPORT
-function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','TP','Exit','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.dir,t.lot,t.entry,t.sl||'',t.tp||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,getSetupArr(t).join('|'),'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
+function exportCSV(){const trades=getFilteredTrades();const rows=[['ID','Tanggal','Akun','Pair','TF','Arah','Lot','Entry','SL','TP','Exit','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan'],...trades.map(t=>[t.id,t.date,t.akun,t.pair,t.tf||'',t.dir,t.lot,t.entry,t.sl||'',t.tp||'',t.exit,t.pnlUSD,t.pnlRp,t.fee||0,t.rr||'',t.result,getSetupArr(t).join('|'),'"'+t.note+'"'])];const csv=rows.map(r=>r.join(',')).join('\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='jurnal-trading-'+new Date().toISOString().slice(0,10)+'.csv';a.click();showToast('📤 CSV berhasil di-export!');}
 function exportJSON(){const data={version:'3.0',exported:new Date().toISOString(),kurs:APP.kurs,pairs:APP.pairs,setups:APP.setups,akuns:APP.akuns,trades:APP.trades};const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='forex-backup-'+new Date().toISOString().slice(0,10)+'.json';a.click();showToast('📄 JSON backup berhasil!');}
 function importData(input){const file=input.files[0];if(!file)return;const reader=new FileReader();reader.onload=e=>{try{const data=JSON.parse(e.target.result);if(data.trades)APP.trades=data.trades;if(data.pairs)APP.pairs=data.pairs;if(data.setups)APP.setups=data.setups;if(data.akuns)APP.akuns=data.akuns;if(data.kurs)APP.kurs=data.kurs;if(data.kursHistory)APP.kursHistory=data.kursHistory;APP.trades.forEach(t=>{if(!t.pnlRp)t.pnlRp=Math.round(t.pnlUSD*APP.kurs);if(t.tp===undefined||t.tp===null)t.tp=0;});updateAll();renderSettings();showToast('✅ Data berhasil diimport! Menyinkronkan ke cloud...');
   // Push semua ke cloud
@@ -3369,6 +3376,7 @@ function importCSV(input){
         date:header.findIndex(h=>h.includes('tanggal')||h.includes('date')),
         akun:header.findIndex(h=>h.includes('akun')||h.includes('account')),
         pair:header.findIndex(h=>h.includes('pair')),
+        tf:header.findIndex(h=>h==='tf'||h.includes('timeframe')),
         dir:header.findIndex(h=>h.includes('arah')||h.includes('dir')||h.includes('side')),
         lot:header.findIndex(h=>h.includes('lot')),
         entry:header.findIndex(h=>h.includes('entry')),
@@ -3411,6 +3419,7 @@ function importCSV(input){
           date:get(cols,'date')||new Date().toISOString().slice(0,16),
           akun:get(cols,'akun')||APP.akuns[0]?.name||'Default',
           pair:rawPair.toUpperCase(),
+          tf:get(cols,'tf')||'',
           dir,
           lot:parseFloat(get(cols,'lot'))||0.01,
           entry:parseFloat(get(cols,'entry'))||0,
