@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login — Forex Journal Pro</title>
+<link rel="stylesheet" href="css/style.css">
+<style>
+  body{min-height:100vh;display:flex;align-items:center;justify-content:center;background:var(--bg0);}
+  .login-box{width:100%;max-width:380px;padding:32px 28px;background:var(--bg1);border:1px solid var(--bdr);border-radius:16px;box-shadow:0 20px 60px rgba(0,0,0,.4);text-align:center;}
+  .login-icon{font-size:44px;margin-bottom:8px;}
+  .login-title{font-family:var(--fn-h);font-size:20px;font-weight:800;background:linear-gradient(135deg,#fff,var(--c-gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
+  .login-sub{font-size:12px;color:var(--txt2);margin-bottom:26px;}
+  #gsiBtnWrap{display:flex;justify-content:center;margin-bottom:10px;}
+  .login-msg{font-size:12px;padding:10px 12px;border-radius:8px;margin-top:14px;text-align:left;line-height:1.5;}
+  .login-msg.err{background:var(--c-red-d);color:var(--c-red2);border:1px solid rgba(239,68,68,.25);}
+  .login-msg.info{background:var(--c-blue-d);color:#60a5fa;border:1px solid rgba(59,130,246,.28);}
+  .pending-view{display:none;}
+  .pending-view .login-icon{color:var(--c-gold);}
+  .spinner{width:22px;height:22px;border:2.5px solid var(--bdr);border-top-color:var(--c-gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .hidden{display:none !important;}
+</style>
+</head>
+<body>
+
+<div class="login-box" id="loginView">
+  <div class="login-icon">📊</div>
+  <div class="login-title">Forex Journal Pro</div>
+  <div class="login-sub">Masuk dengan akun Google kamu untuk lanjut.</div>
+  <div id="gsiBtnWrap"></div>
+  <div id="loginMsgBox"></div>
+</div>
+
+<div class="login-box pending-view" id="pendingView">
+  <div class="login-icon">⏳</div>
+  <div class="login-title">Menunggu Persetujuan</div>
+  <div class="login-sub" id="pendingText">Akun kamu sudah terdaftar dan sedang menunggu persetujuan admin. Kamu akan bisa masuk begitu di-approve.</div>
+  <button class="btn btn-gold" style="width:100%;margin-top:6px;" onclick="checkStatusAgain()">🔄 Cek Status Lagi</button>
+  <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="logoutFromLogin()">Keluar / Ganti Akun</button>
+</div>
+
+<div class="login-box hidden" id="checkingView">
+  <div class="spinner"></div>
+  <div class="login-sub" style="margin-top:14px;margin-bottom:0;">Memeriksa sesi...</div>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script>
+// ══════════════════════════════════════════════════════════
+//  KONFIGURASI — samakan dengan js/01-core-state.js
+// ══════════════════════════════════════════════════════════
+const GAS_URL         = 'https://script.google.com/macros/s/AKfycbw5XMGydEm4lc6RO22nPIK2RHpmbLoC070VKtjh1p1U4YDvQUBCERFEXGtxPRWkjqo/exec'; // ← samakan dgn js/01-core-state.js
+const GOOGLE_CLIENT_ID = '606938621714-h21mf9lgh2sf8fdbn5othm7h2p4vijid.apps.googleusercontent.com'; // ← WAJIB samakan dgn Code.gs
+
+function show(id) {
+  ['loginView', 'pendingView', 'checkingView'].forEach(v => {
+    document.getElementById(v).classList.toggle('hidden', v !== id);
+  });
+}
+
+function showMsg(text, type) {
+  document.getElementById('loginMsgBox').innerHTML = `<div class="login-msg ${type}">${text}</div>`;
+}
+
+async function authCheck(idToken) {
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action: 'authCheck', idToken })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+function saveSession(idToken, me) {
+  localStorage.setItem('jt_idToken', idToken);
+  localStorage.setItem('jt_user', JSON.stringify(me));
+}
+
+function logoutFromLogin() {
+  localStorage.removeItem('jt_idToken');
+  localStorage.removeItem('jt_user');
+  show('loginView');
+}
+
+async function handleCredential(response) {
+  show('checkingView');
+  try {
+    const idToken = response.credential;
+    const r = await authCheck(idToken);
+    if (r.error) { show('loginView'); showMsg('❌ ' + (r.message || r.error), 'err'); return; }
+
+    if (r.status === 'active') {
+      saveSession(idToken, r.me);
+      location.href = 'index.html';
+      return;
+    }
+
+    // Simpan token juga saat pending, supaya "Cek Status Lagi" bisa reuse tanpa login ulang
+    saveSession(idToken, r.me);
+    if (r.status === 'pending') {
+      document.getElementById('pendingText').textContent =
+        'Akun ' + (r.me.email || '') + ' sudah terdaftar dan sedang menunggu persetujuan admin. Kamu akan bisa masuk begitu di-approve.';
+      show('pendingView');
+    } else if (r.status === 'inactive') {
+      document.getElementById('pendingText').textContent =
+        'Akun kamu sudah dinonaktifkan. Hubungi admin kalau ini keliru.';
+      show('pendingView');
+    } else {
+      show('loginView');
+      showMsg('❌ Status akun tidak diketahui.', 'err');
+    }
+  } catch (e) {
+    show('loginView');
+    showMsg('❌ Gagal menghubungi server: ' + e.message, 'err');
+  }
+}
+
+async function checkStatusAgain() {
+  const idToken = localStorage.getItem('jt_idToken');
+  if (!idToken) { show('loginView'); return; }
+  show('checkingView');
+  try {
+    const r = await authCheck(idToken);
+    if (r.error) { logoutFromLogin(); showMsg('❌ Sesi berakhir, silakan login ulang.', 'err'); return; }
+    if (r.status === 'active') {
+      saveSession(idToken, r.me);
+      location.href = 'index.html';
+    } else {
+      show('pendingView');
+    }
+  } catch (e) {
+    show('pendingView');
+  }
+}
+
+window.onload = function () {
+  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.indexOf('GANTI_DENGAN') !== -1) {
+    showMsg('⚠️ GOOGLE_CLIENT_ID belum dikonfigurasi di login.html.', 'err');
+  } else if (window.google && google.accounts && google.accounts.id) {
+    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredential });
+    google.accounts.id.renderButton(document.getElementById('gsiBtnWrap'), { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
+  }
+
+  const existingToken = localStorage.getItem('jt_idToken');
+  if (existingToken) checkStatusAgain();
+};
+</script>
+</body>
+</html>

@@ -1,19 +1,26 @@
 // ============================================================
-//  FOREX JOURNAL PRO — Google Apps Script Backend v3.2
+//  FOREX JOURNAL PRO — Google Apps Script Backend v4.0
 //  Koneksikan HTML Dashboard dengan Google Spreadsheet
+//  v4.0: Login Google (OAuth) + approval admin + 1 spreadsheet per user
 //
 //  CARA DEPLOY:
 //  1. Buka https://script.google.com
 //  2. Buat project baru → paste seluruh kode ini
-//  3. Ganti SHEET_ID di bawah dengan ID spreadsheet Anda
-//  4. Klik Deploy → New Deployment
+//  3. Ganti SHEET_ID di bawah dengan ID spreadsheet MASTER kamu
+//     (spreadsheet ini akan berisi tab USERS + jadi data jurnal admin sendiri)
+//  4. Ganti GOOGLE_CLIENT_ID dengan OAuth Client ID dari Google Cloud Console
+//     (Client ID yang sama juga dipakai di index.html untuk tombol Google Sign-In)
+//  5. Ganti ADMIN_EMAIL dengan email Google kamu sendiri (akun admin pertama)
+//  6. Klik Deploy → New Deployment
 //     - Type: Web App
 //     - Execute as: Me
 //     - Who has access: Anyone
-//  5. Copy URL deployment → tempel ke GAS_URL di HTML
+//  7. Copy URL deployment → tempel ke GAS_URL di HTML
 // ============================================================
 
-const SHEET_ID = '1LiA3hIK8Y3FRJLNcf68hZd5ru0rrjU1Aq51p28siiHc'; // ← GANTI INI
+const SHEET_ID          = '1LiA3hIK8Y3FRJLNcf68hZd5ru0rrjU1Aq51p28siiHc'; // ← ID spreadsheet MASTER
+const GOOGLE_CLIENT_ID  = '606938621714-h21mf9lgh2sf8fdbn5othm7h2p4vijid.apps.googleusercontent.com'; // ← WAJIB DIISI
+const ADMIN_EMAIL       = 'nuhabase.id@gmail.com'; // ← email Google kamu sendiri
 
 // ─── Nama Sheet / Tab ─────────────────────────────────────
 const SH = {
@@ -22,7 +29,8 @@ const SH = {
   PAIRS  : 'PAIRS',
   SETUPS : 'SETUPS',
   AKUN   : 'AKUN',
-  RISK   : 'RISK'
+  RISK   : 'RISK',
+  USERS  : 'USERS'   // ← hanya ada di spreadsheet MASTER, bukan di spreadsheet tiap user
 };
 
 // ─── Header Kolom ─────────────────────────────────────────
@@ -30,13 +38,15 @@ const SH = {
 // JURNAL v3.3: tambah kolom TF (Timeframe) di akhir — posisi ditaruh di akhir
 //              supaya migrasi kolom baru (auto-append) tidak menggeser data lama
 // AKUN   v3.2: tambah Currency dan Balance
+// USERS  v4.0: tabel mapping akun — SATU baris = SATU user + spreadsheet miliknya
 const HEADERS = {
   JURNAL  : ['ID','Tanggal','Akun','Pair','Arah','Lot','Entry','SL','TP','Exit','PnL USD','PnL Rp','Fee (Rp)','RR','Hasil','Setup','Catatan','TF'],
   KURS    : ['Tanggal','Nilai'],
   PAIRS   : ['Nama','Tipe','Multiplier','Pip','Warna','Deskripsi'],
   SETUPS  : ['Nama'],
   AKUN    : ['Nama','Broker','Currency','Balance','Modal','Tipe','Status'],
-  RISK    : ['Key','Value']
+  RISK    : ['Key','Value'],
+  USERS   : ['Email','Nama','FotoURL','SpreadsheetID','Role','Status','TanggalDaftar','TanggalApprove']
 };
 
 // ─── Style header warna tema dashboard ────────────────────
@@ -46,13 +56,35 @@ const HEADER_STYLE = { bg: '#0f1628', fg: '#f0f4ff', bold: true };
 //  ENTRY POINTS
 // ══════════════════════════════════════════════════════════
 
+// doGet tidak lagi dipakai untuk ambil data (semua data privat, wajib lewat POST + idToken).
+// Dibiarkan untuk health-check saja.
 function doGet(e) {
-  return respond(getAllData());
+  return respond({ ok: true, message: 'Forex Journal Pro API aktif. Gunakan POST dengan idToken.' });
 }
 
 function doPost(e) {
   try {
     const req = JSON.parse(e.postData.contents);
+    bootstrapAdmin(); // pastikan akun admin pertama selalu ada di USERS
+
+    // ── Action yang TIDAK butuh akun sudah aktif (dipakai halaman login) ──
+    if (req.action === 'authCheck') {
+      return respond(handleAuthCheck(req.idToken));
+    }
+
+    // ── Semua action lain WAJIB login + akun berstatus 'active' ──
+    const auth = requireActiveUser(req.idToken);
+    if (auth.error) return respond(auth);
+
+    // ── Action khusus admin ──
+    const ADMIN_ACTIONS = ['getPendingUsers', 'getAllUsers', 'approveUser', 'rejectUser', 'setUserStatus'];
+    if (ADMIN_ACTIONS.indexOf(req.action) !== -1 && auth.user.role !== 'admin') {
+      return respond({ error: 'FORBIDDEN', message: 'Aksi ini khusus admin.' });
+    }
+
+    // Set konteks spreadsheet aktif untuk request ini = spreadsheet milik user yang login
+    CURRENT_SS_ID = auth.user.spreadsheetId;
+
     let result;
     switch (req.action) {
       case 'getAll'          : result = getAllData();              break;
@@ -65,7 +97,17 @@ function doPost(e) {
       case 'saveAkuns'       : result = saveAkuns(req.akuns);     break;
       case 'saveRisk'        : result = saveRisk(req.risk);       break;
       case 'replaceAll'      : result = replaceAll(req.data);     break;
+      case 'getPendingUsers' : result = getPendingUsers();        break;
+      case 'getAllUsers'     : result = getAllUsers();            break;
+      case 'approveUser'     : result = approveUser(req.email);   break;
+      case 'rejectUser'      : result = rejectUser(req.email);    break;
+      case 'setUserStatus'   : result = setUserStatus(req.email, req.status); break;
       default                : result = { error: 'Unknown action: ' + req.action };
+    }
+
+    // Sisipkan info profil user yang lagi login, supaya frontend gampang tampilkan nama/role
+    if (result && typeof result === 'object' && !result.error) {
+      result.me = { email: auth.user.email, name: auth.user.name, picture: auth.user.picture, role: auth.user.role };
     }
     return respond(result);
   } catch (err) {
@@ -81,10 +123,283 @@ function respond(data) {
 }
 
 // ══════════════════════════════════════════════════════════
+//  AUTH — verifikasi token Google, lookup/registrasi user, approval
+// ══════════════════════════════════════════════════════════
+
+// Konteks spreadsheet aktif untuk request yang sedang berjalan (di-set di doPost)
+let CURRENT_SS_ID = null;
+
+/**
+ * Verifikasi ID token dari Google Sign-In (Google Identity Services).
+ * Mengembalikan {email, name, picture} kalau valid, atau null kalau tidak.
+ */
+function verifyGoogleToken(idToken) {
+  if (!idToken) return null;
+  try {
+    const res = UrlFetchApp.fetch(
+      'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
+      { muteHttpExceptions: true }
+    );
+    if (res.getResponseCode() !== 200) return null;
+    const payload = JSON.parse(res.getContentText());
+
+    // Pastikan token ini memang dibuat untuk aplikasi kita (cegah token dari app lain dipakai di sini)
+    if (payload.aud !== GOOGLE_CLIENT_ID) {
+      Logger.log('verifyGoogleToken: audience mismatch');
+      return null;
+    }
+    if (payload.email_verified !== 'true' && payload.email_verified !== true) return null;
+
+    return { email: String(payload.email).toLowerCase(), name: payload.name || payload.email, picture: payload.picture || '' };
+  } catch (err) {
+    Logger.log('verifyGoogleToken error: ' + err);
+    return null;
+  }
+}
+
+/**
+ * Cari user di sheet USERS (spreadsheet MASTER). Kalau belum ada, daftarkan otomatis
+ * sebagai 'pending'. Kalau statusnya 'rejected' dan login lagi, direset ke 'pending'
+ * supaya bisa direview ulang oleh admin.
+ */
+function resolveUser(idToken) {
+  const profile = verifyGoogleToken(idToken);
+  if (!profile) return { error: 'INVALID_TOKEN', message: 'Sesi tidak valid, silakan login ulang.' };
+
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const col = {};
+  headers.forEach((h, i) => { col[h] = i; });
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][col['Email']]).toLowerCase() === profile.email) {
+      const rowIdx = i + 1;
+      let status = String(data[i][col['Status']] || 'pending');
+      if (status === 'rejected') {
+        sh.getRange(rowIdx, col['Status'] + 1).setValue('pending');
+        status = 'pending';
+      }
+      return {
+        user: {
+          email: profile.email,
+          name: data[i][col['Nama']] || profile.name,
+          picture: data[i][col['FotoURL']] || profile.picture,
+          spreadsheetId: data[i][col['SpreadsheetID']] || '',
+          role: data[i][col['Role']] || 'member',
+          status: status
+        }
+      };
+    }
+  }
+
+  // Belum pernah daftar → daftarkan otomatis, status 'pending', menunggu approval admin
+  sh.appendRow([profile.email, profile.name, profile.picture, '', 'member', 'pending', new Date(), '']);
+  return {
+    user: { email: profile.email, name: profile.name, picture: profile.picture, spreadsheetId: '', role: 'member', status: 'pending' }
+  };
+}
+
+/**
+ * Dipakai halaman login untuk cek status akun (pending/active/rejected/inactive)
+ * tanpa syarat harus sudah active.
+ */
+function handleAuthCheck(idToken) {
+  const r = resolveUser(idToken);
+  if (r.error) return r;
+  return {
+    ok: true,
+    status: r.user.status,
+    me: { email: r.user.email, name: r.user.name, picture: r.user.picture, role: r.user.role }
+  };
+}
+
+/**
+ * Dipakai semua action data/admin — WAJIB akun berstatus 'active'.
+ */
+function requireActiveUser(idToken) {
+  const r = resolveUser(idToken);
+  if (r.error) return r;
+  if (r.user.status !== 'active') {
+    return { error: 'ACCOUNT_' + r.user.status.toUpperCase(), status: r.user.status, message: accountStatusMessage(r.user.status) };
+  }
+  if (!r.user.spreadsheetId) {
+    // Harusnya tidak terjadi (approveUser selalu bikinkan spreadsheet), tapi jaga-jaga
+    return { error: 'NO_SPREADSHEET', message: 'Spreadsheet akun kamu belum siap, hubungi admin.' };
+  }
+  return { user: r.user };
+}
+
+function accountStatusMessage(status) {
+  if (status === 'pending')  return 'Akun kamu masih menunggu persetujuan admin.';
+  if (status === 'inactive') return 'Akun kamu sudah dinonaktifkan. Hubungi admin.';
+  if (status === 'rejected') return 'Pendaftaran kamu belum disetujui.';
+  return 'Akun tidak aktif.';
+}
+
+/**
+ * Pastikan admin pertama selalu terdaftar & aktif di USERS, memakai SHEET_ID (master)
+ * sebagai spreadsheet data pribadinya — supaya data jurnal admin yang sudah ada
+ * (di spreadsheet master) langsung terpakai, tidak perlu isi ulang.
+ */
+function bootstrapAdmin() {
+  if (!ADMIN_EMAIL || ADMIN_EMAIL.indexOf('GANTI_DENGAN') !== -1) return; // belum dikonfigurasi
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const emailCol = headers.indexOf('Email');
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][emailCol]).toLowerCase() === ADMIN_EMAIL.toLowerCase()) return; // sudah ada
+  }
+  sh.appendRow([ADMIN_EMAIL.toLowerCase(), 'Admin', '', SHEET_ID, 'admin', 'active', new Date(), new Date()]);
+  Logger.log('bootstrapAdmin: admin awal terdaftar -> ' + ADMIN_EMAIL);
+}
+
+// ══════════════════════════════════════════════════════════
+//  ADMIN — approval user baru
+// ══════════════════════════════════════════════════════════
+
+function getPendingUsers() {
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  return sheetToObjects(sh)
+    .filter(r => String(r['Status']) === 'pending')
+    .map(r => ({
+      email: r['Email'], name: r['Nama'], picture: r['FotoURL'],
+      daftar: formatDateForApp(r['TanggalDaftar'])
+    }));
+}
+
+function getAllUsers() {
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  return sheetToObjects(sh).map(r => ({
+    email: r['Email'], name: r['Nama'], picture: r['FotoURL'],
+    role: r['Role'] || 'member', status: r['Status'] || 'pending',
+    daftar: formatDateForApp(r['TanggalDaftar']), approve: formatDateForApp(r['TanggalApprove'])
+  }));
+}
+
+/**
+ * Setujui user: kalau belum punya spreadsheet sendiri, buatkan baru (kosong,
+ * struktur sama seperti master), lalu set status jadi 'active' + kirim email notifikasi.
+ */
+function approveUser(email) {
+  if (!email) return { error: 'Email wajib diisi' };
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const col = {};
+  headers.forEach((h, i) => { col[h] = i; });
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][col['Email']]).toLowerCase() === String(email).toLowerCase()) {
+      const rowIdx = i + 1;
+      let ssId = data[i][col['SpreadsheetID']];
+      if (!ssId) {
+        ssId = createUserSpreadsheet(data[i][col['Nama']] || email);
+        sh.getRange(rowIdx, col['SpreadsheetID'] + 1).setValue(ssId);
+      }
+      sh.getRange(rowIdx, col['Status'] + 1).setValue('active');
+      sh.getRange(rowIdx, col['TanggalApprove'] + 1).setValue(new Date());
+
+      try {
+        MailApp.sendEmail({
+          to: email,
+          subject: 'Akun Jurnal Trading kamu sudah aktif',
+          htmlBody: 'Halo ' + (data[i][col['Nama']] || '') + ',<br><br>' +
+                     'Akun kamu sudah disetujui admin dan siap dipakai. Silakan login kembali ke aplikasi.<br><br>Salam.'
+        });
+      } catch (mailErr) {
+        Logger.log('Gagal kirim email approve: ' + mailErr);
+      }
+
+      return { ok: true, email: email, spreadsheetId: ssId };
+    }
+  }
+  return { error: 'User tidak ditemukan' };
+}
+
+function rejectUser(email) {
+  if (!email) return { error: 'Email wajib diisi' };
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const emailCol = headers.indexOf('Email');
+  const statusCol = headers.indexOf('Status');
+  const nameCol = headers.indexOf('Nama');
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][emailCol]).toLowerCase() === String(email).toLowerCase()) {
+      sh.getRange(i + 1, statusCol + 1).setValue('rejected');
+      try {
+        MailApp.sendEmail({
+          to: email,
+          subject: 'Pendaftaran Jurnal Trading kamu belum disetujui',
+          htmlBody: 'Halo ' + (data[i][nameCol] || '') + ',<br><br>' +
+                     'Maaf, pendaftaran akun kamu belum bisa disetujui saat ini. Hubungi admin untuk info lebih lanjut.<br><br>Salam.'
+        });
+      } catch (mailErr) {
+        Logger.log('Gagal kirim email reject: ' + mailErr);
+      }
+      return { ok: true };
+    }
+  }
+  return { error: 'User tidak ditemukan' };
+}
+
+/**
+ * Ubah status user secara bebas (mis. nonaktifkan user yang tadinya sudah aktif).
+ * status valid: active, inactive, pending, rejected
+ */
+function setUserStatus(email, status) {
+  const allowed = ['active', 'inactive', 'pending', 'rejected'];
+  if (allowed.indexOf(status) === -1) return { error: 'Status tidak valid' };
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const emailCol = headers.indexOf('Email');
+  const statusCol = headers.indexOf('Status');
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][emailCol]).toLowerCase() === String(email).toLowerCase()) {
+      sh.getRange(i + 1, statusCol + 1).setValue(status);
+      return { ok: true };
+    }
+  }
+  return { error: 'User tidak ditemukan' };
+}
+
+/**
+ * Buat spreadsheet baru khusus 1 user (kosong), dengan semua tab data standar
+ * (JURNAL, KURS, PAIRS, SETUPS, AKUN, RISK) — TANPA tab USERS (itu cuma di master).
+ */
+function createUserSpreadsheet(label) {
+  const newSs = SpreadsheetApp.create('Jurnal Trading — ' + label);
+  const newId = newSs.getId();
+
+  Object.keys(SH).forEach(key => {
+    if (key === 'USERS') return;
+    getOrCreateSheet(SH[key], HEADERS[key], newSs);
+  });
+
+  // Hapus sheet default "Sheet1" bawaan Google Sheets kalau masih ada
+  const defaultSheet = newSs.getSheetByName('Sheet1');
+  if (defaultSheet && newSs.getSheets().length > 1) newSs.deleteSheet(defaultSheet);
+
+  return newId;
+}
+
+// ══════════════════════════════════════════════════════════
 //  SHEET HELPER
 // ══════════════════════════════════════════════════════════
 
+// getSS() sekarang mengarah ke spreadsheet MILIK USER YANG SEDANG LOGIN (CURRENT_SS_ID),
+// bukan lagi selalu SHEET_ID. Ini kunci dari isolasi data per-user.
 function getSS() {
+  return SpreadsheetApp.openById(CURRENT_SS_ID || SHEET_ID);
+}
+
+// Spreadsheet MASTER — selalu SHEET_ID, dipakai khusus untuk tab USERS (mapping akun).
+function getMasterSS() {
   return SpreadsheetApp.openById(SHEET_ID);
 }
 
@@ -191,8 +506,8 @@ function migrateAkunSchema(sh) {
  * Kolom header baru yang belum ada di sheet lama (mis. 'TF') akan otomatis
  * ditambahkan di kolom paling akhir, supaya posisi kolom data lama tidak bergeser.
  */
-function getOrCreateSheet(name, headers) {
-  const ss = getSS();
+function getOrCreateSheet(name, headers, ssOverride) {
+  const ss = ssOverride || getSS();
   let sh = ss.getSheetByName(name);
 
   if (!sh) {
@@ -239,8 +554,11 @@ function initSheets() {
   const aShExisting = ss.getSheetByName(SH.AKUN);
   if (aShExisting) migrateAkunSchema(aShExisting);
 
-  // ── Pastikan semua sheet ada & header lengkap (termasuk auto-tambah kolom TF) ──
-  Object.keys(SH).forEach(key => getOrCreateSheet(SH[key], HEADERS[key]));
+  // ── Pastikan semua sheet DATA (bukan USERS) ada & header lengkap di spreadsheet user ini ──
+  Object.keys(SH).forEach(key => {
+    if (key === 'USERS') return; // USERS cuma hidup di spreadsheet MASTER, lihat getMasterSS()
+    getOrCreateSheet(SH[key], HEADERS[key], ss);
+  });
 }
 
 /**
