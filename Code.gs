@@ -134,21 +134,27 @@ let CURRENT_SS_ID = null;
  * Mengembalikan {email, name, picture} kalau valid, atau null kalau tidak.
  */
 function verifyGoogleToken(idToken) {
-  if (!idToken) return null;
+  if (!idToken) { Logger.log('verifyGoogleToken: idToken kosong'); return null; }
   try {
     const res = UrlFetchApp.fetch(
       'https://oauth2.googleapis.com/tokeninfo?id_token=' + encodeURIComponent(idToken),
       { muteHttpExceptions: true }
     );
-    if (res.getResponseCode() !== 200) return null;
+    if (res.getResponseCode() !== 200) {
+      Logger.log('verifyGoogleToken: tokeninfo HTTP ' + res.getResponseCode() + ' -> ' + res.getContentText());
+      return null;
+    }
     const payload = JSON.parse(res.getContentText());
 
     // Pastikan token ini memang dibuat untuk aplikasi kita (cegah token dari app lain dipakai di sini)
     if (payload.aud !== GOOGLE_CLIENT_ID) {
-      Logger.log('verifyGoogleToken: audience mismatch');
+      Logger.log('verifyGoogleToken: audience mismatch. Token aud="' + payload.aud + '" vs GOOGLE_CLIENT_ID="' + GOOGLE_CLIENT_ID + '"');
       return null;
     }
-    if (payload.email_verified !== 'true' && payload.email_verified !== true) return null;
+    if (payload.email_verified !== 'true' && payload.email_verified !== true) {
+      Logger.log('verifyGoogleToken: email belum terverifikasi untuk ' + payload.email);
+      return null;
+    }
 
     return { email: String(payload.email).toLowerCase(), name: payload.name || payload.email, picture: payload.picture || '' };
   } catch (err) {
