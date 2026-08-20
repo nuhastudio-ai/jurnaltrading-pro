@@ -30,8 +30,13 @@ const SH = {
   SETUPS : 'SETUPS',
   AKUN   : 'AKUN',
   RISK   : 'RISK',
-  USERS  : 'USERS'   // ← hanya ada di spreadsheet MASTER, bukan di spreadsheet tiap user
+  USERS  : 'USERS',   // ← hanya ada di spreadsheet MASTER, bukan di spreadsheet tiap user
+  SESSIONS: 'SESSIONS' // ← hanya ada di spreadsheet MASTER; session token pengganti idToken Google
 };
+
+// Berapa lama session token berlaku sebelum user wajib login ulang.
+// (idToken Google sendiri cuma tahan ~1 jam, makanya dulu user sering ke-log-out sendiri)
+const SESSION_TTL_DAYS = 7;
 
 // ─── Header Kolom ─────────────────────────────────────────
 // JURNAL v3.1: EXIT dan TP dipisah
@@ -46,7 +51,8 @@ const HEADERS = {
   SETUPS  : ['Nama'],
   AKUN    : ['Nama','Broker','Currency','Balance','Modal','Tipe','Status'],
   RISK    : ['Key','Value'],
-  USERS   : ['Email','Nama','FotoURL','SpreadsheetID','Role','Status','TanggalDaftar','TanggalApprove']
+  USERS   : ['Email','Nama','FotoURL','SpreadsheetID','Role','Status','TanggalDaftar','TanggalApprove'],
+  SESSIONS: ['Token','Email','DibuatPada','KadaluarsaPada']
 };
 
 // ─── Style header warna tema dashboard ────────────────────
@@ -73,7 +79,9 @@ function doPost(e) {
     }
 
     // ── Semua action lain WAJIB login + akun berstatus 'active' ──
-    const auth = requireActiveUser(req.idToken);
+    // Pakai sessionToken (bukan idToken Google lagi) supaya sesi tidak putus
+    // tiap ~1 jam gara-gara idToken Google memang selalu expired cepat.
+    const auth = requireActiveUser(req.sessionToken);
     if (auth.error) return respond(auth);
 
     // ── Action khusus admin ──
@@ -209,22 +217,103 @@ function resolveUser(idToken) {
 /**
  * Dipakai halaman login untuk cek status akun (pending/active/rejected/inactive)
  * tanpa syarat harus sudah active.
+ *
+ * Kalau status 'active', sekalian terbitkan sessionToken baru (berlaku SESSION_TTL_DAYS hari)
+ * supaya frontend TIDAK perlu lagi kirim idToken Google di setiap request berikutnya.
  */
 function handleAuthCheck(idToken) {
   const r = resolveUser(idToken);
   if (r.error) return r;
-  return {
+  const result = {
     ok: true,
     status: r.user.status,
     me: { email: r.user.email, name: r.user.name, picture: r.user.picture, role: r.user.role }
   };
+  if (r.user.status === 'active') {
+    result.sessionToken = createSession(r.user.email);
+  }
+  return result;
+}
+
+// ══════════════════════════════════════════════════════════
+//  SESSION TOKEN — pengganti idToken Google untuk request sehari-hari.
+//  idToken Google cuma valid ~1 jam & wajib verifikasi ke server Google tiap kali dipakai
+//  (lambat + bikin user ke-log-out sendiri di tengah pemakaian). Session token ini:
+//  - dibuat SEKALI saat login berhasil (di handleAuthCheck)
+//  - disimpan di sheet SESSIONS (spreadsheet MASTER)
+//  - berlaku SESSION_TTL_DAYS hari, dicek cukup dari sheet (tanpa panggil Google lagi)
+// ══════════════════════════════════════════════════════════
+
+function generateSessionToken() {
+  return Utilities.getUuid().replace(/-/g, '') + Utilities.getUuid().replace(/-/g, '');
+}
+
+function createSession(email) {
+  const sh = getOrCreateSheet(SH.SESSIONS, HEADERS.SESSIONS, getMasterSS());
+  const token = generateSessionToken();
+  const now = new Date();
+  const expires = new Date(now.getTime() + SESSION_TTL_DAYS * 24 * 60 * 60 * 1000);
+  sh.appendRow([token, String(email).toLowerCase(), now, expires]);
+  return token;
+}
+
+/**
+ * Cari session token di sheet SESSIONS. Kalau valid & belum expired, ambil profil
+ * user terbaru dari sheet USERS (supaya perubahan role/status oleh admin langsung kepakai
+ * tanpa user perlu login ulang).
+ */
+function resolveSessionUser(sessionToken) {
+  if (!sessionToken) return { error: 'INVALID_TOKEN', message: 'Sesi tidak valid, silakan login ulang.' };
+
+  const sh = getOrCreateSheet(SH.SESSIONS, HEADERS.SESSIONS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const col = {};
+  headers.forEach((h, i) => { col[h] = i; });
+
+  for (let i = 1; i < data.length; i++) {
+    if (data[i][col['Token']] === sessionToken) {
+      const expiresAt = new Date(data[i][col['KadaluarsaPada']]);
+      if (isNaN(expiresAt.getTime()) || expiresAt.getTime() < Date.now()) {
+        sh.deleteRow(i + 1); // bersihkan session basi
+        return { error: 'INVALID_TOKEN', message: 'Sesi kamu sudah berakhir, silakan login ulang.' };
+      }
+      return lookupUserByEmail(String(data[i][col['Email']]).toLowerCase());
+    }
+  }
+  return { error: 'INVALID_TOKEN', message: 'Sesi tidak valid, silakan login ulang.' };
+}
+
+function lookupUserByEmail(email) {
+  const sh = getOrCreateSheet(SH.USERS, HEADERS.USERS, getMasterSS());
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const col = {};
+  headers.forEach((h, i) => { col[h] = i; });
+
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][col['Email']]).toLowerCase() === email) {
+      return {
+        user: {
+          email: email,
+          name: data[i][col['Nama']] || email,
+          picture: data[i][col['FotoURL']] || '',
+          spreadsheetId: data[i][col['SpreadsheetID']] || '',
+          role: data[i][col['Role']] || 'member',
+          status: data[i][col['Status']] || 'pending'
+        }
+      };
+    }
+  }
+  return { error: 'INVALID_TOKEN', message: 'Akun tidak ditemukan, silakan login ulang.' };
 }
 
 /**
  * Dipakai semua action data/admin — WAJIB akun berstatus 'active'.
+ * Sekarang menerima sessionToken (bukan idToken Google), lihat resolveSessionUser().
  */
-function requireActiveUser(idToken) {
-  const r = resolveUser(idToken);
+function requireActiveUser(sessionToken) {
+  const r = resolveSessionUser(sessionToken);
   if (r.error) return r;
   if (r.user.status !== 'active') {
     return { error: 'ACCOUNT_' + r.user.status.toUpperCase(), status: r.user.status, message: accountStatusMessage(r.user.status) };

@@ -8,9 +8,11 @@ const SHEET_ID  = '1LiA3hIK8Y3FRJLNcf68hZd5ru0rrjU1Aq51p28siiHc';          // �
 //  AUTH — token & profil disimpan oleh login.html di localStorage,
 //  dibaca di sini. Kalau belum login, langsung dialihkan ke login.html.
 // ══════════════════════════════════════════════════════════
-function getAuthToken() { return localStorage.getItem('jt_idToken') || ''; }
+// jt_sessionToken (bukan jt_idToken lagi) yang dipakai untuk komunikasi dengan server —
+// idToken Google cuma tahan ~1 jam sehingga user sering ke-log-out sendiri di tengah pemakaian.
+function getAuthToken() { return localStorage.getItem('jt_sessionToken') || ''; }
 function getAuthUser()  { try { return JSON.parse(localStorage.getItem('jt_user') || 'null'); } catch (e) { return null; } }
-function clearAuth()    { localStorage.removeItem('jt_idToken'); localStorage.removeItem('jt_user'); }
+function clearAuth()    { localStorage.removeItem('jt_idToken'); localStorage.removeItem('jt_user'); localStorage.removeItem('jt_sessionToken'); }
 function goToLogin(reason) {
   clearAuth();
   if (reason) sessionStorage.setItem('jt_loginMsg', reason);
@@ -63,7 +65,7 @@ async function api(action, payload = {}) {
   const res = await fetch(GAS_URL, {
     method: 'POST',
     headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action, ...payload, idToken: getAuthToken() })
+    body: JSON.stringify({ action, ...payload, sessionToken: getAuthToken() })
   });
   if (!res.ok) throw new Error('HTTP ' + res.status);
   const data = await res.json();

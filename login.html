@@ -73,14 +73,19 @@ async function authCheck(idToken) {
   return res.json();
 }
 
-function saveSession(idToken, me) {
+function saveSession(idToken, me, sessionToken) {
+  // jt_idToken hanya dipakai untuk "Cek Status Lagi" saat masih pending.
   localStorage.setItem('jt_idToken', idToken);
   localStorage.setItem('jt_user', JSON.stringify(me));
+  // jt_sessionToken inilah yang dipakai app (index.html) untuk semua request ke server,
+  // masa berlakunya jauh lebih lama daripada idToken Google (yang cuma ~1 jam).
+  if (sessionToken) localStorage.setItem('jt_sessionToken', sessionToken);
 }
 
 function logoutFromLogin() {
   localStorage.removeItem('jt_idToken');
   localStorage.removeItem('jt_user');
+  localStorage.removeItem('jt_sessionToken');
   show('loginView');
 }
 
@@ -92,7 +97,7 @@ async function handleCredential(response) {
     if (r.error) { show('loginView'); showMsg('❌ ' + (r.message || r.error), 'err'); return; }
 
     if (r.status === 'active') {
-      saveSession(idToken, r.me);
+      saveSession(idToken, r.me, r.sessionToken);
       location.href = 'index.html';
       return;
     }
@@ -125,7 +130,7 @@ async function checkStatusAgain() {
     const r = await authCheck(idToken);
     if (r.error) { logoutFromLogin(); showMsg('❌ Sesi berakhir, silakan login ulang.', 'err'); return; }
     if (r.status === 'active') {
-      saveSession(idToken, r.me);
+      saveSession(idToken, r.me, r.sessionToken);
       location.href = 'index.html';
     } else {
       show('pendingView');
