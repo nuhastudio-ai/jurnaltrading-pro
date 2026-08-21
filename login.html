@@ -73,9 +73,10 @@ async function doGoogleLogin() {
   show('checkingView');
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    await auth.signInWithPopup(provider);
-    // Jangan panggil onLoggedIn() di sini — biarkan listener onAuthStateChanged
-    // di bawah yang menangani, supaya tidak terpanggil dobel/bertabrakan.
+    // Pakai redirect, BUKAN popup — signInWithPopup rawan macet karena
+    // browser modern (COOP) sering blokir komunikasi popup-nya.
+    await auth.signInWithRedirect(provider);
+    // Browser akan pindah halaman ke Google, lalu balik lagi ke sini setelah login.
   } catch (e) {
     show('loginView');
     showMsg('❌ Gagal login: ' + e.message);
@@ -148,7 +149,14 @@ function doLogout() {
   auth.signOut().then(() => { show('loginView'); });
 }
 
-// Kalau sesi Firebase masih aktif (browser reload / buka tab baru), langsung cek status
+// Tangkap hasil/error dari signInWithRedirect (kalau ada masalah spesifik saat redirect balik)
+auth.getRedirectResult().catch(e => {
+  console.error('getRedirectResult error:', e);
+  show('loginView');
+  showMsg('❌ Gagal login: ' + e.message);
+});
+
+// Kalau sesi Firebase masih aktif (browser reload / redirect balik dari Google), langsung cek status
 auth.onAuthStateChanged(user => {
   if (user) { show('checkingView'); onLoggedIn(user); }
   else { show('loginView'); }
