@@ -73,8 +73,9 @@ async function doGoogleLogin() {
   show('checkingView');
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    const result = await auth.signInWithPopup(provider);
-    await onLoggedIn(result.user);
+    await auth.signInWithPopup(provider);
+    // Jangan panggil onLoggedIn() di sini — biarkan listener onAuthStateChanged
+    // di bawah yang menangani, supaya tidak terpanggil dobel/bertabrakan.
   } catch (e) {
     show('loginView');
     showMsg('❌ Gagal login: ' + e.message);
@@ -87,40 +88,53 @@ async function doGoogleLogin() {
  * berdasarkan status: active → masuk ke index.html, pending/inactive → tampilkan info.
  */
 async function onLoggedIn(user) {
-  const ref = db.collection('users').doc(user.uid);
-  const snap = await ref.get();
+  try {
+    const ref = db.collection('users').doc(user.uid);
+    const snap = await ref.get();
 
-  if (!snap.exists) {
-    // Pendaftaran otomatis pertama kali — status default 'pending', role 'member'
-    await ref.set({
-      email: user.email,
-      name: user.displayName || user.email,
-      picture: user.photoURL || '',
-      role: 'member',
-      status: 'pending',
-      daftar: firebase.firestore.FieldValue.serverTimestamp()
-    });
-  }
+    if (!snap.exists) {
+      // Pendaftaran otomatis pertama kali — status default 'pending', role 'member'
+      await ref.set({
+        email: user.email,
+        name: user.displayName || user.email,
+        picture: user.photoURL || '',
+        role: 'member',
+        status: 'pending',
+        daftar: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
 
-  const profile = (await ref.get()).data();
+    const profileSnap = await ref.get();
+    const profile = profileSnap.data();
 
-  if (profile.status === 'active') {
-    location.href = 'index.html';
-    return;
+    if (!profile) {
+      show('loginView');
+      showMsg('❌ Profil user tidak ditemukan setelah dibuat. Coba lagi.');
+      return;
+    }
+
+    if (profile.status === 'active') {
+      location.href = 'index.html';
+      return;
+    }
+    if (profile.status === 'pending') {
+      document.getElementById('pendingText').textContent =
+        'Akun ' + profile.email + ' sudah terdaftar dan sedang menunggu persetujuan admin.';
+      show('pendingView');
+      return;
+    }
+    if (profile.status === 'inactive') {
+      document.getElementById('pendingText').textContent = 'Akun kamu sudah dinonaktifkan. Hubungi admin kalau ini keliru.';
+      show('pendingView');
+      return;
+    }
+    show('loginView');
+    showMsg('❌ Status akun tidak diketahui: ' + profile.status);
+  } catch (e) {
+    console.error('onLoggedIn error:', e);
+    show('loginView');
+    showMsg('❌ Terjadi error: ' + e.message);
   }
-  if (profile.status === 'pending') {
-    document.getElementById('pendingText').textContent =
-      'Akun ' + profile.email + ' sudah terdaftar dan sedang menunggu persetujuan admin.';
-    show('pendingView');
-    return;
-  }
-  if (profile.status === 'inactive') {
-    document.getElementById('pendingText').textContent = 'Akun kamu sudah dinonaktifkan. Hubungi admin kalau ini keliru.';
-    show('pendingView');
-    return;
-  }
-  show('loginView');
-  showMsg('❌ Status akun tidak diketahui.');
 }
 
 async function checkStatusAgain() {
