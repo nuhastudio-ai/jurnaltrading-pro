@@ -1,0 +1,44 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper: ambil dokumen profil user yang sedang login
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid));
+    }
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    function isAdmin() {
+      return isSignedIn() && myProfile().data.role == 'admin';
+    }
+    function isActive() {
+      return isSignedIn() && myProfile().data.status == 'active';
+    }
+
+    // ── /users/{uid} — profil & status approval ─────────────
+    match /users/{uid} {
+      // Siapapun yang login boleh baca profilnya sendiri (untuk cek status pending/active)
+      // Admin boleh baca semua profil (untuk halaman approval)
+      allow read: if isSignedIn() && (request.auth.uid == uid || isAdmin());
+
+      // User baru boleh BUAT profilnya sendiri sekali (saat pertama login),
+      // TAPI tidak boleh set role/status sendiri (harus default pending/member)
+      allow create: if isSignedIn() && request.auth.uid == uid
+                    && request.resource.data.role == 'member'
+                    && request.resource.data.status == 'pending';
+
+      // Update: admin boleh ubah role/status siapa saja (approve/reject/nonaktifkan).
+      // User biasa TIDAK boleh update dokumennya sendiri sama sekali
+      // (mencegah user mengubah status/role dirinya jadi active/admin sendiri).
+      allow update: if isAdmin();
+
+      allow delete: if false; // tidak ada fitur hapus akun dari sisi app
+    }
+
+    // ── /users/{uid}/trades/{tradeId} — data jurnal, TERISOLASI per uid ──
+    match /users/{uid}/{subcollection}/{docId} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid && isActive();
+    }
+  }
+}

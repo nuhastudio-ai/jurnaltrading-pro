@@ -160,9 +160,4 @@ showSettingsSec = function (id, el) {
   if (id === 'approval') loadApprovalSettings();
 };
 
-// ── Logout ──────────────────────────────────────────────────
-function logout() {
-  if (!confirm('Keluar dari akun ini?')) return;
-  clearAuth();
-  location.href = 'login.html';
-}
+// (fungsi logout() sudah didefinisikan di js/01-core-state.js)

@@ -11,12 +11,12 @@
   .login-icon{font-size:44px;margin-bottom:8px;}
   .login-title{font-family:var(--fn-h);font-size:20px;font-weight:800;background:linear-gradient(135deg,#fff,var(--c-gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:4px;}
   .login-sub{font-size:12px;color:var(--txt2);margin-bottom:26px;}
-  #gsiBtnWrap{display:flex;justify-content:center;margin-bottom:10px;}
+  .gbtn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;padding:11px;background:#fff;color:#1f1f1f;border:none;border-radius:24px;font-family:var(--fn-b);font-size:13.5px;font-weight:700;cursor:pointer;transition:box-shadow .15s;}
+  .gbtn:hover{box-shadow:0 2px 12px rgba(255,255,255,.15);}
+  .gbtn img{width:18px;height:18px;}
   .login-msg{font-size:12px;padding:10px 12px;border-radius:8px;margin-top:14px;text-align:left;line-height:1.5;}
   .login-msg.err{background:var(--c-red-d);color:var(--c-red2);border:1px solid rgba(239,68,68,.25);}
-  .login-msg.info{background:var(--c-blue-d);color:#60a5fa;border:1px solid rgba(59,130,246,.28);}
   .pending-view{display:none;}
-  .pending-view .login-icon{color:var(--c-gold);}
   .spinner{width:22px;height:22px;border:2.5px solid var(--bdr);border-top-color:var(--c-gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .hidden{display:none !important;}
@@ -28,16 +28,19 @@
   <div class="login-icon">📊</div>
   <div class="login-title">Forex Journal Pro</div>
   <div class="login-sub">Masuk dengan akun Google kamu untuk lanjut.</div>
-  <div id="gsiBtnWrap"></div>
+  <button class="gbtn" onclick="doGoogleLogin()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="">
+    Masuk dengan Google
+  </button>
   <div id="loginMsgBox"></div>
 </div>
 
 <div class="login-box pending-view" id="pendingView">
   <div class="login-icon">⏳</div>
   <div class="login-title">Menunggu Persetujuan</div>
-  <div class="login-sub" id="pendingText">Akun kamu sudah terdaftar dan sedang menunggu persetujuan admin. Kamu akan bisa masuk begitu di-approve.</div>
+  <div class="login-sub" id="pendingText">Akun kamu sudah terdaftar dan sedang menunggu persetujuan admin.</div>
   <button class="btn btn-gold" style="width:100%;margin-top:6px;" onclick="checkStatusAgain()">🔄 Cek Status Lagi</button>
-  <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="logoutFromLogin()">Keluar / Ganti Akun</button>
+  <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="doLogout()">Keluar / Ganti Akun</button>
 </div>
 
 <div class="login-box hidden" id="checkingView">
@@ -45,112 +48,97 @@
   <div class="login-sub" style="margin-top:14px;margin-bottom:0;">Memeriksa sesi...</div>
 </div>
 
-<script src="https://accounts.google.com/gsi/client" async defer></script>
+<!-- Firebase SDK (versi "compat" — bisa dipakai via <script> biasa, tanpa perlu bundler/import) -->
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+<script src="js/00-firebase-config.js"></script>
 <script>
 // ══════════════════════════════════════════════════════════
-//  KONFIGURASI — samakan dengan js/01-core-state.js
+//  LOGIN — Firebase Auth (Google provider)
 // ══════════════════════════════════════════════════════════
-const GAS_URL         = 'https://script.google.com/macros/s/AKfycbw5XMGydEm4lc6RO22nPIK2RHpmbLoC070VKtjh1p1U4YDvQUBCERFEXGtxPRWkjqo/exec'; // ← samakan dgn js/01-core-state.js
-const GOOGLE_CLIENT_ID = '606938621714-h21mf9lgh2sf8fdbn5othm7h2p4vijid.apps.googleusercontent.com'; // ← WAJIB samakan dgn Code.gs
+const auth = firebase.auth();
+const db   = firebase.firestore();
 
 function show(id) {
   ['loginView', 'pendingView', 'checkingView'].forEach(v => {
     document.getElementById(v).classList.toggle('hidden', v !== id);
   });
 }
-
-function showMsg(text, type) {
-  document.getElementById('loginMsgBox').innerHTML = `<div class="login-msg ${type}">${text}</div>`;
+function showMsg(text) {
+  document.getElementById('loginMsgBox').innerHTML = `<div class="login-msg err">${text}</div>`;
 }
 
-async function authCheck(idToken) {
-  const res = await fetch(GAS_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-    body: JSON.stringify({ action: 'authCheck', idToken })
-  });
-  if (!res.ok) throw new Error('HTTP ' + res.status);
-  return res.json();
-}
-
-function saveSession(idToken, me, sessionToken) {
-  // jt_idToken hanya dipakai untuk "Cek Status Lagi" saat masih pending.
-  localStorage.setItem('jt_idToken', idToken);
-  localStorage.setItem('jt_user', JSON.stringify(me));
-  // jt_sessionToken inilah yang dipakai app (index.html) untuk semua request ke server,
-  // masa berlakunya jauh lebih lama daripada idToken Google (yang cuma ~1 jam).
-  if (sessionToken) localStorage.setItem('jt_sessionToken', sessionToken);
-}
-
-function logoutFromLogin() {
-  localStorage.removeItem('jt_idToken');
-  localStorage.removeItem('jt_user');
-  localStorage.removeItem('jt_sessionToken');
-  show('loginView');
-}
-
-async function handleCredential(response) {
+async function doGoogleLogin() {
   show('checkingView');
   try {
-    const idToken = response.credential;
-    const r = await authCheck(idToken);
-    if (r.error) { show('loginView'); showMsg('❌ ' + (r.message || r.error), 'err'); return; }
-
-    if (r.status === 'active') {
-      saveSession(idToken, r.me, r.sessionToken);
-      location.href = 'index.html';
-      return;
-    }
-
-    // Simpan token juga saat pending, supaya "Cek Status Lagi" bisa reuse tanpa login ulang
-    saveSession(idToken, r.me);
-    if (r.status === 'pending') {
-      document.getElementById('pendingText').textContent =
-        'Akun ' + (r.me.email || '') + ' sudah terdaftar dan sedang menunggu persetujuan admin. Kamu akan bisa masuk begitu di-approve.';
-      show('pendingView');
-    } else if (r.status === 'inactive') {
-      document.getElementById('pendingText').textContent =
-        'Akun kamu sudah dinonaktifkan. Hubungi admin kalau ini keliru.';
-      show('pendingView');
-    } else {
-      show('loginView');
-      showMsg('❌ Status akun tidak diketahui.', 'err');
-    }
+    const provider = new firebase.auth.GoogleAuthProvider();
+    const result = await auth.signInWithPopup(provider);
+    await onLoggedIn(result.user);
   } catch (e) {
     show('loginView');
-    showMsg('❌ Gagal menghubungi server: ' + e.message, 'err');
+    showMsg('❌ Gagal login: ' + e.message);
   }
+}
+
+/**
+ * Dipanggil setiap kali ada user Firebase yang berhasil auth.
+ * Mengecek/membuat dokumen profil di /users/{uid}, lalu tentukan langkah selanjutnya
+ * berdasarkan status: active → masuk ke index.html, pending/inactive → tampilkan info.
+ */
+async function onLoggedIn(user) {
+  const ref = db.collection('users').doc(user.uid);
+  const snap = await ref.get();
+
+  if (!snap.exists) {
+    // Pendaftaran otomatis pertama kali — status default 'pending', role 'member'
+    await ref.set({
+      email: user.email,
+      name: user.displayName || user.email,
+      picture: user.photoURL || '',
+      role: 'member',
+      status: 'pending',
+      daftar: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  }
+
+  const profile = (await ref.get()).data();
+
+  if (profile.status === 'active') {
+    location.href = 'index.html';
+    return;
+  }
+  if (profile.status === 'pending') {
+    document.getElementById('pendingText').textContent =
+      'Akun ' + profile.email + ' sudah terdaftar dan sedang menunggu persetujuan admin.';
+    show('pendingView');
+    return;
+  }
+  if (profile.status === 'inactive') {
+    document.getElementById('pendingText').textContent = 'Akun kamu sudah dinonaktifkan. Hubungi admin kalau ini keliru.';
+    show('pendingView');
+    return;
+  }
+  show('loginView');
+  showMsg('❌ Status akun tidak diketahui.');
 }
 
 async function checkStatusAgain() {
-  const idToken = localStorage.getItem('jt_idToken');
-  if (!idToken) { show('loginView'); return; }
   show('checkingView');
-  try {
-    const r = await authCheck(idToken);
-    if (r.error) { logoutFromLogin(); showMsg('❌ Sesi berakhir, silakan login ulang.', 'err'); return; }
-    if (r.status === 'active') {
-      saveSession(idToken, r.me, r.sessionToken);
-      location.href = 'index.html';
-    } else {
-      show('pendingView');
-    }
-  } catch (e) {
-    show('pendingView');
-  }
+  const user = auth.currentUser;
+  if (!user) { show('loginView'); return; }
+  await onLoggedIn(user);
 }
 
-window.onload = function () {
-  if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID.indexOf('GANTI_DENGAN') !== -1) {
-    showMsg('⚠️ GOOGLE_CLIENT_ID belum dikonfigurasi di login.html.', 'err');
-  } else if (window.google && google.accounts && google.accounts.id) {
-    google.accounts.id.initialize({ client_id: GOOGLE_CLIENT_ID, callback: handleCredential });
-    google.accounts.id.renderButton(document.getElementById('gsiBtnWrap'), { theme: 'filled_black', size: 'large', shape: 'pill', text: 'signin_with' });
-  }
+function doLogout() {
+  auth.signOut().then(() => { show('loginView'); });
+}
 
-  const existingToken = localStorage.getItem('jt_idToken');
-  if (existingToken) checkStatusAgain();
-};
+// Kalau sesi Firebase masih aktif (browser reload / buka tab baru), langsung cek status
+auth.onAuthStateChanged(user => {
+  if (user) { show('checkingView'); onLoggedIn(user); }
+  else { show('loginView'); }
+});
 </script>
 </body>
 </html>
