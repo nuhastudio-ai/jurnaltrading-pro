@@ -16,7 +16,7 @@
   .gbtn img{width:18px;height:18px;}
   .login-msg{font-size:12px;padding:10px 12px;border-radius:8px;margin-top:14px;text-align:left;line-height:1.5;}
   .login-msg.err{background:var(--c-red-d);color:var(--c-red2);border:1px solid rgba(239,68,68,.25);}
-  .pending-view{display:none;}
+  .pending-view.hidden{display:none;}
   .spinner{width:22px;height:22px;border:2.5px solid var(--bdr);border-top-color:var(--c-gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .hidden{display:none !important;}
@@ -68,7 +68,7 @@
   <div id="loginMsgBox"></div>
 </div>
 
-<div class="login-box pending-view" id="pendingView">
+<div class="login-box pending-view hidden" id="pendingView">
   <div class="p-orbit-wrap">
     <div class="p-particles">
       <div class="p-particle"></div><div class="p-particle"></div><div class="p-particle"></div>
