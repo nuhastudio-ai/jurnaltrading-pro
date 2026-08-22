@@ -73,13 +73,31 @@ async function doGoogleLogin() {
   show('checkingView');
   try {
     const provider = new firebase.auth.GoogleAuthProvider();
-    // Pakai redirect, BUKAN popup — signInWithPopup rawan macet karena
-    // browser modern (COOP) sering blokir komunikasi popup-nya.
-    await auth.signInWithRedirect(provider);
-    // Browser akan pindah halaman ke Google, lalu balik lagi ke sini setelah login.
+    // Pakai POPUP, bukan redirect. signInWithRedirect melewati domain
+    // "jurnal-trading-pro26.firebaseapp.com" sebagai lompatan (bounce) terpisah
+    // dari domain app (Vercel) — browser modern (Chrome bounce-tracking
+    // mitigations, ITP Safari/Firefox, dst) makin sering memblokir/menghapus
+    // state domain perantara itu, sehingga hasil login hilang TANPA error apapun
+    // (user "kelihatannya" login tapi dokumen /users/{uid} tidak pernah dibuat).
+    // Popup tidak punya masalah ini karena semuanya terjadi di window terpisah,
+    // bukan navigasi lintas domain berantai. vercel.json project ini sudah
+    // menyediakan header COOP (same-origin-allow-popups) yang dibutuhkan
+    // supaya popup bisa berkomunikasi balik ke window utama dengan lancar.
+    const result = await auth.signInWithPopup(provider);
+    if (result && result.user) {
+      await onLoggedIn(result.user);
+    } else {
+      show('loginView');
+    }
   } catch (e) {
     show('loginView');
-    showMsg('❌ Gagal login: ' + e.message);
+    if (e.code === 'auth/popup-blocked') {
+      showMsg('❌ Popup diblokir browser. Izinkan popup untuk situs ini lalu coba lagi.');
+    } else if (e.code === 'auth/popup-closed-by-user' || e.code === 'auth/cancelled-popup-request') {
+      // User menutup popup sendiri — tidak perlu tampilkan pesan error.
+    } else {
+      showMsg('❌ Gagal login: ' + e.message);
+    }
   }
 }
 
