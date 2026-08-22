@@ -839,6 +839,28 @@
     <div id="detailContent"></div>
   </div>
 </div>
+
+<!-- POPUP PERAYAAN — muncul saat admin menyetujui/mengaktifkan akun -->
+<div class="appr-overlay" id="approveCelebrateOverlay">
+  <div class="appr-box">
+    <div class="appr-particles" id="approveConfetti"></div>
+    <div class="appr-check-wrap">
+      <div class="appr-ring appr-ring-1"></div>
+      <div class="appr-ring appr-ring-2"></div>
+      <svg class="appr-check-svg" viewBox="0 0 52 52">
+        <circle class="appr-check-circle" cx="26" cy="26" r="24" fill="none"/>
+        <path class="appr-check-mark" fill="none" d="M14 27l7 7 17-17"/>
+      </svg>
+    </div>
+    <div class="appr-title" id="approveCelebrateTitle">Akun Disetujui!</div>
+    <div class="appr-account-chip" id="approveCelebrateChip">
+      <img id="approveCelebratePic" src="" alt="" style="display:none;">
+      <span id="approveCelebrateEmail"></span>
+    </div>
+    <div class="appr-sub" id="approveCelebrateSub">User sekarang bisa langsung masuk dan mulai mencatat trading.</div>
+    <button class="btn btn-gold" style="width:100%;margin-top:16px;" onclick="closeApproveCelebrate()">Tutup</button>
+  </div>
+</div>
 <!-- DATE RANGE PICKER OVERLAY -->
 <div class="drp-overlay" id="drpOverlay" onclick="closeDRP()" style="display:none;"></div>
 <div class="drp-popup" id="drpPopup">

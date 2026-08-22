@@ -1,42 +1,24 @@
 // ══════════════════════════════════════════════════════════
-//  AUTH — Firebase Auth. Kalau belum login, langsung ke login.html.
-//  authReady = Promise yang resolve setelah status login pertama kali
-//  selesai dicek (dipakai file 08-ui-utils-boot.js sebelum load data).
+//  KONFIGURASI CLOUD — ISI SESUAI DEPLOYMENT GAS ANDA
 // ══════════════════════════════════════════════════════════
-function waitForAuth() {
-  return new Promise(resolve => {
-    const unsub = firebase.auth().onAuthStateChanged(user => { unsub(); resolve(user); });
-  });
-}
+const GAS_URL   = 'https://script.google.com/macros/s/AKfycbw5XMGydEm4lc6RO22nPIK2RHpmbLoC070VKtjh1p1U4YDvQUBCERFEXGtxPRWkjqo/exec'; // ← Tempel URL dari GAS deployment
+const SHEET_ID  = '1LiA3hIK8Y3FRJLNcf68hZd5ru0rrjU1Aq51p28siiHc';          // ← Sheet ID (untuk referensi)
 
-let CURRENT_USER = null;
-const authReady = (async () => {
-  CURRENT_USER = await waitForAuth();
-  if (!CURRENT_USER) { location.href = 'login.html'; return; }
-})();
-
-function currentUid() {
-  if (!CURRENT_USER) { location.href = 'login.html'; throw new Error('Belum login'); }
-  return CURRENT_USER.uid;
+// ══════════════════════════════════════════════════════════
+//  AUTH — token & profil disimpan oleh login.html di localStorage,
+//  dibaca di sini. Kalau belum login, langsung dialihkan ke login.html.
+// ══════════════════════════════════════════════════════════
+// jt_sessionToken (bukan jt_idToken lagi) yang dipakai untuk komunikasi dengan server —
+// idToken Google cuma tahan ~1 jam sehingga user sering ke-log-out sendiri di tengah pemakaian.
+function getAuthToken() { return localStorage.getItem('jt_sessionToken') || ''; }
+function getAuthUser()  { try { return JSON.parse(localStorage.getItem('jt_user') || 'null'); } catch (e) { return null; } }
+function clearAuth()    { localStorage.removeItem('jt_idToken'); localStorage.removeItem('jt_user'); localStorage.removeItem('jt_sessionToken'); }
+function goToLogin(reason) {
+  clearAuth();
+  if (reason) sessionStorage.setItem('jt_loginMsg', reason);
+  location.href = 'login.html';
 }
-function requireAdmin() {
-  if (!APP.isAdmin) throw new Error('Aksi ini khusus admin');
-}
-function accountStatusMessage(status) {
-  if (status === 'pending')  return 'Akun kamu masih menunggu persetujuan admin.';
-  if (status === 'inactive') return 'Akun kamu sudah dinonaktifkan. Hubungi admin.';
-  if (status === 'rejected') return 'Pendaftaran kamu belum disetujui.';
-  return 'Akun tidak aktif.';
-}
-function fmtDate(ts) {
-  if (!ts) return '-';
-  const d = ts.toDate ? ts.toDate() : new Date(ts);
-  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric' });
-}
-function logout() {
-  if (!confirm('Keluar dari akun ini?')) return;
-  firebase.auth().signOut().then(() => location.href = 'login.html');
-}
+if (!getAuthToken()) { goToLogin(); }
 
 // ══════════════════════════════════════════════════════════
 //  STATE APLIKASI (default; akan di-override dari cloud)
@@ -69,152 +51,48 @@ const APP={
 };
 
 // ══════════════════════════════════════════════════════════
-//  FIRESTORE HELPERS — struktur data:
-//  /users/{uid}                    → profil (email, nama, role, status)
-//  /users/{uid}/data/main          → 1 dokumen: kurs, kursHistory, pairs, setups, akuns, risk
-//  /users/{uid}/trades/{tradeId}   → 1 dokumen per trade
+//  CLOUD API
 // ══════════════════════════════════════════════════════════
-const userDoc   = uid => firebase.firestore().collection('users').doc(uid);
-const dataDoc   = uid => userDoc(uid).collection('data').doc('main');
-const tradesCol = uid => userDoc(uid).collection('trades');
 
 /**
- * Pengganti pemanggilan Apps Script — signature (action, payload) DIPERTAHANKAN SAMA
- * supaya semua pemanggil di file 02-09 tidak perlu diubah sama sekali.
- * Sekarang semua operasi jalan langsung ke Firestore (client SDK), diamankan oleh
- * firestore.rules (bukan lagi oleh backend Apps Script).
+ * Kirim request ke GAS Web App. idToken disisipkan otomatis di setiap request.
+ * Menggunakan Content-Type: text/plain untuk menghindari CORS preflight.
  */
 async function api(action, payload = {}) {
-  await authReady;
-  const uid = currentUid();
-
-  switch (action) {
-
-    case 'getAll': {
-      const profileSnap = await userDoc(uid).get();
-      const profile = profileSnap.exists ? profileSnap.data() : null;
-      if (!profile || profile.status !== 'active') {
-        const msg = accountStatusMessage(profile ? profile.status : 'pending');
-        location.href = 'login.html';
-        throw new Error(msg);
-      }
-      APP.me = { email: profile.email, name: profile.name, picture: profile.picture, role: profile.role };
-      APP.isAdmin = profile.role === 'admin';
-
-      const [dataSnap, tradesSnap] = await Promise.all([ dataDoc(uid).get(), tradesCol(uid).get() ]);
-      const settings = dataSnap.exists ? dataSnap.data() : {};
-      const trades = tradesSnap.docs.map(d => d.data());
-
-      return {
-        ok: true,
-        trades,
-        kurs: settings.kurs,
-        kursHistory: settings.kursHistory || [],
-        pairs: settings.pairs,
-        setups: settings.setups,
-        akuns: settings.akuns,
-        risk: settings.risk,
-        me: APP.me
-      };
-    }
-
-    case 'saveTrade':
-      await tradesCol(uid).doc(String(payload.trade.id)).set(payload.trade);
-      return { ok: true };
-
-    case 'saveAllTrades': { // dipakai import CSV — tulis banyak trade sekaligus
-      const batch = firebase.firestore().batch();
-      (payload.trades || []).forEach(t => batch.set(tradesCol(uid).doc(String(t.id)), t));
-      await batch.commit();
-      return { ok: true };
-    }
-
-    case 'deleteTrade':
-      await tradesCol(uid).doc(String(payload.id)).delete();
-      return { ok: true };
-
-    case 'deleteAllTrades': {
-      const snap = await tradesCol(uid).get();
-      const batch = firebase.firestore().batch();
-      snap.docs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
-      return { ok: true };
-    }
-
-    case 'saveKurs': {
-      const cur = (await dataDoc(uid).get()).data() || {};
-      const hist = [payload.kurs, ...(cur.kursHistory || [])];
-      await dataDoc(uid).set({ kurs: payload.kurs.val, kursHistory: hist }, { merge: true });
-      return { ok: true };
-    }
-
-    case 'savePairs':  await dataDoc(uid).set({ pairs: payload.pairs },   { merge: true }); return { ok: true };
-    case 'saveSetups': await dataDoc(uid).set({ setups: payload.setups }, { merge: true }); return { ok: true };
-    case 'saveAkuns':  await dataDoc(uid).set({ akuns: payload.akuns },   { merge: true }); return { ok: true };
-    case 'saveRisk':   await dataDoc(uid).set({ risk: payload.risk },     { merge: true }); return { ok: true };
-
-    case 'replaceAll': {
-      const d = payload.data;
-      const snap = await tradesCol(uid).get();
-      const batch = firebase.firestore().batch();
-      snap.docs.forEach(doc => batch.delete(doc.ref));
-      (d.trades || []).forEach(t => batch.set(tradesCol(uid).doc(String(t.id)), t));
-      await batch.commit();
-      await dataDoc(uid).set({
-        kurs: d.kurs, kursHistory: d.kursHistory || [], pairs: d.pairs, setups: d.setups, akuns: d.akuns
-      }, { merge: true });
-      return { ok: true };
-    }
-
-    // ── ADMIN — diamankan ganda: cek role di sini (UX) + firestore.rules (keamanan asli) ──
-    case 'getPendingUsers': {
-      requireAdmin();
-      const snap = await firebase.firestore().collection('users').where('status', '==', 'pending').get();
-      return snap.docs.map(d => ({ email: d.data().email, name: d.data().name, picture: d.data().picture, daftar: fmtDate(d.data().daftar) }));
-    }
-    case 'getAllUsers': {
-      requireAdmin();
-      const snap = await firebase.firestore().collection('users').get();
-      return snap.docs.map(d => ({
-        email: d.data().email, name: d.data().name, picture: d.data().picture,
-        role: d.data().role || 'member', status: d.data().status || 'pending',
-        daftar: fmtDate(d.data().daftar), approve: fmtDate(d.data().approve)
-      }));
-    }
-    case 'approveUser': {
-      requireAdmin();
-      const q = await firebase.firestore().collection('users').where('email', '==', payload.email).limit(1).get();
-      if (q.empty) return { error: 'User tidak ditemukan' };
-      await q.docs[0].ref.update({ status: 'active', approve: firebase.firestore.FieldValue.serverTimestamp() });
-      return { ok: true, email: payload.email };
-    }
-    case 'rejectUser': {
-      requireAdmin();
-      const q = await firebase.firestore().collection('users').where('email', '==', payload.email).limit(1).get();
-      if (q.empty) return { error: 'User tidak ditemukan' };
-      await q.docs[0].ref.update({ status: 'rejected' });
-      return { ok: true };
-    }
-    case 'setUserStatus': {
-      requireAdmin();
-      const q = await firebase.firestore().collection('users').where('email', '==', payload.email).limit(1).get();
-      if (q.empty) return { error: 'User tidak ditemukan' };
-      await q.docs[0].ref.update({ status: payload.status });
-      return { ok: true };
-    }
-
-    default:
-      return { error: 'Unknown action: ' + action };
+  if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    throw new Error('GAS_URL belum dikonfigurasi. Edit konstanta GAS_URL di script.');
   }
+  const res = await fetch(GAS_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({ action, ...payload, sessionToken: getAuthToken() })
+  });
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const data = await res.json();
+
+  // Sesi tidak valid / akun tidak lagi aktif → tendang balik ke login
+  if (data && data.error) {
+    const authErrors = ['INVALID_TOKEN', 'NO_SPREADSHEET', 'ACCOUNT_PENDING', 'ACCOUNT_INACTIVE', 'ACCOUNT_REJECTED'];
+    if (authErrors.indexOf(data.error) !== -1) {
+      goToLogin(data.message || 'Sesi berakhir, silakan login ulang.');
+      throw new Error(data.message || data.error);
+    }
+  }
+  if (data && data.me) {
+    APP.me = data.me;
+    APP.isAdmin = data.me.role === 'admin';
+    localStorage.setItem('jt_user', JSON.stringify(data.me));
+  }
+  return data;
 }
 
-/** Fire-and-forget cloud sync dengan feedback pill (signature sama seperti versi lama) */
+/** Fire-and-forget cloud sync dengan feedback pill */
 function cloudSync(action, payload, successMsg) {
   setCloudPill('saving');
   api(action, payload)
     .then(r => {
-      if (r && r.error) { setCloudPill('err'); showToast('❌ Cloud: ' + r.error, 'error'); }
-      else { setCloudPill('idle'); if (successMsg) showToast(successMsg); }
+      if (r.error) { setCloudPill('err'); showToast('❌ Cloud: ' + r.error, 'error'); }
+      else { setCloudPill('idle'); if(successMsg) showToast(successMsg); }
     })
     .catch(e => { setCloudPill('err'); showToast('❌ Gagal sync cloud: ' + e.message, 'error'); });
 }
@@ -251,4 +129,3 @@ const getAkun=name=>APP.akuns.find(a=>a.name===name);
 const g=(id,val)=>document.getElementById(id).textContent=val;
 
 // PNL CALC
-

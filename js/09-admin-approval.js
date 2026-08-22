@@ -72,7 +72,7 @@ function renderPendingUsers(list) {
         </div>
       </div>
       <div style="display:flex;gap:6px;">
-        <button class="btn btn-gold btn-sm" onclick="adminApprove('${u.email}')">✅ Approve</button>
+        <button class="btn btn-gold btn-sm" onclick="adminApprove('${u.email}', '${(u.picture || '').replace(/'/g, "\\'")}')">✅ Approve</button>
         <button class="btn btn-danger btn-sm" onclick="adminReject('${u.email}')">✕ Tolak</button>
       </div>
     </div>
@@ -100,25 +100,78 @@ function renderAllUsers(list) {
         ${u.role === 'admin' ? '<span style="color:var(--txt2);font-size:11px;">—</span>' : (
           u.status === 'active'
             ? `<button class="btn btn-ghost btn-sm" onclick="adminSetStatus('${u.email}','inactive')">Nonaktifkan</button>`
-            : `<button class="btn btn-ghost btn-sm" onclick="adminSetStatus('${u.email}','active')">Aktifkan</button>`
+            : `<button class="btn btn-ghost btn-sm" onclick="adminSetStatus('${u.email}','active','${(u.picture || '').replace(/'/g, "\\'")}')">Aktifkan</button>`
         )}
       </td>
     </tr>
   `).join('');
 }
 
-async function adminApprove(email) {
-  if (!confirm('Setujui akun ' + email + '? User akan dapat email notifikasi dan spreadsheet pribadi otomatis dibuatkan.')) return;
+async function adminApprove(email, picture) {
+  if (!confirm('Setujui akun ' + email + '? User akan langsung bisa masuk ke aplikasi.')) return;
   showLoader('Menyetujui user...');
   try {
     const r = await api('approveUser', { email });
     if (r.error) throw new Error(r.error);
-    showToast('✅ ' + email + ' disetujui!');
     await loadApprovalSettings();
+    openApproveCelebrate({
+      title: 'Akun Disetujui! 🎉',
+      email,
+      picture,
+      sub: 'User sekarang bisa langsung masuk dan mulai mencatat trading.'
+    });
   } catch (e) {
     showToast('❌ Gagal approve: ' + e.message, 'error');
   } finally {
     hideLoader();
+  }
+}
+
+// ══════════════════════════════════════════════════════════
+//  POPUP PERAYAAN — muncul saat akun disetujui/diaktifkan
+// ══════════════════════════════════════════════════════════
+function openApproveCelebrate({ title, email, picture, sub }) {
+  const overlay = document.getElementById('approveCelebrateOverlay');
+  if (!overlay) return; // fallback: kalau markup belum ada, diam-diam skip (toast lama tetap jalan lewat loadApprovalSettings)
+  document.getElementById('approveCelebrateTitle').textContent = title || 'Akun Disetujui!';
+  document.getElementById('approveCelebrateEmail').textContent = email || '';
+  document.getElementById('approveCelebrateSub').textContent = sub || '';
+  const pic = document.getElementById('approveCelebratePic');
+  if (picture) { pic.src = picture; pic.style.display = 'inline-block'; } else { pic.style.display = 'none'; }
+
+  spawnConfetti();
+  // Re-trigger animasi checkmark tiap kali dibuka
+  const svg = overlay.querySelector('.appr-check-svg');
+  if (svg) { svg.style.animation = 'none'; void svg.offsetWidth; svg.style.animation = ''; }
+  const circle = overlay.querySelector('.appr-check-circle');
+  const mark = overlay.querySelector('.appr-check-mark');
+  [circle, mark].forEach(el => { if (!el) return; el.style.animation = 'none'; void el.offsetWidth; });
+  requestAnimationFrame(() => {
+    if (circle) circle.style.animation = 'apprCircleDraw .5s ease-out forwards';
+    if (mark) mark.style.animation = 'apprMarkDraw .35s ease-out .45s forwards';
+  });
+
+  overlay.classList.add('active');
+}
+function closeApproveCelebrate() {
+  const overlay = document.getElementById('approveCelebrateOverlay');
+  if (overlay) overlay.classList.remove('active');
+}
+function spawnConfetti() {
+  const wrap = document.getElementById('approveConfetti');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  const colors = ['#f5c518', '#34d399', '#60a5fa', '#f87171', '#e8a900'];
+  const shapes = ['50%', '2px']; // lingkaran / kotak
+  for (let i = 0; i < 26; i++) {
+    const c = document.createElement('div');
+    c.className = 'appr-confetti';
+    c.style.left = (5 + Math.random() * 90) + '%';
+    c.style.background = colors[i % colors.length];
+    c.style.borderRadius = shapes[i % 2];
+    c.style.animationDelay = (Math.random() * 0.4) + 's';
+    c.style.animationDuration = (1.1 + Math.random() * 0.9) + 's';
+    wrap.appendChild(c);
   }
 }
 
@@ -137,15 +190,24 @@ async function adminReject(email) {
   }
 }
 
-async function adminSetStatus(email, status) {
+async function adminSetStatus(email, status, picture) {
   const label = status === 'active' ? 'mengaktifkan' : 'menonaktifkan';
   if (!confirm('Yakin ' + label + ' akun ' + email + '?')) return;
   showLoader('Memproses...');
   try {
     const r = await api('setUserStatus', { email, status });
     if (r.error) throw new Error(r.error);
-    showToast('✅ Status ' + email + ' diubah.');
     await loadApprovalSettings();
+    if (status === 'active') {
+      openApproveCelebrate({
+        title: 'Akun Diaktifkan! 🎉',
+        email,
+        picture,
+        sub: 'User sekarang bisa langsung masuk dan mulai mencatat trading.'
+      });
+    } else {
+      showToast('✅ Status ' + email + ' diubah.');
+    }
   } catch (e) {
     showToast('❌ Gagal ubah status: ' + e.message, 'error');
   } finally {

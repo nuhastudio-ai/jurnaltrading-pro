@@ -20,6 +20,39 @@
   .spinner{width:22px;height:22px;border:2.5px solid var(--bdr);border-top-color:var(--c-gold);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto;}
   @keyframes spin{to{transform:rotate(360deg);}}
   .hidden{display:none !important;}
+
+  /* ═══ PENDING VIEW — animasi orbit + partikel ═══ */
+  #pendingView{max-width:400px;padding:36px 30px 28px;position:relative;overflow:hidden;}
+  #pendingView::before{content:'';position:absolute;top:-60px;left:50%;transform:translateX(-50%);width:220px;height:220px;background:radial-gradient(circle,rgba(245,197,24,.16),transparent 70%);pointer-events:none;}
+  .p-orbit-wrap{position:relative;width:104px;height:104px;margin:0 auto 18px;}
+  .p-orbit-core{position:absolute;inset:50%;transform:translate(-50%,-50%);width:52px;height:52px;background:linear-gradient(135deg,var(--c-gold),var(--c-gold2));border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 0 24px rgba(245,197,24,.55),0 0 60px rgba(245,197,24,.22);animation:pCorePulse 1.6s ease-in-out infinite;}
+  @keyframes pCorePulse{0%,100%{transform:translate(-50%,-50%) scale(1);}50%{transform:translate(-50%,-50%) scale(1.08);}}
+  .p-orbit-ring{position:absolute;inset:0;border-radius:50%;border:2px solid transparent;animation:pOrbitSpin linear infinite;}
+  .p-orbit-ring::before{content:'';position:absolute;border-radius:50%;background:currentColor;box-shadow:0 0 8px currentColor;}
+  .p-orbit-r1{border-color:rgba(245,197,24,.16);animation-duration:2.4s;color:var(--c-gold);}
+  .p-orbit-r1::before{width:9px;height:9px;top:-4.5px;left:50%;transform:translateX(-50%);}
+  .p-orbit-r2{inset:14px;border-color:rgba(52,211,153,.14);animation-duration:3.2s;animation-direction:reverse;color:var(--c-green2);}
+  .p-orbit-r2::before{width:6px;height:6px;top:-3px;left:50%;transform:translateX(-50%);}
+  @keyframes pOrbitSpin{to{transform:rotate(360deg);}}
+  .p-particles{position:absolute;inset:-16px;pointer-events:none;}
+  .p-particle{position:absolute;width:4px;height:4px;border-radius:50%;background:var(--c-gold);opacity:0;animation:pParticleFly 2.6s ease-in-out infinite;}
+  .p-particle:nth-child(1){top:8%;left:50%;animation-delay:0s;--dx:0px;--dy:-32px;}
+  .p-particle:nth-child(2){top:50%;right:2%;animation-delay:.4s;--dx:32px;--dy:0px;background:var(--c-green2);}
+  .p-particle:nth-child(3){bottom:8%;left:50%;animation-delay:.8s;--dx:0px;--dy:32px;}
+  .p-particle:nth-child(4){top:50%;left:2%;animation-delay:1.2s;--dx:-32px;--dy:0px;background:var(--c-green2);}
+  .p-particle:nth-child(5){top:18%;right:14%;animation-delay:.2s;--dx:24px;--dy:-24px;background:#fce27a;}
+  .p-particle:nth-child(6){bottom:18%;left:14%;animation-delay:1.6s;--dx:-24px;--dy:24px;}
+  @keyframes pParticleFly{0%{opacity:0;transform:scale(0) translate(0,0);}30%{opacity:1;}100%{opacity:0;transform:scale(1.4) translate(var(--dx,20px),var(--dy,-30px));}}
+  .p-ticker{min-height:32px;display:flex;align-items:center;justify-content:center;margin-top:2px;}
+  .p-ticker-text{font-size:11.5px;color:var(--txt1);line-height:1.5;animation:pTickerFade .5s ease;}
+  @keyframes pTickerFade{from{opacity:0;transform:translateY(4px);}to{opacity:1;transform:translateY(0);}}
+  .p-steps{display:flex;align-items:center;justify-content:center;gap:6px;margin:16px 0 4px;}
+  .p-step-dot{width:6px;height:6px;border-radius:50%;background:var(--bdr2);transition:all .3s;}
+  .p-step-dot.done{background:var(--c-green2);box-shadow:0 0 6px rgba(52,211,153,.6);}
+  .p-step-dot.now{background:var(--c-gold);box-shadow:0 0 8px rgba(245,197,24,.7);animation:pCorePulse 1s ease-in-out infinite;}
+  .p-account-chip{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.05);border:1px solid var(--bdr);border-radius:20px;padding:5px 12px 5px 5px;margin:10px 0 4px;max-width:100%;}
+  .p-account-chip img{width:22px;height:22px;border-radius:50%;}
+  .p-account-chip span{font-size:11px;font-weight:600;color:var(--txt1);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 </style>
 </head>
 <body>
@@ -36,10 +69,27 @@
 </div>
 
 <div class="login-box pending-view" id="pendingView">
-  <div class="login-icon">⏳</div>
+  <div class="p-orbit-wrap">
+    <div class="p-particles">
+      <div class="p-particle"></div><div class="p-particle"></div><div class="p-particle"></div>
+      <div class="p-particle"></div><div class="p-particle"></div><div class="p-particle"></div>
+    </div>
+    <div class="p-orbit-ring p-orbit-r1"></div>
+    <div class="p-orbit-ring p-orbit-r2"></div>
+    <div class="p-orbit-core">⏳</div>
+  </div>
   <div class="login-title">Menunggu Persetujuan</div>
-  <div class="login-sub" id="pendingText">Akun kamu sudah terdaftar dan sedang menunggu persetujuan admin.</div>
-  <button class="btn btn-gold" style="width:100%;margin-top:6px;" onclick="checkStatusAgain()">🔄 Cek Status Lagi</button>
+  <div class="p-account-chip" id="pendingAccountChip" style="display:none;">
+    <img id="pendingAccountPic" src="" alt="">
+    <span id="pendingAccountEmail"></span>
+  </div>
+  <div class="p-steps">
+    <div class="p-step-dot done"></div>
+    <div class="p-step-dot now"></div>
+    <div class="p-step-dot"></div>
+  </div>
+  <div class="p-ticker"><div class="p-ticker-text" id="pendingText">Akun kamu sudah terdaftar dan sedang menunggu persetujuan admin.</div></div>
+  <button class="btn btn-gold" style="width:100%;margin-top:12px;" onclick="checkStatusAgain()">🔄 Cek Status Lagi</button>
   <button class="btn btn-ghost" style="width:100%;margin-top:8px;" onclick="doLogout()">Keluar / Ganti Akun</button>
 </div>
 
@@ -137,12 +187,15 @@ async function onLoggedIn(user) {
       return;
     }
     if (profile.status === 'pending') {
-      document.getElementById('pendingText').textContent =
-        'Akun ' + profile.email + ' sudah terdaftar dan sedang menunggu persetujuan admin.';
+      showPendingAccount(profile);
+      startPendingTicker();
+      startPendingAutoCheck();
       show('pendingView');
       return;
     }
     if (profile.status === 'inactive') {
+      stopPendingTicker(); stopPendingAutoCheck();
+      showPendingAccount(profile);
       document.getElementById('pendingText').textContent = 'Akun kamu sudah dinonaktifkan. Hubungi admin kalau ini keliru.';
       show('pendingView');
       return;
@@ -164,7 +217,67 @@ async function checkStatusAgain() {
 }
 
 function doLogout() {
+  stopPendingTicker(); stopPendingAutoCheck();
   auth.signOut().then(() => { show('loginView'); });
+}
+
+/** Tampilkan foto profil + email di kartu kecil pada layar "Menunggu Persetujuan" */
+function showPendingAccount(profile) {
+  const chip = document.getElementById('pendingAccountChip');
+  const pic  = document.getElementById('pendingAccountPic');
+  const email = document.getElementById('pendingAccountEmail');
+  if (!chip) return;
+  email.textContent = profile.email || '';
+  if (profile.picture) { pic.src = profile.picture; pic.style.display = 'inline-block'; }
+  else { pic.style.display = 'none'; }
+  chip.style.display = 'inline-flex';
+}
+
+// ── Pesan berganti-ganti di layar "Menunggu Persetujuan" ───────────────
+const PENDING_MESSAGES = [
+  'Akun kamu sudah terdaftar dan sedang menunggu persetujuan admin.',
+  '⏱️ Biasanya tidak butuh waktu lama — sabar ya!',
+  '🔔 Admin akan mendapat notifikasi tentang pendaftaran kamu.',
+  '🚀 Begitu disetujui, kamu bisa langsung mulai mencatat trading.',
+  '👀 Halaman ini otomatis mengecek status setiap beberapa saat.'
+];
+let _pendingTickerIdx = 0, _pendingTickerTimer = null, _pendingAutoCheckTimer = null;
+
+function startPendingTicker() {
+  stopPendingTicker();
+  _pendingTickerIdx = 0;
+  _pendingTickerTimer = setInterval(() => {
+    _pendingTickerIdx = (_pendingTickerIdx + 1) % PENDING_MESSAGES.length;
+    const el = document.getElementById('pendingText');
+    if (!el) return;
+    el.style.animation = 'none';
+    // force reflow supaya animasi fade bisa diulang tiap ganti teks
+    void el.offsetWidth;
+    el.textContent = PENDING_MESSAGES[_pendingTickerIdx];
+    el.style.animation = 'pTickerFade .5s ease';
+  }, 3800);
+}
+function stopPendingTicker() {
+  if (_pendingTickerTimer) { clearInterval(_pendingTickerTimer); _pendingTickerTimer = null; }
+}
+
+/** Cek status ke Firestore tiap 12 detik selagi user diam di layar pending — supaya begitu
+ *  admin approve, user otomatis kebawa masuk ke index.html tanpa perlu klik apa-apa. */
+function startPendingAutoCheck() {
+  stopPendingAutoCheck();
+  _pendingAutoCheckTimer = setInterval(async () => {
+    const user = auth.currentUser;
+    if (!user) return;
+    const snap = await db.collection('users').doc(user.uid).get();
+    const profile = snap.exists ? snap.data() : null;
+    if (profile && profile.status === 'active') {
+      stopPendingTicker(); stopPendingAutoCheck();
+      location.href = 'index.html';
+    }
+  }, 12000);
+}
+function stopPendingAutoCheck() {
+  if (_pendingAutoCheckTimer) { clearInterval(_pendingAutoCheckTimer); _pendingAutoCheckTimer = null; }
 }
 
 // Tangkap hasil/error dari signInWithRedirect (kalau ada masalah spesifik saat redirect balik)

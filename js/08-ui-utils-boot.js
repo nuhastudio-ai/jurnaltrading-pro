@@ -336,16 +336,30 @@ function initDateFilters(){
 }
 
 (async function init() {
-  await authReady; // pastikan status login Firebase sudah selesai dicek sebelum lanjut
   initDateFilters();
   // Swipe navigation untuk mobile
   _addSwipe('rekapNavWrap',()=>navRekapMonth(1),()=>navRekapMonth(-1));
   _addSwipe('calPanel',()=>navCalMonth(1),()=>navCalMonth(-1));
   // 1. Tampilkan loader
-  showLoader('Menghubungkan ke Firestore...');
+  showLoader('Menghubungkan ke Google Spreadsheet...');
   setCloudPill('saving');
 
-  // 2. Load dari cloud (Firestore)
+  // 2. Jika GAS_URL belum diisi → tampilkan warning tapi tetap jalan
+  if (!GAS_URL || GAS_URL === 'YOUR_GAS_WEB_APP_URL_HERE') {
+    document.getElementById('cloudLoaderSub').textContent =
+      '⚠️ GAS_URL belum dikonfigurasi. Menggunakan data default.';
+    await new Promise(r => setTimeout(r, 1800));
+    hideLoader();
+    setCloudPill('err');
+    // Render dengan data default yang sudah ada di APP
+    document.getElementById('kursDisplay').textContent = 'Rp ' + APP.kurs.toLocaleString('id');
+    document.getElementById('kursInput').value = APP.kurs;
+    populateCtrlAkun(); initWinLossChart(); updateAll(); renderSettings(); router();
+    showToast('⚠️ Isi GAS_URL untuk mengaktifkan cloud storage', 'info');
+    return;
+  }
+
+  // 3. Load dari cloud
   try {
     document.getElementById('cloudLoaderSub').textContent = 'Mengambil data jurnal & pengaturan...';
     const data = await api('getAll');
@@ -380,7 +394,7 @@ function initDateFilters(){
     const sub = document.getElementById('cloudLoaderSub');
     sub.innerHTML = `<div class="cloud-loader-err">
       ❌ Gagal terhubung ke cloud:<br><b>${err.message}</b><br><br>
-      Pastikan Firebase sudah dikonfigurasi & Security Rules sudah di-publish.<br>
+      Pastikan GAS sudah di-deploy & SHEET_ID benar.<br>
       <button onclick="location.reload()" style="margin-top:10px;background:var(--c-blue2);color:#fff;border:none;padding:6px 14px;border-radius:6px;cursor:pointer;font-weight:700;">🔄 Coba Lagi</button>
     </div>`;
     setCloudPill('err');
