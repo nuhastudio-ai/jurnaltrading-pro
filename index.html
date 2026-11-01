@@ -1179,372 +1179,372 @@
       <div class="pnl-info-box" id="pnlInfoBox">ℹ️ PnL dihitung otomatis dari tipe pair yang dipilih.</div>
       <div class="form-grid">
         <div class="form-field"><label class="form-lbl">Akun</label><select class="form-in" id="fm-akun"></select></div>
-        <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="datetime-local"
-            class="form-in" id="fm-date"></div>
         <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="text" class="form-in"
-            id="fm-date" placeholder="Pilih tanggal & waktu..."></div>
-        id="fm-date" placeholder="Pilih tanggal & waktu..." readonly style="cursor:pointer;">
-      </div>
-      <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair"
-          onchange="onPairChange()"></select></div>
-      <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf">
-          <option value="1m">1m</option>
-          <option value="5m">5m</option>
-          <option value="15m">15m</option>
-          <option value="30m">30m</option>
-          <option value="1h">1h</option>
-          <option value="4h">4h</option>
-          <option value="1D">1D</option>
-        </select></div>
-      <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir"
-          onchange="calcPnL()">
-          <option>BUY</option>
-          <option>SELL</option>
-        </select></div>
-      <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot"
-          step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Entry Price <span
-            style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number"
-          class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi"
-          oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);"
-          onfocus="this.style.borderColor='var(--c-blue)'"
-          onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
-      <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in"
-          id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">TP <span
-            style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input
-          type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR"
-          oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Exit Price <span
-            style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih
-            OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001"
-          placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number"
-          class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()">
-      </div>
-      <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span
-            style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number"
-          class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">RR <span
-            style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b
-              style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b
-              style="color:var(--c-green2)">TP</b></span></label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly
-            style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
-          <input type="hidden" id="fm-rr">
+          id="fm-date" placeholder="Pilih tanggal & waktu..." readonly style="cursor:pointer;">
         </div>
-      </div>
-      <div class="form-field full"><label class="form-lbl">Hasil <span
-            style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan
-            harga)</span></label>
-        <div class="form-in" id="fm-result-display"
-          style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
-          <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
-          <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
-        </div>
-        <input type="hidden" id="fm-result" value="BE">
-      </div>
-      <div class="form-field full"><label class="form-lbl">Setup <span
-            style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari
-            satu</span></label>
-        <div class="setup-picker" id="fm-setup-picker"></div>
-      </div>
-      <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text" class="form-in"
-          id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
-    </div>
-    <div class="pnl-preview" id="pnlPreview">
-      <div>
-        <div class="pnl-preview-lbl">Estimasi PnL (Auto)</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Fee: <span id="feePreview"
-            style="color:var(--c-gold);font-family:var(--fn-m);">Rp 0</span></div>
-      </div>
-      <div style="text-align:right;">
-        <div class="pnl-preview-val" id="pnlUSDPreview" style="color:var(--txt2);">$0.00</div>
-        <div style="font-size:12px;font-family:var(--fn-m);font-weight:700;color:var(--txt2);" id="pnlRpPreview">Rp 0
-        </div>
-        <div style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);" id="pnlNetPreview"></div>
-      </div>
-    </div>
-    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('tradeModal')">Batal</button><button
-        class="btn btn-gold" onclick="saveTrade()">💾 Simpan Trade</button></div>
-  </div>
-  </div>
-  <div class="modal-overlay" id="pairModal">
-    <div class="modal sm">
-      <div class="modal-hd">
-        <div class="modal-title" id="pairModalTitle">🔧 Tambah Pair Baru</div>
-        <div class="modal-close" onclick="closeModal('pairModal')">✕</div>
-      </div>
-      <div class="form-grid">
-        <div class="form-field"><label class="form-lbl">Nama Pair</label><input type="text" class="form-in" id="pm-name"
-            placeholder="XAU/USD"></div>
-        <div class="form-field"><label class="form-lbl">Tipe</label>
-          <select class="form-in" id="pm-type" onchange="onPairTypeChange()">
-            <option value="forex">Forex Major (×100,000)</option>
-            <option value="commodity100">Commodity ×100 (Gold)</option>
-            <option value="commodity1000">Commodity ×1,000 (Oil)</option>
-            <option value="jpy">JPY Pair (×1,000)</option>
-            <option value="custom">Custom Multiplier</option>
-          </select>
-        </div>
-        <div class="form-field"><label class="form-lbl">Multiplier</label><input type="number" class="form-in"
-            id="pm-mult" value="100000"></div>
-        <div class="form-field"><label class="form-lbl">Pip Size</label><input type="number" class="form-in" id="pm-pip"
-            value="0.0001" step="0.00001"></div>
-        <div class="form-field"><label class="form-lbl">Chip Warna</label>
-          <select class="form-in" id="pm-color">
-            <option value="chip-gold">Gold</option>
-            <option value="chip-blue">Blue</option>
-            <option value="chip-purple">Purple</option>
-            <option value="chip-cyan">Cyan</option>
-            <option value="chip-green">Green</option>
-            <option value="chip-red">Red</option>
-            <option value="chip-gray">Gray</option>
-          </select>
-        </div>
-        <div class="form-field"><label class="form-lbl">Deskripsi</label><input type="text" class="form-in" id="pm-desc"
-            placeholder="Gold / Emas"></div>
-      </div>
-      <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('pairModal')">Batal</button><button
-          class="btn btn-gold" onclick="savePair()">💾 Simpan Pair</button></div>
-    </div>
-  </div>
-  <!-- DELETE LOADING OVERLAY -->
-  <div class="del-loading-overlay" id="delLoadingOverlay">
-    <div class="del-loading-box">
-      <div class="del-orbit-wrap">
-        <div class="del-particles">
-          <div class="del-particle"></div>
-          <div class="del-particle"></div>
-          <div class="del-particle"></div>
-          <div class="del-particle"></div>
-          <div class="del-particle"></div>
-          <div class="del-particle"></div>
-        </div>
-        <div class="del-orbit-ring del-orbit-r1"></div>
-        <div class="del-orbit-ring del-orbit-r2"></div>
-        <div class="del-orbit-ring del-orbit-r3"></div>
-        <div class="del-orbit-core">🗑️</div>
-      </div>
-      <div class="del-loading-title" id="delLoadingTitle">Menghapus<span
-          class="del-loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
-      <div class="del-progress-wrap">
-        <div class="del-progress-bar" id="delProgressBar"></div>
-      </div>
-      <div class="del-progress-label" id="delProgressLabel">Memproses...</div>
-      <div class="del-loading-sub" id="delLoadingSub">Mohon tunggu, jangan tutup halaman ini</div>
-    </div>
-  </div>
-  <!-- AKUN DELETE CONFIRM MODAL -->
-  <div class="del-modal-overlay" id="deleteAkunModal">
-    <div class="del-modal">
-      <!-- STEP 1: Pilih tindakan -->
-      <div id="delStep1">
-        <div class="del-modal-top">
-          <span class="del-modal-icon">⚠️</span>
-          <div class="del-modal-title">Apa yang ingin dilakukan?</div>
-          <div class="del-modal-sub">Pilih tindakan untuk akun berikut:</div>
-          <div class="del-modal-account">
-            <span class="del-modal-account-icon">👤</span>
-            <div>
-              <div class="del-modal-account-name" id="deleteAkunName">—</div>
-              <div class="del-modal-account-broker" id="deleteAkunBroker">—</div>
-            </div>
-          </div>
-        </div>
-        <div class="del-modal-options">
-          <div class="del-option del-option-arsip" onclick="confirmDeleteAkun('arsip')">
-            <div class="del-option-ico">🗄️</div>
-            <div class="del-option-txt">
-              <div class="del-option-title">Arsipkan Akun</div>
-              <div class="del-option-desc">Akun disembunyikan dari filter & statistik. Data jurnal tetap aman dan bisa
-                dikembalikan kapanpun.</div>
-            </div>
-            <span class="del-option-arrow">›</span>
-          </div>
-          <div class="del-option del-option-perm" onclick="goToDelStep2()">
-            <div class="del-option-ico">🗑️</div>
-            <div class="del-option-txt">
-              <div class="del-option-title">Hapus Permanen</div>
-              <div class="del-option-desc">Akun dihapus selamanya. Akan ada konfirmasi lanjutan untuk data jurnal
-                terkait.</div>
-            </div>
-            <span class="del-option-arrow">›</span>
-          </div>
-          <button class="del-modal-cancel"
-            onclick="document.getElementById('deleteAkunModal').classList.remove('active')">Batal</button>
-        </div>
-      </div>
-      <!-- STEP 2: Konfirmasi trade -->
-      <div id="delStep2" style="display:none;">
-        <div class="del-modal-top"
-          style="background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(127,29,29,.15));border-color:rgba(239,68,68,.25);">
-          <span class="del-modal-icon"
-            style="animation:none;filter:drop-shadow(0 4px 16px rgba(239,68,68,.7));">🗑️</span>
-          <div class="del-modal-title" style="color:var(--c-red2);">Hapus Permanen</div>
-          <div class="del-modal-sub">Akun <b id="delStep2AkunName" style="color:#fff;"></b> akan dihapus selamanya.
-          </div>
-          <div
-            style="margin-top:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 14px;">
-            <div style="font-size:11px;font-weight:700;color:var(--c-red2);margin-bottom:4px;">⚠️ Data Jurnal Terkait
-            </div>
-            <div style="font-size:11px;color:var(--txt1);"><span id="delStep2TradeCount"
-                style="color:#fff;font-weight:700;font-family:var(--fn-m);">0</span> trade ditemukan dengan akun ini.
-            </div>
-          </div>
-        </div>
-        <div class="del-modal-options">
-          <div
-            style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:-4px;">
-            Pilih nasib data jurnal:</div>
-          <div class="del-option del-option-perm" onclick="confirmDeleteAkun('permanent', true)"
-            style="border-color:rgba(239,68,68,.35);">
-            <div class="del-option-ico" style="background:rgba(239,68,68,.2);">💥</div>
-            <div class="del-option-txt">
-              <div class="del-option-title">Hapus Akun + Semua Jurnalnya</div>
-              <div class="del-option-desc">Semua trade terkait akun ini ikut dihapus permanen dari cloud. Tidak dapat
-                dikembalikan.</div>
-            </div>
-            <span class="del-option-arrow">›</span>
-          </div>
-          <div class="del-option" onclick="confirmDeleteAkun('permanent', false)"
-            style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
-            <div class="del-option-ico" style="background:rgba(255,255,255,.07);font-size:20px;">📂</div>
-            <div class="del-option-txt">
-              <div class="del-option-title" style="color:var(--txt1);">Hapus Akun Saja</div>
-              <div class="del-option-desc">Data jurnal tetap tersimpan tapi tanpa referensi akun (orphan). Tidak muncul
-                di statistik.</div>
-            </div>
-            <span class="del-option-arrow" style="color:var(--txt2);">›</span>
-          </div>
-          <button class="del-modal-cancel" onclick="goToDelStep1()">← Kembali</button>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="akunModal">
-    <div class="modal sm">
-      <div class="modal-hd">
-        <div class="modal-title" id="akunModalTitle">👤 Tambah Akun</div>
-        <div class="modal-close" onclick="closeModal('akunModal')">✕</div>
-      </div>
-      <div class="form-grid">
-        <div class="form-field full"><label class="form-lbl">Nama Akun</label><input type="text" class="form-in"
-            id="am-name" placeholder="SCALPING ONE"></div>
-        <div class="form-field"><label class="form-lbl">Broker</label><input type="text" class="form-in" id="am-broker"
-            placeholder="XM Global"></div>
-        <div class="form-field"><label class="form-lbl">Tipe</label><select class="form-in" id="am-type">
-            <option value="live">LIVE</option>
-            <option value="demo">DEMO</option>
-            <option value="cent">CENT</option>
+        <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair"
+            onchange="onPairChange()"></select></div>
+        <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf">
+            <option value="1m">1m</option>
+            <option value="5m">5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="4h">4h</option>
+            <option value="1D">1D</option>
           </select></div>
-        <div class="form-field"><label class="form-lbl">Currency</label><select class="form-in" id="am-currency"
-            onchange="calcAkunModal()">
-            <option value="IDR">IDR (Rupiah)</option>
-            <option value="USD">USD — US$ (Dolar AS)</option>
-            <option value="USC">USC — US¢ (Sen Dolar AS)</option>
-          </select></div>
-        <div class="form-field"><label class="form-lbl" id="am-balance-lbl">Balance</label><input type="number"
-            class="form-in" id="am-balance" value="0" step="0.01" oninput="calcAkunModal()"
-            placeholder="Nominal sesuai currency"></div>
-        <div class="form-field full"><label class="form-lbl">Modal Ekuivalen (Rp) <span
-              style="font-size:9px;color:var(--txt2);font-weight:400;">— otomatis dari balance ×
-              kurs</span></label><input type="number" class="form-in" id="am-modal" readonly
-            style="opacity:.65;cursor:not-allowed;" value="0"></div>
+        <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot"
+            step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">Entry Price <span
+              style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number"
+            class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi"
+            oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);"
+            onfocus="this.style.borderColor='var(--c-blue)'"
+            onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
+        <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in"
+            id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">TP <span
+              style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input
+            type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR"
+            oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">Exit Price <span
+              style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih
+              OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001"
+            placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number"
+            class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()">
+        </div>
+          <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span
+                style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number"
+              class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
+          <div class="form-field"><label class="form-lbl">RR <span
+                style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b
+                  style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b
+                  style="color:var(--c-green2)">TP</b></span></label>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly
+                style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
+              <input type="hidden" id="fm-rr">
+            </div>
+          </div>
+          <div class="form-field full"><label class="form-lbl">Hasil <span
+                style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan
+                harga)</span></label>
+            <div class="form-in" id="fm-result-display"
+              style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
+              <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
+              <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
+            </div>
+            <input type="hidden" id="fm-result" value="BE">
+          </div>
+          <div class="form-field full"><label class="form-lbl">Setup <span
+                style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari
+                satu</span></label>
+            <div class="setup-picker" id="fm-setup-picker"></div>
+          </div>
+          <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text"
+              class="form-in" id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
+        </div>
+            <div class="pnl-preview" id="pnlPreview">
+              <div>
+                <div class="pnl-preview-lbl">Estimasi PnL (Auto)</div>
+                <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Fee: <span id="feePreview"
+                    style="color:var(--c-gold);font-family:var(--fn-m);">Rp 0</span></div>
+              </div>
+              <div style="text-align:right;">
+                <div class="pnl-preview-val" id="pnlUSDPreview" style="color:var(--txt2);">$0.00</div>
+                <div style="font-size:12px;font-family:var(--fn-m);font-weight:700;color:var(--txt2);"
+                  id="pnlRpPreview">Rp 0
+                </div>
+                <div style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);" id="pnlNetPreview"></div>
+              </div>
+            </div>
+            <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('tradeModal')">Batal</button><button
+                class="btn btn-gold" onclick="saveTrade()">💾 Simpan Trade</button></div>
+          </div>
+        </div>
+      <div class="modal-overlay" id="pairModal">
+        <div class="modal sm">
+          <div class="modal-hd">
+            <div class="modal-title" id="pairModalTitle">🔧 Tambah Pair Baru</div>
+            <div class="modal-close" onclick="closeModal('pairModal')">✕</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-field"><label class="form-lbl">Nama Pair</label><input type="text" class="form-in"
+                id="pm-name" placeholder="XAU/USD"></div>
+            <div class="form-field"><label class="form-lbl">Tipe</label>
+              <select class="form-in" id="pm-type" onchange="onPairTypeChange()">
+                <option value="forex">Forex Major (×100,000)</option>
+                <option value="commodity100">Commodity ×100 (Gold)</option>
+                <option value="commodity1000">Commodity ×1,000 (Oil)</option>
+                <option value="jpy">JPY Pair (×1,000)</option>
+                <option value="custom">Custom Multiplier</option>
+              </select>
+            </div>
+            <div class="form-field"><label class="form-lbl">Multiplier</label><input type="number" class="form-in"
+                id="pm-mult" value="100000"></div>
+            <div class="form-field"><label class="form-lbl">Pip Size</label><input type="number" class="form-in"
+                id="pm-pip" value="0.0001" step="0.00001"></div>
+            <div class="form-field"><label class="form-lbl">Chip Warna</label>
+              <select class="form-in" id="pm-color">
+                <option value="chip-gold">Gold</option>
+                <option value="chip-blue">Blue</option>
+                <option value="chip-purple">Purple</option>
+                <option value="chip-cyan">Cyan</option>
+                <option value="chip-green">Green</option>
+                <option value="chip-red">Red</option>
+                <option value="chip-gray">Gray</option>
+              </select>
+            </div>
+            <div class="form-field"><label class="form-lbl">Deskripsi</label><input type="text" class="form-in"
+                id="pm-desc" placeholder="Gold / Emas"></div>
+          </div>
+          <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('pairModal')">Batal</button><button
+              class="btn btn-gold" onclick="savePair()">💾 Simpan Pair</button></div>
+        </div>
       </div>
-      <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('akunModal')">Batal</button><button
-          class="btn btn-gold" onclick="saveAkun()">💾 Simpan Akun</button></div>
-    </div>
-  </div>
-  <div class="modal-overlay" id="detailModal">
-    <div class="modal sm">
-      <div class="modal-hd">
-        <div class="modal-title">📄 Detail Trade</div>
-        <div class="modal-close" onclick="closeModal('detailModal')">✕</div>
+      <!-- DELETE LOADING OVERLAY -->
+      <div class="del-loading-overlay" id="delLoadingOverlay">
+        <div class="del-loading-box">
+          <div class="del-orbit-wrap">
+            <div class="del-particles">
+              <div class="del-particle"></div>
+              <div class="del-particle"></div>
+              <div class="del-particle"></div>
+              <div class="del-particle"></div>
+              <div class="del-particle"></div>
+              <div class="del-particle"></div>
+            </div>
+            <div class="del-orbit-ring del-orbit-r1"></div>
+            <div class="del-orbit-ring del-orbit-r2"></div>
+            <div class="del-orbit-ring del-orbit-r3"></div>
+            <div class="del-orbit-core">🗑️</div>
+          </div>
+          <div class="del-loading-title" id="delLoadingTitle">Menghapus<span
+              class="del-loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+          <div class="del-progress-wrap">
+            <div class="del-progress-bar" id="delProgressBar"></div>
+          </div>
+          <div class="del-progress-label" id="delProgressLabel">Memproses...</div>
+          <div class="del-loading-sub" id="delLoadingSub">Mohon tunggu, jangan tutup halaman ini</div>
+        </div>
       </div>
-      <div id="detailContent"></div>
-    </div>
-  </div>
+      <!-- AKUN DELETE CONFIRM MODAL -->
+      <div class="del-modal-overlay" id="deleteAkunModal">
+        <div class="del-modal">
+          <!-- STEP 1: Pilih tindakan -->
+          <div id="delStep1">
+            <div class="del-modal-top">
+              <span class="del-modal-icon">⚠️</span>
+              <div class="del-modal-title">Apa yang ingin dilakukan?</div>
+              <div class="del-modal-sub">Pilih tindakan untuk akun berikut:</div>
+              <div class="del-modal-account">
+                <span class="del-modal-account-icon">👤</span>
+                <div>
+                  <div class="del-modal-account-name" id="deleteAkunName">—</div>
+                  <div class="del-modal-account-broker" id="deleteAkunBroker">—</div>
+                </div>
+              </div>
+            </div>
+            <div class="del-modal-options">
+              <div class="del-option del-option-arsip" onclick="confirmDeleteAkun('arsip')">
+                <div class="del-option-ico">🗄️</div>
+                <div class="del-option-txt">
+                  <div class="del-option-title">Arsipkan Akun</div>
+                  <div class="del-option-desc">Akun disembunyikan dari filter & statistik. Data jurnal tetap aman dan
+                    bisa
+                    dikembalikan kapanpun.</div>
+                </div>
+                <span class="del-option-arrow">›</span>
+              </div>
+              <div class="del-option del-option-perm" onclick="goToDelStep2()">
+                <div class="del-option-ico">🗑️</div>
+                <div class="del-option-txt">
+                  <div class="del-option-title">Hapus Permanen</div>
+                  <div class="del-option-desc">Akun dihapus selamanya. Akan ada konfirmasi lanjutan untuk data jurnal
+                    terkait.</div>
+                </div>
+                <span class="del-option-arrow">›</span>
+              </div>
+              <button class="del-modal-cancel"
+                onclick="document.getElementById('deleteAkunModal').classList.remove('active')">Batal</button>
+            </div>
+          </div>
+          <!-- STEP 2: Konfirmasi trade -->
+          <div id="delStep2" style="display:none;">
+            <div class="del-modal-top"
+              style="background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(127,29,29,.15));border-color:rgba(239,68,68,.25);">
+              <span class="del-modal-icon"
+                style="animation:none;filter:drop-shadow(0 4px 16px rgba(239,68,68,.7));">🗑️</span>
+              <div class="del-modal-title" style="color:var(--c-red2);">Hapus Permanen</div>
+              <div class="del-modal-sub">Akun <b id="delStep2AkunName" style="color:#fff;"></b> akan dihapus selamanya.
+              </div>
+              <div
+                style="margin-top:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 14px;">
+                <div style="font-size:11px;font-weight:700;color:var(--c-red2);margin-bottom:4px;">⚠️ Data Jurnal
+                  Terkait
+                </div>
+                <div style="font-size:11px;color:var(--txt1);"><span id="delStep2TradeCount"
+                    style="color:#fff;font-weight:700;font-family:var(--fn-m);">0</span> trade ditemukan dengan akun
+                  ini.
+                </div>
+              </div>
+            </div>
+            <div class="del-modal-options">
+              <div
+                style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:-4px;">
+                Pilih nasib data jurnal:</div>
+              <div class="del-option del-option-perm" onclick="confirmDeleteAkun('permanent', true)"
+                style="border-color:rgba(239,68,68,.35);">
+                <div class="del-option-ico" style="background:rgba(239,68,68,.2);">💥</div>
+                <div class="del-option-txt">
+                  <div class="del-option-title">Hapus Akun + Semua Jurnalnya</div>
+                  <div class="del-option-desc">Semua trade terkait akun ini ikut dihapus permanen dari cloud. Tidak
+                    dapat
+                    dikembalikan.</div>
+                </div>
+                <span class="del-option-arrow">›</span>
+              </div>
+              <div class="del-option" onclick="confirmDeleteAkun('permanent', false)"
+                style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
+                <div class="del-option-ico" style="background:rgba(255,255,255,.07);font-size:20px;">📂</div>
+                <div class="del-option-txt">
+                  <div class="del-option-title" style="color:var(--txt1);">Hapus Akun Saja</div>
+                  <div class="del-option-desc">Data jurnal tetap tersimpan tapi tanpa referensi akun (orphan). Tidak
+                    muncul
+                    di statistik.</div>
+                </div>
+                <span class="del-option-arrow" style="color:var(--txt2);">›</span>
+              </div>
+              <button class="del-modal-cancel" onclick="goToDelStep1()">← Kembali</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-overlay" id="akunModal">
+        <div class="modal sm">
+          <div class="modal-hd">
+            <div class="modal-title" id="akunModalTitle">👤 Tambah Akun</div>
+            <div class="modal-close" onclick="closeModal('akunModal')">✕</div>
+          </div>
+          <div class="form-grid">
+            <div class="form-field full"><label class="form-lbl">Nama Akun</label><input type="text" class="form-in"
+                id="am-name" placeholder="SCALPING ONE"></div>
+            <div class="form-field"><label class="form-lbl">Broker</label><input type="text" class="form-in"
+                id="am-broker" placeholder="XM Global"></div>
+            <div class="form-field"><label class="form-lbl">Tipe</label><select class="form-in" id="am-type">
+                <option value="live">LIVE</option>
+                <option value="demo">DEMO</option>
+                <option value="cent">CENT</option>
+              </select></div>
+            <div class="form-field"><label class="form-lbl">Currency</label><select class="form-in" id="am-currency"
+                onchange="calcAkunModal()">
+                <option value="IDR">IDR (Rupiah)</option>
+                <option value="USD">USD — US$ (Dolar AS)</option>
+                <option value="USC">USC — US¢ (Sen Dolar AS)</option>
+              </select></div>
+            <div class="form-field"><label class="form-lbl" id="am-balance-lbl">Balance</label><input type="number"
+                class="form-in" id="am-balance" value="0" step="0.01" oninput="calcAkunModal()"
+                placeholder="Nominal sesuai currency"></div>
+            <div class="form-field full"><label class="form-lbl">Modal Ekuivalen (Rp) <span
+                  style="font-size:9px;color:var(--txt2);font-weight:400;">— otomatis dari balance ×
+                  kurs</span></label><input type="number" class="form-in" id="am-modal" readonly
+                style="opacity:.65;cursor:not-allowed;" value="0"></div>
+          </div>
+          <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('akunModal')">Batal</button><button
+              class="btn btn-gold" onclick="saveAkun()">💾 Simpan Akun</button></div>
+        </div>
+      </div>
+      <div class="modal-overlay" id="detailModal">
+        <div class="modal sm">
+          <div class="modal-hd">
+            <div class="modal-title">📄 Detail Trade</div>
+            <div class="modal-close" onclick="closeModal('detailModal')">✕</div>
+          </div>
+          <div id="detailContent"></div>
+        </div>
+      </div>
 
-  <!-- POPUP PERAYAAN — muncul saat admin menyetujui/mengaktifkan akun -->
-  <div class="appr-overlay" id="approveCelebrateOverlay">
-    <div class="appr-box">
-      <div class="appr-particles" id="approveConfetti"></div>
-      <div class="appr-check-wrap">
-        <div class="appr-ring appr-ring-1"></div>
-        <div class="appr-ring appr-ring-2"></div>
-        <svg class="appr-check-svg" viewBox="0 0 52 52">
-          <circle class="appr-check-circle" cx="26" cy="26" r="24" fill="none" />
-          <path class="appr-check-mark" fill="none" d="M14 27l7 7 17-17" />
-        </svg>
-      </div>
-      <div class="appr-title" id="approveCelebrateTitle">Akun Disetujui!</div>
-      <div class="appr-account-chip" id="approveCelebrateChip">
-        <img id="approveCelebratePic" src="" alt="" style="display:none;">
-        <span id="approveCelebrateEmail"></span>
-      </div>
-      <div class="appr-sub" id="approveCelebrateSub">User sekarang bisa langsung masuk dan mulai mencatat trading.</div>
-      <button class="btn btn-gold" style="width:100%;margin-top:16px;" onclick="closeApproveCelebrate()">Tutup</button>
-    </div>
-  </div>
-  <!-- DATE RANGE PICKER OVERLAY -->
-  <div class="drp-overlay" id="drpOverlay" onclick="closeDRP()" style="display:none;"></div>
-  <div class="drp-popup" id="drpPopup">
-    <!-- Presets -->
-    <div class="drp-presets" id="drpPresets">
-      <div class="drp-preset" data-preset="today" onclick="drpSelectPreset('today')">Hari Ini</div>
-      <div class="drp-preset" data-preset="last7" onclick="drpSelectPreset('last7')">7 Hari Terakhir</div>
-      <div class="drp-preset" data-preset="last30" onclick="drpSelectPreset('last30')">30 Hari Terakhir</div>
-      <div class="drp-preset" data-preset="last3m" onclick="drpSelectPreset('last3m')">3 Bulan Terakhir</div>
-      <div class="drp-preset" data-preset="last12m" onclick="drpSelectPreset('last12m')">12 Bulan Terakhir</div>
-      <div class="drp-preset" data-preset="mtd" onclick="drpSelectPreset('mtd')">Bulan Ini</div>
-      <div class="drp-preset" data-preset="ytd" onclick="drpSelectPreset('ytd')">Tahun Ini</div>
-      <div class="drp-preset" data-preset="all" onclick="drpSelectPreset('all')">Semua Waktu</div>
-    </div>
-    <!-- Calendars + footer -->
-    <div class="drp-cals">
-      <div class="drp-cals-row">
-        <!-- Calendar left -->
-        <div class="drp-cal" id="drpCalLeft">
-          <div class="drp-cal-hd">
-            <button class="drp-cal-nav" onclick="drpNavMonth(-1)">&#8249;</button>
-            <div class="drp-cal-title" id="drpTitleLeft">—</div>
-            <div style="width:26px;"></div>
+      <!-- POPUP PERAYAAN — muncul saat admin menyetujui/mengaktifkan akun -->
+      <div class="appr-overlay" id="approveCelebrateOverlay">
+        <div class="appr-box">
+          <div class="appr-particles" id="approveConfetti"></div>
+          <div class="appr-check-wrap">
+            <div class="appr-ring appr-ring-1"></div>
+            <div class="appr-ring appr-ring-2"></div>
+            <svg class="appr-check-svg" viewBox="0 0 52 52">
+              <circle class="appr-check-circle" cx="26" cy="26" r="24" fill="none" />
+              <path class="appr-check-mark" fill="none" d="M14 27l7 7 17-17" />
+            </svg>
           </div>
-          <div class="drp-cal-grid" id="drpGridLeft"></div>
-        </div>
-        <!-- Calendar right -->
-        <div class="drp-cal" id="drpCalRight">
-          <div class="drp-cal-hd">
-            <div style="width:26px;"></div>
-            <div class="drp-cal-title" id="drpTitleRight">—</div>
-            <button class="drp-cal-nav" onclick="drpNavMonth(1)">&#8250;</button>
+          <div class="appr-title" id="approveCelebrateTitle">Akun Disetujui!</div>
+          <div class="appr-account-chip" id="approveCelebrateChip">
+            <img id="approveCelebratePic" src="" alt="" style="display:none;">
+            <span id="approveCelebrateEmail"></span>
           </div>
-          <div class="drp-cal-grid" id="drpGridRight"></div>
+          <div class="appr-sub" id="approveCelebrateSub">User sekarang bisa langsung masuk dan mulai mencatat trading.
+          </div>
+          <button class="btn btn-gold" style="width:100%;margin-top:16px;"
+            onclick="closeApproveCelebrate()">Tutup</button>
         </div>
       </div>
-      <!-- Footer -->
-      <div class="drp-footer">
-        <div class="drp-range-lbl" id="drpRangeLbl">Pilih tanggal awal</div>
-        <div class="drp-footer-btns">
-          <button class="btn btn-ghost btn-sm" onclick="closeDRP()">Batal</button>
-          <button class="btn btn-primary btn-sm" onclick="drpApply()">Terapkan</button>
+      <!-- DATE RANGE PICKER OVERLAY -->
+      <div class="drp-overlay" id="drpOverlay" onclick="closeDRP()" style="display:none;"></div>
+      <div class="drp-popup" id="drpPopup">
+        <!-- Presets -->
+        <div class="drp-presets" id="drpPresets">
+          <div class="drp-preset" data-preset="today" onclick="drpSelectPreset('today')">Hari Ini</div>
+          <div class="drp-preset" data-preset="last7" onclick="drpSelectPreset('last7')">7 Hari Terakhir</div>
+          <div class="drp-preset" data-preset="last30" onclick="drpSelectPreset('last30')">30 Hari Terakhir</div>
+          <div class="drp-preset" data-preset="last3m" onclick="drpSelectPreset('last3m')">3 Bulan Terakhir</div>
+          <div class="drp-preset" data-preset="last12m" onclick="drpSelectPreset('last12m')">12 Bulan Terakhir</div>
+          <div class="drp-preset" data-preset="mtd" onclick="drpSelectPreset('mtd')">Bulan Ini</div>
+          <div class="drp-preset" data-preset="ytd" onclick="drpSelectPreset('ytd')">Tahun Ini</div>
+          <div class="drp-preset" data-preset="all" onclick="drpSelectPreset('all')">Semua Waktu</div>
+        </div>
+        <!-- Calendars + footer -->
+        <div class="drp-cals">
+          <div class="drp-cals-row">
+            <!-- Calendar left -->
+            <div class="drp-cal" id="drpCalLeft">
+              <div class="drp-cal-hd">
+                <button class="drp-cal-nav" onclick="drpNavMonth(-1)">&#8249;</button>
+                <div class="drp-cal-title" id="drpTitleLeft">—</div>
+                <div style="width:26px;"></div>
+              </div>
+              <div class="drp-cal-grid" id="drpGridLeft"></div>
+            </div>
+            <!-- Calendar right -->
+            <div class="drp-cal" id="drpCalRight">
+              <div class="drp-cal-hd">
+                <div style="width:26px;"></div>
+                <div class="drp-cal-title" id="drpTitleRight">—</div>
+                <button class="drp-cal-nav" onclick="drpNavMonth(1)">&#8250;</button>
+              </div>
+              <div class="drp-cal-grid" id="drpGridRight"></div>
+            </div>
+          </div>
+          <!-- Footer -->
+          <div class="drp-footer">
+            <div class="drp-range-lbl" id="drpRangeLbl">Pilih tanggal awal</div>
+            <div class="drp-footer-btns">
+              <button class="btn btn-ghost btn-sm" onclick="closeDRP()">Batal</button>
+              <button class="btn btn-primary btn-sm" onclick="drpApply()">Terapkan</button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script src="js/00-firebase-config.js"></script>
-  <script src="js/01-core-state.js"></script>
-  <script src="js/02-calculations.js"></script>
-  <script src="js/03-router-trades.js"></script>
-  <script src="js/04-pairs-akun.js"></script>
-  <script src="js/05-dashboard.js"></script>
-  <script src="js/06-settings.js"></script>
-  <script src="js/07-date-cloud-init.js"></script>
-  <script src="js/08-ui-utils-boot.js"></script>
-  <script src="js/09-admin-approval.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+      <script src="js/00-firebase-config.js"></script>
+      <script src="js/01-core-state.js"></script>
+      <script src="js/02-calculations.js"></script>
+      <script src="js/03-router-trades.js"></script>
+      <script src="js/04-pairs-akun.js"></script>
+      <script src="js/05-dashboard.js"></script>
+      <script src="js/06-settings.js"></script>
+      <script src="js/07-date-cloud-init.js"></script>
+      <script src="js/08-ui-utils-boot.js"></script>
+      <script src="js/09-admin-approval.js"></script>
 </body>
 
 </html>
