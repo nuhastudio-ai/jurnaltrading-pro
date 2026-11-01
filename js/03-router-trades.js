@@ -125,168 +125,208 @@ function closeModal(id) { document.getElementById(id).classList.remove('open'); 
 
 // DIRECTION TOGGLE
 function setDirection(dir) {
-  document.getElementById('fm-dir').value = dir;
+  const hiddenDir = document.getElementById('fm-dir');
+  if (hiddenDir) hiddenDir.value = dir;
   const btnBuy = document.getElementById('dirBtnBuy');
   const btnSell = document.getElementById('dirBtnSell');
-  if (dir === 'BUY') {
-    btnBuy.classList.add('active');
-    btnSell.classList.remove('active');
-  } else {
-    btnSell.classList.add('active');
-    btnBuy.classList.remove('active');
+    if (btnBuy && btnSell) {
+      if (dir === 'BUY') {
+        btnBuy.classList.add('active');
+        btnSell.classList.remove('active');
+      } else {
+        btnSell.classList.add('active');
+        btnBuy.classList.remove('active');
+      }
+    }
+    try { calcPnL(); } catch (e) { }
   }
-  calcPnL();
-}
 
-// FLATPICKR INSTANCE
-var _fmDatePicker = null;
-function initDatePicker() {
-  if (_fmDatePicker) return;
-  _fmDatePicker = flatpickr('#fm-date', {
-    enableTime: true,
-    time_24hr: true,
-    dateFormat: 'Y-m-d H:i',
-    altInput: true,
-    altFormat: 'd M Y, H:i',
-    defaultDate: new Date(),
-    locale: { firstDayOfWeek: 1 },
-    disableMobile: true,
-    appendTo: document.querySelector('#tradeModal .modal')
-  });
-}
-
-function openAddModal() {
-  APP.editTradeId = null;
-  document.getElementById('tradeModalTitle').textContent = '➕ Tambah Trade Baru';
-  setDirection('BUY');
-  initDatePicker();
-  if (_fmDatePicker) _fmDatePicker.setDate(new Date(), true);
-  document.getElementById('fm-pnl-usd').value = '';
-  document.getElementById('fm-tf').value = '15m';
-  document.getElementById('fm-entry').value = '';
-  document.getElementById('fm-sl').value = '';
-  document.getElementById('fm-tp').value = '';
-  document.getElementById('fm-exit').value = '';
-  document.getElementById('fm-note').value = '';
-  document.getElementById('fm-fee').value = '';
-  document.getElementById('fm-rr').value = '';
-  document.getElementById('fm-rr-display').value = '';
-  document.getElementById('pnlUSDPreview').textContent = '$0.00';
-  document.getElementById('pnlRpPreview').textContent = 'Rp 0';
-  document.getElementById('feePreview').textContent = 'Rp 0';
-  document.getElementById('pnlNetPreview').textContent = '';
-  // Reset hasil badge
-  const badge = document.getElementById('fm-result-badge');
-  if (badge) { badge.className = 'res-be'; badge.textContent = '—'; }
-  document.getElementById('fm-result').value = 'OPEN';
-  populateTradeForm();
-  openModal('tradeModal');
-}
-
-function openEditModal(id) {
-  const t = APP.trades.find(x => x.id === id); if (!t) return;
-  APP.editTradeId = id;
-  document.getElementById('tradeModalTitle').textContent = '✏️ Edit Trade #' + id;
-  setDirection(t.dir || 'BUY');
-  initDatePicker();
-  populateTradeForm(t.akun);
-  document.getElementById('fm-akun').value = t.akun;
-  if (_fmDatePicker) {
-    var dv = dateToInputVal(t.date);
-    _fmDatePicker.setDate(dv, true);
+  // FLATPICKR INSTANCE
+  var _fmDatePicker = null;
+  function initDatePicker() {
+    const el = document.getElementById('fm-date');
+    if (!el) return;
+    if (typeof flatpickr !== 'undefined') {
+      if (_fmDatePicker) return;
+      try {
+        _fmDatePicker = flatpickr(el, {
+          enableTime: true,
+          time_24hr: true,
+          dateFormat: 'Y-m-d H:i',
+          altInput: true,
+          altFormat: 'd M Y, H:i',
+          defaultDate: new Date(),
+          locale: { firstDayOfWeek: 1 },
+          disableMobile: 'auto'
+        });
+      } catch (e) {
+        console.warn('Flatpickr init warning:', e);
+      }
+    } else {
+      el.removeAttribute('readonly');
+      el.type = 'datetime-local';
+      el.onclick = function () { if (this.showPicker) this.showPicker(); };
+    }
   }
-  document.getElementById('fm-pair').value = t.pair;
-  document.getElementById('fm-tf').value = t.tf || '15m';
-  document.getElementById('fm-lot').value = t.lot;
-  document.getElementById('fm-entry').value = t.entry;
-  document.getElementById('fm-sl').value = t.sl || '';
-  document.getElementById('fm-tp').value = t.tp || '';
-  document.getElementById('fm-exit').value = t.exit || '';
-  // Kosongkan override PnL agar RR, Hasil, dan estimasi PnL dihitung ulang
-  // secara otomatis dari Entry/SL/Exit yang baru diisi. User bisa isi manual
-  // field Override PnL USD jika diperlukan setelah modal terbuka.
-  document.getElementById('fm-pnl-usd').value = '';
-  document.getElementById('fm-fee').value = t.fee || '';
-  renderSetupPicker(getSetupArr(t));
-  document.getElementById('fm-note').value = t.note;
-  // Trigger kalkulasi ulang: PnL preview, RR, dan Hasil otomatis ter-refresh
-  onPairChange();
-  openModal('tradeModal');
-}
 
-function populateTradeForm(includeAkunName) {
-  const activeAkuns = APP.akuns.filter(a => a.status !== 'inactive');
-  let opts = activeAkuns.map(a => `<option>${a.name}</option>`).join('');
-  if (includeAkunName && !activeAkuns.some(a => a.name === includeAkunName)) {
-    const arsipAkun = APP.akuns.find(a => a.name === includeAkunName);
-    if (arsipAkun) opts += `<option value="${arsipAkun.name}">${arsipAkun.name} (arsip)</option>`;
+  function openAddModal() {
+    APP.editTradeId = null;
+    const titleEl = document.getElementById('tradeModalTitle');
+    if (titleEl) titleEl.textContent = '➕ Tambah Trade Baru';
+
+    // 1. Tampilkan modal terlebih dahulu
+    openModal('tradeModal');
+
+    // 2. Isi dropdown akun dan pair
+    populateTradeForm();
+
+    // 3. Set pilihan arah default BUY (kiri SELL, kanan BUY)
+    setDirection('BUY');
+
+    // 4. Set tanggal default (waktu sekarang)
+    const now = new Date();
+    const dateStr = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+    const dateInput = document.getElementById('fm-date');
+    if (dateInput) dateInput.value = dateStr;
+
+    initDatePicker();
+    if (_fmDatePicker) {
+      try { _fmDatePicker.setDate(now, true); } catch (e) { }
+    }
+
+    // 5. Reset semua isian lainnya
+    document.getElementById('fm-pnl-usd').value = '';
+    document.getElementById('fm-tf').value = '15m';
+    document.getElementById('fm-lot').value = '0.01';
+    document.getElementById('fm-entry').value = '';
+    document.getElementById('fm-sl').value = '';
+    document.getElementById('fm-tp').value = '';
+    document.getElementById('fm-exit').value = '';
+    document.getElementById('fm-note').value = '';
+    document.getElementById('fm-fee').value = '';
+    document.getElementById('fm-rr').value = '';
+    document.getElementById('fm-rr-display').value = '';
+    document.getElementById('pnlUSDPreview').textContent = '$0.00';
+    document.getElementById('pnlRpPreview').textContent = 'Rp 0';
+    document.getElementById('feePreview').textContent = 'Rp 0';
+    document.getElementById('pnlNetPreview').textContent = '';
+
+    const badge = document.getElementById('fm-result-badge');
+    if (badge) { badge.className = 'res-be'; badge.textContent = '—'; }
+    document.getElementById('fm-result').value = 'OPEN';
+
+    try { onPairChange(); } catch (e) { }
   }
-  document.getElementById('fm-akun').innerHTML = opts;
-  document.getElementById('fm-pair').innerHTML = APP.pairs.map(p => `<option value="${p.name}">${p.name} — ${p.desc || ''}</option>`).join('');
-  renderSetupPicker([]);
-  onPairChange();
-}
 
-// ── SETUP MULTI-PICKER HELPERS ─────────────────────────────
-function getSetupArr(t) {
-  const s = t.setup; if (!s || s === '') return []; if (Array.isArray(s)) return s.filter(Boolean);
-  // Handle comma-separated string yang disimpan dari DB (contoh: "ICT, Breakout")
-  return s.split(',').map(x => x.trim()).filter(Boolean);
-}
-function renderSetupPicker(selected = []) {
-  const picker = document.getElementById('fm-setup-picker');
-  if (!picker) return;
-  if (!APP.setups.length) { picker.innerHTML = '<span style="font-size:11px;color:var(--txt2);">Belum ada setup — tambah di Settings → Setup</span>'; return; }
-  picker.innerHTML = APP.setups.map(s => `<div class="setup-pick-chip${selected.includes(s) ? ' selected' : ''}" onclick="this.classList.toggle('selected')">${s}</div>`).join('');
-}
-function getSelectedSetups() { return [...document.querySelectorAll('#fm-setup-picker .setup-pick-chip.selected')].map(el => el.textContent.trim()); }
+  function openEditModal(id) {
+    const t = APP.trades.find(x => x.id === id); if (!t) return;
+    APP.editTradeId = id;
+    const titleEl = document.getElementById('tradeModalTitle');
+    if (titleEl) titleEl.textContent = '✏️ Edit Trade #' + id;
 
-function saveTrade() {
-  const entryVal = parseFloat(document.getElementById('fm-entry').value) || 0;
-  if (!entryVal) { return showToast('❌ Entry Price wajib diisi!', 'error'); }
-  const exitVal = parseFloat(document.getElementById('fm-exit').value) || 0;
-  const manual = document.getElementById('fm-pnl-usd').value;
-  const pnlUSD = manual !== '' ? parseFloat(manual) || 0 : calcPnLAuto();
-  const grossRp = Math.round(pnlUSD * APP.kurs);
-  const fee = parseInt(document.getElementById('fm-fee').value) || 0;
-  const pnlRp = grossRp - fee;
-  const data = {
-    akun: document.getElementById('fm-akun').value,
-    date: document.getElementById('fm-date').value,
-    pair: document.getElementById('fm-pair').value,
-    tf: document.getElementById('fm-tf').value,
-    dir: document.getElementById('fm-dir').value,
-    lot: parseFloat(document.getElementById('fm-lot').value) || 0.01,
-    entry: parseFloat(document.getElementById('fm-entry').value) || 0,
-    sl: parseFloat(document.getElementById('fm-sl').value) || 0,
-    tp: parseFloat(document.getElementById('fm-tp').value) || 0,
-    exit: exitVal,
-    pnlUSD, pnlRp, fee,
-    rr: parseFloat(document.getElementById('fm-rr').value) || 0,
-    result: document.getElementById('fm-result').value,
-    setup: getSelectedSetups(),
-    note: document.getElementById('fm-note').value,
-  };
-  const wasEditId = APP.editTradeId; // capture BEFORE reset
-  if (APP.editTradeId !== null) {
-    const idx = APP.trades.findIndex(t => t.id === APP.editTradeId);
-    if (idx > -1) APP.trades[idx] = { ...APP.trades[idx], ...data };
-    showToast('✅ Trade #' + APP.editTradeId + ' diperbarui!');
-  } else {
-    const newId = Math.max(0, ...APP.trades.map(t => t.id)) + 1;
-    APP.trades.unshift({ id: newId, ...data }); // unshift = newest first
-    data.id = newId;
-    showToast('✅ Trade baru ditambahkan!');
+    openModal('tradeModal');
+    populateTradeForm(t.akun);
+    setDirection(t.dir || 'BUY');
+
+    document.getElementById('fm-akun').value = t.akun;
+
+    const dv = dateToInputVal(t.date);
+    const dateInput = document.getElementById('fm-date');
+    if (dateInput) dateInput.value = dv;
+
+    initDatePicker();
+    if (_fmDatePicker) {
+      try { _fmDatePicker.setDate(dv, true); } catch (e) { }
+    }
+
+    document.getElementById('fm-pair').value = t.pair;
+    document.getElementById('fm-tf').value = t.tf || '15m';
+    document.getElementById('fm-lot').value = t.lot;
+    document.getElementById('fm-entry').value = t.entry;
+    document.getElementById('fm-sl').value = t.sl || '';
+    document.getElementById('fm-tp').value = t.tp || '';
+    document.getElementById('fm-exit').value = t.exit || '';
+    document.getElementById('fm-pnl-usd').value = '';
+    document.getElementById('fm-fee').value = t.fee || '';
+    renderSetupPicker(getSetupArr(t));
+    document.getElementById('fm-note').value = t.note || '';
+
+    try { onPairChange(); } catch (e) { }
   }
-  APP.editTradeId = null; // reset agar add trade berikutnya tidak menimpa data lama
-  closeModal('tradeModal');
-  updateAll();
-  renderJournal(); // selalu render ulang jurnal agar perubahan langsung tampil
-  // Sync ke cloud — gunakan wasEditId (sebelum modal close reset)
-  const tradeToSync = wasEditId !== null
-    ? APP.trades.find(t => t.id === wasEditId)
-    : APP.trades[0];
-  cloudSync('saveTrade', { trade: tradeToSync || data });
-}
+
+  function populateTradeForm(includeAkunName) {
+    const activeAkuns = APP.akuns.filter(a => a.status !== 'inactive');
+    let opts = activeAkuns.map(a => `<option>${a.name}</option>`).join('');
+    if (includeAkunName && !activeAkuns.some(a => a.name === includeAkunName)) {
+      const arsipAkun = APP.akuns.find(a => a.name === includeAkunName);
+      if (arsipAkun) opts += `<option value="${arsipAkun.name}">${arsipAkun.name} (arsip)</option>`;
+    }
+    document.getElementById('fm-akun').innerHTML = opts;
+    document.getElementById('fm-pair').innerHTML = APP.pairs.map(p => `<option value="${p.name}">${p.name} — ${p.desc || ''}</option>`).join('');
+    renderSetupPicker([]);
+    onPairChange();
+  }
+
+  // ── SETUP MULTI-PICKER HELPERS ─────────────────────────────
+  function getSetupArr(t) {
+    const s = t.setup; if (!s || s === '') return []; if (Array.isArray(s)) return s.filter(Boolean);
+    // Handle comma-separated string yang disimpan dari DB (contoh: "ICT, Breakout")
+    return s.split(',').map(x => x.trim()).filter(Boolean);
+  }
+  function renderSetupPicker(selected = []) {
+    const picker = document.getElementById('fm-setup-picker');
+    if (!picker) return;
+    if (!APP.setups.length) { picker.innerHTML = '<span style="font-size:11px;color:var(--txt2);">Belum ada setup — tambah di Settings → Setup</span>'; return; }
+    picker.innerHTML = APP.setups.map(s => `<div class="setup-pick-chip${selected.includes(s) ? ' selected' : ''}" onclick="this.classList.toggle('selected')">${s}</div>`).join('');
+  }
+  function getSelectedSetups() { return [...document.querySelectorAll('#fm-setup-picker .setup-pick-chip.selected')].map(el => el.textContent.trim()); }
+
+  function saveTrade() {
+    const entryVal = parseFloat(document.getElementById('fm-entry').value) || 0;
+    if (!entryVal) { return showToast('❌ Entry Price wajib diisi!', 'error'); }
+    const exitVal = parseFloat(document.getElementById('fm-exit').value) || 0;
+    const manual = document.getElementById('fm-pnl-usd').value;
+    const pnlUSD = manual !== '' ? parseFloat(manual) || 0 : calcPnLAuto();
+    const grossRp = Math.round(pnlUSD * APP.kurs);
+    const fee = parseInt(document.getElementById('fm-fee').value) || 0;
+    const pnlRp = grossRp - fee;
+    const data = {
+      akun: document.getElementById('fm-akun').value,
+      date: document.getElementById('fm-date').value,
+      pair: document.getElementById('fm-pair').value,
+      tf: document.getElementById('fm-tf').value,
+      dir: document.getElementById('fm-dir').value,
+      lot: parseFloat(document.getElementById('fm-lot').value) || 0.01,
+      entry: parseFloat(document.getElementById('fm-entry').value) || 0,
+      sl: parseFloat(document.getElementById('fm-sl').value) || 0,
+      tp: parseFloat(document.getElementById('fm-tp').value) || 0,
+      exit: exitVal,
+      pnlUSD, pnlRp, fee,
+      rr: parseFloat(document.getElementById('fm-rr').value) || 0,
+      result: document.getElementById('fm-result').value,
+      setup: getSelectedSetups(),
+      note: document.getElementById('fm-note').value,
+    };
+    const wasEditId = APP.editTradeId; // capture BEFORE reset
+    if (APP.editTradeId !== null) {
+      const idx = APP.trades.findIndex(t => t.id === APP.editTradeId);
+      if (idx > -1) APP.trades[idx] = { ...APP.trades[idx], ...data };
+      showToast('✅ Trade #' + APP.editTradeId + ' diperbarui!');
+    } else {
+      const newId = Math.max(0, ...APP.trades.map(t => t.id)) + 1;
+      APP.trades.unshift({ id: newId, ...data }); // unshift = newest first
+      data.id = newId;
+      showToast('✅ Trade baru ditambahkan!');
+    }
+    APP.editTradeId = null; // reset agar add trade berikutnya tidak menimpa data lama
+    closeModal('tradeModal');
+    updateAll();
+    renderJournal(); // selalu render ulang jurnal agar perubahan langsung tampil
+    // Sync ke cloud — gunakan wasEditId (sebelum modal close reset)
+    const tradeToSync = wasEditId !== null
+      ? APP.trades.find(t => t.id === wasEditId)
+      : APP.trades[0];
+    cloudSync('saveTrade', { trade: tradeToSync || data });
+  }
 
 // PAIR MODAL

@@ -17,6 +17,7 @@
   <link rel="stylesheet" href="css/style.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 </head>
 
 <body>
@@ -80,7 +81,8 @@
           <div class="settings-tab" onclick="showSettingsSec('setups',this)">🎛 Setup</div>
           <div class="settings-tab" onclick="showSettingsSec('akun',this)">👤 Akun Trading</div>
           <div class="settings-tab" id="tabApproval" onclick="showSettingsSec('approval',this)" hidden>🛡️ Approval Akun
-            <span id="pendingBadge" class="badge-count" style="display:none;"></span></div>
+            <span id="pendingBadge" class="badge-count" style="display:none;"></span>
+          </div>
           <div class="settings-tab-sep"></div>
           <div class="settings-tab" onclick="showSettingsSec('backup',this)">💾 Backup & Import</div>
           <div class="settings-tab" onclick="showSettingsSec('about',this)">ℹ️ Tentang</div>
@@ -1006,7 +1008,8 @@
                   </div>
                   <div class="s-card-bd">
                     <p style="font-size:11px;color:var(--txt2);margin-bottom:12px;">Restore lengkap dari file
-                      <b>.json</b> backup — termasuk kurs, pair, setup, akun, dan semua trade.</p>
+                      <b>.json</b> backup — termasuk kurs, pair, setup, akun, dan semua trade.
+                    </p>
                     <div
                       style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;"
                       onmouseenter="this.style.borderColor='var(--c-blue)'"
@@ -1180,90 +1183,92 @@
             class="form-in" id="fm-date"></div>
         <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="text" class="form-in"
             id="fm-date" placeholder="Pilih tanggal & waktu..."></div>
-        <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair"
-            onchange="onPairChange()"></select></div>
-        <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf">
-            <option value="1m">1m</option>
-            <option value="5m">5m</option>
-            <option value="15m">15m</option>
-            <option value="30m">30m</option>
-            <option value="1h">1h</option>
-            <option value="4h">4h</option>
-            <option value="1D">1D</option>
-          </select></div>
-        <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir"
-            onchange="calcPnL()">
-            <option>BUY</option>
-            <option>SELL</option>
-          </select></div>
-        <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot"
-            step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
-        <div class="form-field"><label class="form-lbl">Entry Price <span
-              style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number"
-            class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi"
-            oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);"
-            onfocus="this.style.borderColor='var(--c-blue)'"
-            onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
-        <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in"
-            id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
-        <div class="form-field"><label class="form-lbl">TP <span
-              style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input
-            type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR"
-            oninput="calcPnL()"></div>
-        <div class="form-field"><label class="form-lbl">Exit Price <span
-              style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih
-              OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001"
-            placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
-        <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number"
-            class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()">
-        </div>
-        <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span
-              style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number"
-            class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
-        <div class="form-field"><label class="form-lbl">RR <span
-              style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b
-                style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b
-                style="color:var(--c-green2)">TP</b></span></label>
-          <div style="display:flex;align-items:center;gap:8px;">
-            <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly
-              style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
-            <input type="hidden" id="fm-rr">
-          </div>
-        </div>
-        <div class="form-field full"><label class="form-lbl">Hasil <span
-              style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan
-              harga)</span></label>
-          <div class="form-in" id="fm-result-display"
-            style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
-            <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
-            <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
-          </div>
-          <input type="hidden" id="fm-result" value="BE">
-        </div>
-        <div class="form-field full"><label class="form-lbl">Setup <span
-              style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari
-              satu</span></label>
-          <div class="setup-picker" id="fm-setup-picker"></div>
-        </div>
-        <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text"
-            class="form-in" id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
+        id="fm-date" placeholder="Pilih tanggal & waktu..." readonly style="cursor:pointer;">
       </div>
-      <div class="pnl-preview" id="pnlPreview">
-        <div>
-          <div class="pnl-preview-lbl">Estimasi PnL (Auto)</div>
-          <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Fee: <span id="feePreview"
-              style="color:var(--c-gold);font-family:var(--fn-m);">Rp 0</span></div>
-        </div>
-        <div style="text-align:right;">
-          <div class="pnl-preview-val" id="pnlUSDPreview" style="color:var(--txt2);">$0.00</div>
-          <div style="font-size:12px;font-family:var(--fn-m);font-weight:700;color:var(--txt2);" id="pnlRpPreview">Rp 0
-          </div>
-          <div style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);" id="pnlNetPreview"></div>
+      <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair"
+          onchange="onPairChange()"></select></div>
+      <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf">
+          <option value="1m">1m</option>
+          <option value="5m">5m</option>
+          <option value="15m">15m</option>
+          <option value="30m">30m</option>
+          <option value="1h">1h</option>
+          <option value="4h">4h</option>
+          <option value="1D">1D</option>
+        </select></div>
+      <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir"
+          onchange="calcPnL()">
+          <option>BUY</option>
+          <option>SELL</option>
+        </select></div>
+      <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot"
+          step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">Entry Price <span
+            style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number"
+          class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi"
+          oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);"
+          onfocus="this.style.borderColor='var(--c-blue)'"
+          onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
+      <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in"
+          id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">TP <span
+            style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input
+          type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR"
+          oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">Exit Price <span
+            style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih
+            OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001"
+          placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number"
+          class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()">
+      </div>
+      <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span
+            style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number"
+          class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
+      <div class="form-field"><label class="form-lbl">RR <span
+            style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b
+              style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b
+              style="color:var(--c-green2)">TP</b></span></label>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly
+            style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
+          <input type="hidden" id="fm-rr">
         </div>
       </div>
-      <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('tradeModal')">Batal</button><button
-          class="btn btn-gold" onclick="saveTrade()">💾 Simpan Trade</button></div>
+      <div class="form-field full"><label class="form-lbl">Hasil <span
+            style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan
+            harga)</span></label>
+        <div class="form-in" id="fm-result-display"
+          style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
+          <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
+          <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
+        </div>
+        <input type="hidden" id="fm-result" value="BE">
+      </div>
+      <div class="form-field full"><label class="form-lbl">Setup <span
+            style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari
+            satu</span></label>
+        <div class="setup-picker" id="fm-setup-picker"></div>
+      </div>
+      <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text" class="form-in"
+          id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
     </div>
+    <div class="pnl-preview" id="pnlPreview">
+      <div>
+        <div class="pnl-preview-lbl">Estimasi PnL (Auto)</div>
+        <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Fee: <span id="feePreview"
+            style="color:var(--c-gold);font-family:var(--fn-m);">Rp 0</span></div>
+      </div>
+      <div style="text-align:right;">
+        <div class="pnl-preview-val" id="pnlUSDPreview" style="color:var(--txt2);">$0.00</div>
+        <div style="font-size:12px;font-family:var(--fn-m);font-weight:700;color:var(--txt2);" id="pnlRpPreview">Rp 0
+        </div>
+        <div style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);" id="pnlNetPreview"></div>
+      </div>
+    </div>
+    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('tradeModal')">Batal</button><button
+        class="btn btn-gold" onclick="saveTrade()">💾 Simpan Trade</button></div>
+  </div>
   </div>
   <div class="modal-overlay" id="pairModal">
     <div class="modal sm">
