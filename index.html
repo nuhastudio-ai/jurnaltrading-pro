@@ -1,920 +1,1545 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Jurnal Trading Forex — Pro Dashboard</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jurnal Trading Forex — Pro Dashboard</title>
+  <link rel="icon"
+    href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>📊</text></svg>">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/themes/dark.css">
 </head>
+
 <body>
-<div class="app">
-<!-- HEADER WRAP (sticky) -->
-<div class="header-wrap">
-<!-- TOP NAV -->
-<div class="topbar">
-  <div class="topbar-inner">
-    <div class="brand"><div class="brand-icon">📊</div><div class="brand-name">FOREX JOURNAL PRO</div></div>
-    <div class="topbar-kurs">
-      <span class="topbar-kurs-lbl">USD/IDR</span>
-      <span class="topbar-kurs-val" id="kursDisplay">Rp 17.223</span>
-    </div>
-    <div class="nav-right">
-      <div class="cloud-pill idle" id="cloudPill" title="Status koneksi cloud">☁️ Cloud</div>
-      <div class="user-badge" id="userBadge" title="Klik untuk keluar" onclick="logout()" style="display:none;">
-        <img id="userBadgeAvatar" src="" alt="" style="display:none;">
-        <span id="userBadgeName"></span>
+  <div class="app">
+    <!-- HEADER WRAP (sticky) -->
+    <div class="header-wrap">
+      <!-- TOP NAV -->
+      <div class="topbar">
+        <div class="topbar-inner">
+          <div class="brand">
+            <div class="brand-icon">📊</div>
+            <div class="brand-name">FOREX JOURNAL PRO</div>
+          </div>
+          <div class="topbar-kurs">
+            <span class="topbar-kurs-lbl">USD/IDR</span>
+            <span class="topbar-kurs-val" id="kursDisplay">Rp 17.223</span>
+          </div>
+          <div class="nav-right">
+            <div class="cloud-pill idle" id="cloudPill" title="Status koneksi cloud">☁️ Cloud</div>
+            <div class="user-badge" id="userBadge" title="Klik untuk keluar" onclick="logout()" style="display:none;">
+              <img id="userBadgeAvatar" src="" alt="" style="display:none;">
+              <span id="userBadgeName"></span>
+            </div>
+            <div class="live-pill">
+              <div class="live-dot"></div>LIVE
+            </div>
+            <div class="clock-box" id="clockBox">--:--:--</div>
+            <button class="btn btn-gold" onclick="openAddModal()">＋ Trade</button>
+          </div>
+        </div>
       </div>
-      <div class="live-pill"><div class="live-dot"></div>LIVE</div>
-      <div class="clock-box" id="clockBox">--:--:--</div>
-      <button class="btn btn-gold" onclick="openAddModal()">＋ Trade</button>
-    </div>
-  </div>
-</div>
-<!-- SUBBAR (shown on non-settings pages) -->
-<div id="mainSubbar">
-  <div class="subbar">
-    <div class="ctrl-row">
-      <span class="ctrl-label">Akun</span>
-      <select class="ctrl-sel" id="ctrlAkun" onchange="updateAll()"><option value="all">Semua Akun</option></select>
-      <div class="ctrl-sep"></div>
-      <span class="ctrl-label">Periode</span>
-      <button class="drp-btn" id="mainDrpBtn" onclick="openDRP('main')">
-        <span class="drp-btn-ico">📅</span>
-        <span class="drp-btn-label" id="mainDrpLabel">Semua Waktu</span>
-        <span class="drp-btn-chev">▼</span>
+      <!-- SUBBAR (shown on non-settings pages) -->
+      <div id="mainSubbar">
+        <div class="subbar">
+          <div class="ctrl-row">
+            <span class="ctrl-label">Akun</span>
+            <select class="ctrl-sel" id="ctrlAkun" onchange="updateAll()">
+              <option value="all">Semua Akun</option>
+            </select>
+            <div class="ctrl-sep"></div>
+            <span class="ctrl-label">Periode</span>
+            <button class="drp-btn" id="mainDrpBtn" onclick="openDRP('main')">
+              <span class="drp-btn-ico">📅</span>
+              <span class="drp-btn-label" id="mainDrpLabel">Semua Waktu</span>
+              <span class="drp-btn-chev">▼</span>
+            </button>
+            <!-- hidden inputs kept for getFilteredTrades() compatibility -->
+            <input type="hidden" id="dateFrom">
+            <input type="hidden" id="dateTo">
+            <div style="margin-left:auto;display:flex;gap:8px;">
+              <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 Export CSV</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- SETTINGS TABBAR (shown only on settings page) -->
+      <div id="settingsTabbar" class="settings-tabbar">
+        <div class="settings-tabbar-inner">
+          <div class="settings-tab active" onclick="showSettingsSec('kurs',this)">💱 Kurs & Mata Uang</div>
+          <div class="settings-tab" onclick="showSettingsSec('pairs',this)">🔧 Manajemen Pair</div>
+          <div class="settings-tab" onclick="showSettingsSec('setups',this)">🎛 Setup</div>
+          <div class="settings-tab" onclick="showSettingsSec('akun',this)">👤 Akun Trading</div>
+          <div class="settings-tab" id="tabApproval" onclick="showSettingsSec('approval',this)" hidden>🛡️ Approval Akun
+            <span id="pendingBadge" class="badge-count" style="display:none;"></span></div>
+          <div class="settings-tab-sep"></div>
+          <div class="settings-tab" onclick="showSettingsSec('backup',this)">💾 Backup & Import</div>
+          <div class="settings-tab" onclick="showSettingsSec('about',this)">ℹ️ Tentang</div>
+        </div>
+      </div>
+    </div><!-- end .header-wrap -->
+
+    <!-- MOBILE BOTTOM NAV (visible only on ≤768px) -->
+    <nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi utama">
+      <button class="mobile-nav-item active" id="mbn-dashboard" type="button" onclick="switchPage('dashboard',this)"
+        aria-label="Dashboard">
+        <span class="mobile-nav-icon" aria-hidden="true">🏠</span>
+        <span class="mobile-nav-label">Dashboard</span>
       </button>
-      <!-- hidden inputs kept for getFilteredTrades() compatibility -->
-      <input type="hidden" id="dateFrom">
-      <input type="hidden" id="dateTo">
-      <div style="margin-left:auto;display:flex;gap:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 Export CSV</button>
-      </div>
-    </div>
-  </div>
-</div>
-<!-- SETTINGS TABBAR (shown only on settings page) -->
-<div id="settingsTabbar" class="settings-tabbar">
-  <div class="settings-tabbar-inner">
-    <div class="settings-tab active" onclick="showSettingsSec('kurs',this)">💱 Kurs & Mata Uang</div>
-    <div class="settings-tab" onclick="showSettingsSec('pairs',this)">🔧 Manajemen Pair</div>
-    <div class="settings-tab" onclick="showSettingsSec('setups',this)">🎛 Setup</div>
-    <div class="settings-tab" onclick="showSettingsSec('akun',this)">👤 Akun Trading</div>
-    <div class="settings-tab" id="tabApproval" onclick="showSettingsSec('approval',this)" hidden>🛡️ Approval Akun <span id="pendingBadge" class="badge-count" style="display:none;"></span></div>
-    <div class="settings-tab-sep"></div>
-    <div class="settings-tab" onclick="showSettingsSec('backup',this)">💾 Backup & Import</div>
-    <div class="settings-tab" onclick="showSettingsSec('about',this)">ℹ️ Tentang</div>
-  </div>
-</div>
-</div><!-- end .header-wrap -->
-
-<!-- MOBILE BOTTOM NAV (visible only on ≤768px) -->
-<nav class="mobile-bottom-nav" id="mobileBottomNav" aria-label="Navigasi utama">
-  <button class="mobile-nav-item active" id="mbn-dashboard" type="button"
-       onclick="switchPage('dashboard',this)" aria-label="Dashboard">
-    <span class="mobile-nav-icon" aria-hidden="true">🏠</span>
-    <span class="mobile-nav-label">Dashboard</span>
-  </button>
-  <button class="mobile-nav-item" id="mbn-analysis" type="button"
-       onclick="switchPage('analysis',this)" aria-label="Analisis">
-    <span class="mobile-nav-icon" aria-hidden="true">📈</span>
-    <span class="mobile-nav-label">Analisis</span>
-  </button>
-  <button class="mobile-nav-item" id="mbn-journal" type="button"
-       onclick="switchPage('journal',this)" aria-label="Jurnal">
-    <span class="mobile-nav-icon" aria-hidden="true">📋</span>
-    <span class="mobile-nav-label">Jurnal</span>
-  </button>
-  <button class="mobile-nav-item" id="mbn-settings" type="button"
-       onclick="switchPage('settings',this)" aria-label="Settings">
-    <span class="mobile-nav-icon" aria-hidden="true">⚙️</span>
-    <span class="mobile-nav-label">Settings</span>
-  </button>
-</nav>
-
-<!-- BODY WRAP -->
-<div class="body-wrap">
-<!-- SIDEBAR (main nav) -->
-<div class="sidebar" id="mainSidebar">
-  <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle menu">☰</button>
-  <div class="sidebar-nav">
-    <div class="sidebar-item active" onclick="switchPage('dashboard',this)"><span class="sidebar-icon">🏠</span><span class="sidebar-label">Dashboard</span></div>
-    <div class="sidebar-item" onclick="switchPage('analysis',this)"><span class="sidebar-icon">📈</span><span class="sidebar-label">Analisis</span></div>
-    <div class="sidebar-item" onclick="switchPage('journal',this)"><span class="sidebar-icon">📋</span><span class="sidebar-label">Jurnal</span></div>
-    <div class="sidebar-item" onclick="switchPage('settings',this)"><span class="sidebar-icon">⚙️</span><span class="sidebar-label">Settings</span></div>
-  </div>
-  <div class="sidebar-spacer"></div>
-  <div class="sidebar-version">v3.0 · Apr 2026</div>
-</div>
-<!-- CONTENT AREA -->
-<div class="content-area">
-
-<!-- DASHBOARD -->
-<div class="page active" id="page-dashboard">
-  <div class="main">
-    <div class="g8" id="kpiGrid">
-      <div class="kpi kpi-blue"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Total Equity</div><div class="kpi-ico">💼</div></div><div class="kpi-val" id="kEquity">—</div><div class="kpi-sub">Modal: <span id="kModal">—</span></div></div>
-      <div class="kpi kpi-green"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Net PnL</div><div class="kpi-ico">💹</div></div><div class="kpi-val" id="kPnl">—</div><div class="kpi-sub" id="kPnlSub">—</div></div>
-      <div class="kpi kpi-gold"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Win Rate</div><div class="kpi-ico">🎯</div></div><div class="kpi-val" id="kWR">—</div><div class="kpi-sub" id="kWRsub">—</div></div>
-      <div class="kpi kpi-purple"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Profit Factor</div><div class="kpi-ico">⚡</div></div><div class="kpi-val" id="kPF">—</div><div class="kpi-sub">Win PnL / Loss PnL</div></div>
-      <div class="kpi kpi-cyan"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Total Trades</div><div class="kpi-ico">🔒</div></div><div class="kpi-val" id="kTotal">—</div><div class="kpi-sub">Closed trades</div></div>
-      <div class="kpi kpi-blue"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Open Trades</div><div class="kpi-ico">🔓</div></div><div class="kpi-val" id="kOpen">0</div><div class="kpi-sub">Posisi aktif</div></div>
-      <div class="kpi kpi-gold"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">W/L Ratio</div><div class="kpi-ico">📐</div></div><div class="kpi-val" id="kWL">—</div><div class="kpi-sub">Avg Win / Avg Loss</div></div>
-      <div class="kpi kpi-green"><div class="kpi-glow"></div><div class="kpi-hd"><div class="kpi-lbl">Return %</div><div class="kpi-ico">📊</div></div><div class="kpi-val" id="kReturn">—</div><div class="kpi-sub">Dari modal awal</div></div>
-    </div>
-    <!-- WIN/LOSS CHART (left) + EQUITY CURVE (right) -->
-    <div class="wl-equity-grid">
-      <!-- WIN/LOSS CARD -->
-      <div class="panel" style="display:flex;flex-direction:column;">
-        <div class="panel-hd"><div class="panel-title"><div class="dot dot-gold"></div>Win / Loss</div><span id="wlTotalBadge" style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);font-weight:700;">0 trades</span></div>
-        <div class="panel-bd" style="flex:1;display:flex;flex-direction:column;">
-          <div class="wl-card">
-            <div class="wl-ring-wrap">
-              <svg class="wl-svg" width="260" height="260" viewBox="0 0 160 160">
-                <defs>
-                  <linearGradient id="wlGradWin" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#34d399"/>
-                    <stop offset="100%" stop-color="#22d3ee"/>
-                  </linearGradient>
-                  <linearGradient id="wlGradLoss" x1="0%" y1="0%" x2="100%" y2="100%">
-                    <stop offset="0%" stop-color="#f87171"/>
-                    <stop offset="100%" stop-color="#ef4444"/>
-                  </linearGradient>
-                  <filter id="wlGlow">
-                    <feGaussianBlur stdDeviation="3" result="blur"/>
-                    <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-                  </filter>
-                </defs>
-                <!-- Track -->
-                <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="22" stroke-linecap="round"/>
-                <!-- Loss arc (full bg red) -->
-                <circle id="wlArcLoss" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradLoss)" stroke-width="22" stroke-linecap="round"
-                  stroke-dasharray="389.6 0" stroke-dashoffset="97.4" transform="rotate(-90 80 80)" opacity="0.35" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);"/>
-                <!-- Win arc -->
-                <circle id="wlArcWin" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradWin)" stroke-width="22" stroke-linecap="round"
-                  stroke-dasharray="0 389.6" stroke-dashoffset="97.4" transform="rotate(-90 80 80)" filter="url(#wlGlow)" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);"/>
-                <!-- BE dots -->
-                <circle id="wlArcBE" cx="80" cy="80" r="62" fill="none" stroke="#f5c518" stroke-width="10" stroke-linecap="round"
-                  stroke-dasharray="0 389.6" stroke-dashoffset="97.4" transform="rotate(-90 80 80)" style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);"/>
-              </svg>
-              <div class="wl-center">
-                <div class="wl-pct" id="wlPct">0%</div>
-                <div class="wl-pct-lbl">WIN RATE</div>
-              </div>
-            </div>
-            <div class="wl-bars">
-              <div class="wl-bar-row">
-                <div class="wl-bar-ico">🟢</div>
-                <div class="wl-bar-meta">
-                  <div class="wl-bar-top"><span class="wl-bar-lbl">WIN</span><span class="wl-bar-cnt v-green" id="wlWinCnt">0</span></div>
-                  <div class="wl-bar-track"><div class="wl-bar-fill" id="wlWinBar" style="width:0%;background:linear-gradient(90deg,#10b981,#34d399);box-shadow:0 0 8px rgba(16,185,129,.5);"></div></div>
-                </div>
-              </div>
-              <div class="wl-bar-row">
-                <div class="wl-bar-ico">🔴</div>
-                <div class="wl-bar-meta">
-                  <div class="wl-bar-top"><span class="wl-bar-lbl">LOSS</span><span class="wl-bar-cnt v-red" id="wlLossCnt">0</span></div>
-                  <div class="wl-bar-track"><div class="wl-bar-fill" id="wlLossBar" style="width:0%;background:linear-gradient(90deg,#ef4444,#f87171);"></div></div>
-                </div>
-              </div>
-              <div class="wl-bar-row">
-                <div class="wl-bar-ico">🟡</div>
-                <div class="wl-bar-meta">
-                  <div class="wl-bar-top"><span class="wl-bar-lbl">BE</span><span class="wl-bar-cnt v-gold" id="wlBECnt">0</span></div>
-                  <div class="wl-bar-track"><div class="wl-bar-fill" id="wlBEBar" style="width:0%;background:linear-gradient(90deg,#c99b14,#f5c518);"></div></div>
-                </div>
-              </div>
-            </div>
-            <div class="wl-divider"></div>
-            <div class="wl-stats">
-              <div class="wl-stat"><div class="wl-stat-lbl">Avg Win</div><div class="wl-stat-val v-green" id="wlAvgWin">—</div></div>
-              <div class="wl-stat"><div class="wl-stat-lbl">Avg Loss</div><div class="wl-stat-val v-red" id="wlAvgLoss">—</div></div>
-              <div class="wl-stat"><div class="wl-stat-lbl">Best</div><div class="wl-stat-val v-cyan" id="wlBest">—</div></div>
-              <div class="wl-stat"><div class="wl-stat-lbl">Worst</div><div class="wl-stat-val v-red" id="wlWorst">—</div></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- EQUITY CURVE -->
-      <div class="panel">
-        <div class="panel-hd">
-          <div class="panel-title"><div class="dot dot-green"></div>Equity Curve — PnL Kumulatif</div>
-          <div class="mode-tabs">
-            <button class="mode-tab active" onclick="switchEquityMode('day',this)">Harian</button>
-            <button class="mode-tab" onclick="switchEquityMode('week',this)">Mingguan</button>
-            <button class="mode-tab" onclick="switchEquityMode('month',this)">Bulanan</button>
-          </div>
-        </div>
-        <div class="panel-bd"><div class="chart-wrap h240"><canvas id="equityChart"></canvas></div></div>
-        <!-- GROWTH PER AKUN CARD -->
-        <div class="growth-section">
-          <div class="growth-hd">
-            <div class="panel-title">
-              <div class="dot dot-blue" style="box-shadow:0 0 10px var(--c-blue),0 0 22px rgba(79,142,247,.4);animation:glowPulse 2.4s ease-in-out infinite;"></div>
-              Pertumbuhan Per Akun
-            </div>
-            <span class="growth-note">Filter: Harian / Mingguan / Bulanan ↑</span>
-          </div>
-          <div class="growth-chart-wrap"><canvas id="growthChart"></canvas></div>
-          <div id="growthLegend" class="growth-legend"></div>
-        </div>
-      </div>
-    </div>
-    <!-- REKAP PNL - di bawah equity -->
-    <div class="month-nav-wrap" id="rekapNavWrap">
-      <button class="month-nav-btn nav-left" onclick="navRekapMonth(-1)" title="Bulan Sebelumnya">&#8249;</button>
-      <button class="month-nav-btn nav-right" onclick="navRekapMonth(1)" title="Bulan Berikutnya">&#8250;</button>
-    <div class="panel">
-      <div class="panel-hd">
-        <div class="panel-title"><div class="dot dot-cyan"></div>Rekap PnL Per Periode</div>
-        <div style="display:flex;gap:7px;align-items:center;">
-          <div class="mode-tabs">
-            <button class="mode-tab active" onclick="switchRekapMode('day',this)">DAY</button>
-            <button class="mode-tab" onclick="switchRekapMode('week',this)">WEEK</button>
-            <button class="mode-tab" onclick="switchRekapMode('month',this)">MONTH</button>
-          </div>
-          <select class="ctrl-sel" id="rekapMonth" onchange="renderRekap()" style="font-size:11px;padding:5px 8px;">
-            <option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>Mei</option><option>Jun</option><option>Jul</option><option>Ags</option><option>Sep</option><option>Okt</option><option>Nov</option><option>Des</option>
-          </select>
-          <select class="ctrl-sel" id="rekapYear" onchange="renderRekap()" style="font-size:11px;padding:5px 8px;">
-            <option>2024</option><option>2025</option><option>2026</option><option>2027</option>
-          </select>
-        </div>
-      </div>
-      <div id="rekapBody" style="overflow-x:auto;"></div>
-    </div>
-    </div><!-- /month-nav-wrap rekapNavWrap -->
-    <!-- STATS + TOP PAIRS + METRICS -->
-    <div style="display:grid;grid-template-columns:25% 75%;gap:14px;align-items:stretch;" id="statsGrid">
-      <div style="display:flex;flex-direction:column;height:100%;">
-        <div class="panel" style="flex:1;display:flex;flex-direction:column;">
-          <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Statistik Trading</div></div>
-          <div style="flex:1;display:flex;flex-direction:column;">
-            <div class="st-row"><span class="st-lbl">Win Trades</span><span class="v-green st-val" id="st-win">—</span></div>
-            <div class="st-row"><span class="st-lbl">Loss Trades</span><span class="v-red st-val" id="st-loss">—</span></div>
-            <div class="st-row"><span class="st-lbl">BE Trades</span><span class="v-white st-val" id="st-be">—</span></div>
-            <div class="st-row"><span class="st-lbl">Win Rate</span><span class="v-green st-val" id="st-wr">—</span></div>
-            <div class="st-row"><span class="st-lbl">Loss Rate</span><span class="v-red st-val" id="st-lr">—</span></div>
-            <div class="st-row"><span class="st-lbl">Profit Factor</span><span class="v-gold st-val" id="st-pf">—</span></div>
-            <div class="st-row"><span class="st-lbl">Avg Win (Rp)</span><span class="v-green st-val" id="st-aw">—</span></div>
-            <div class="st-row"><span class="st-lbl">Avg Loss (Rp)</span><span class="v-red st-val" id="st-al">—</span></div>
-            <div class="st-row"><span class="st-lbl">W/L Ratio</span><span class="v-cyan st-val" id="st-wl">—</span></div>
-            <div class="st-row"><span class="st-lbl">Total Fee (Rp)</span><span class="v-gold st-val" id="st-fee">—</span></div>
-            <div class="st-row st-row-last"><span class="st-lbl">Net PnL (Rp)</span><span class="v-green st-val" id="st-pnl">—</span></div>
-          </div>
-        </div>
-      </div>
-      <div style="display:flex;flex-direction:column;gap:14px;">
-        <div class="panel">
-          <div class="panel-hd"><div class="panel-title"><div class="dot dot-gold"></div>Top Pairs — Ranking by PnL</div></div>
-          <div style="overflow-x:auto;">
-            <table class="data-tbl"><thead><tr><th class="td-c">Rank</th><th>Pair</th><th class="td-c">Trades</th><th class="td-c">Win</th><th class="td-c">Loss</th><th class="td-r">Net PnL (Rp)</th><th class="td-r">Win Rate</th></tr></thead>
-            <tbody id="topPairsBody"></tbody></table>
-          </div>
-        </div>
-        <div class="panel">
-          <div class="panel-hd"><div class="panel-title"><div class="dot dot-purple"></div>Performance Metrics</div></div>
-          <div class="panel-bd">
-            <div class="prog-wrap" id="perfMetrics"></div>
-            <div class="mini-grid" id="miniStats"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- HARI GRID -->
-    <div class="panel">
-      <div class="panel-hd"><div class="panel-title"><div class="dot dot-green"></div>Analisa PnL Per Hari (Rp)</div></div>
-      <div style="overflow-x:auto;" id="hariGrid"></div>
-    </div>
-  </div>
-</div>
-
-<!-- ANALYSIS PAGE -->
-<div class="page" id="page-analysis">
-  <div class="main">
-    <div style="font-family:var(--fn-h);font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;">📈 Analisis Mendalam <span style="font-size:12px;font-family:var(--fn);font-weight:400;color:var(--txt2);">— Deep Performance Analytics</span></div>
-    <!-- REKAP AKUN -->
-    <div class="panel">
-      <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Rekap Per Akun</div></div>
-      <div style="overflow-x:auto;"><table class="data-tbl"><thead><tr><th>Nama Akun</th><th class="td-c">Currency</th><th class="td-c">Balance</th><th class="td-c">Modal (Rp)</th><th class="td-c">Net PnL</th><th class="td-c">Return %</th><th class="td-c">Win Rate</th><th class="td-c">Trades</th><th class="td-c">PF</th><th class="td-c">Equity Aktif</th></tr></thead>
-      <tbody id="akunTableBody"></tbody></table></div>
-    </div>
-    <div class="g8" id="analysisMetrics"></div>
-    <div class="g2">
-      <div class="panel">
-        <div class="panel-hd"><div class="panel-title"><div class="dot dot-green"></div>Cumulative Equity Curve</div><span class="badge badge-up" id="an-return">+0%</span></div>
-        <div class="panel-bd"><div class="chart-wrap h280"><canvas id="an-equity"></canvas></div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-hd"><div class="panel-title"><div class="dot dot-gold"></div>Win/Loss Streak Visualizer</div></div>
-        <div class="panel-bd">
-          <div class="streak-grid" id="streakGrid"></div>
-          <div style="display:flex;gap:12px;margin-top:10px;">
-            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);"><div style="width:12px;height:12px;border-radius:3px;background:var(--c-green);"></div>WIN</div>
-            <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);"><div style="width:12px;height:12px;border-radius:3px;background:var(--c-red);"></div>LOSS</div>
-          </div>
-          <div class="mini-grid" style="margin-top:12px;">
-            <div class="mini-card"><div class="mini-lbl">Best Win Streak</div><div class="mini-val v-green" id="an-best-streak">—</div></div>
-            <div class="mini-card"><div class="mini-lbl">Worst Loss Streak</div><div class="mini-val v-red" id="an-worst-streak">—</div></div>
-            <div class="mini-card"><div class="mini-lbl">Expectancy/Trade</div><div class="mini-val v-gold" id="an-expectancy">—</div></div>
-            <div class="mini-card"><div class="mini-lbl">Max Drawdown</div><div class="mini-val v-red" id="an-maxdd">—</div></div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="g2">
-      <div class="panel">
-        <div class="panel-hd"><div class="panel-title"><div class="dot dot-blue"></div>Distribusi PnL per Trade</div></div>
-        <div class="panel-bd">
-          <div class="chart-wrap h200"><canvas id="an-dist"></canvas></div>
-          <div class="dist-wrap" id="an-dist-bars" style="margin-top:12px;"></div>
-        </div>
-      </div>
-      <div class="panel">
-        <div class="panel-hd"><div class="panel-title"><div class="dot dot-cyan"></div>Win Rate Per Setup & PnL Per Hari</div></div>
-        <div class="panel-bd">
-          <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;">Win Rate Per Setup</div>
-          <div class="dist-wrap" id="an-setup-bars"></div>
-          <div style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 7px;">PnL Per Hari Perdagangan</div>
-          <div class="chart-wrap" style="height:150px;"><canvas id="an-day"></canvas></div>
-        </div>
-      </div>
-    </div>
-    <div class="g2">
-      <div class="panel" id="calPanel" style="position:relative;overflow:visible;">
-        <button class="month-nav-btn nav-left" onclick="navCalMonth(-1)" title="Bulan Sebelumnya" id="calNavLeft">&#8249;</button>
-        <button class="month-nav-btn nav-right" onclick="navCalMonth(1)" title="Bulan Berikutnya" id="calNavRight">&#8250;</button>
-        <div class="panel-hd">
-          <div class="panel-title"><div class="dot dot-green"></div>Kalender Trading Heatmap</div>
-          <div style="display:flex;gap:6px;">
-            <select class="ctrl-sel" id="calMonth" onchange="renderCalendar()" style="font-size:11px;padding:4px 8px;"><option>Jan</option><option>Feb</option><option>Mar</option><option>Apr</option><option>Mei</option><option>Jun</option><option>Jul</option><option>Ags</option><option>Sep</option><option>Okt</option><option>Nov</option><option>Des</option></select>
-            <select class="ctrl-sel" id="calYear" onchange="renderCalendar()" style="font-size:11px;padding:4px 8px;"><option>2024</option><option>2025</option><option>2026</option><option>2027</option></select>
-          </div>
-        </div>
-        <div class="panel-bd"><div class="cal-grid" id="calendarGrid"></div></div>
-      </div>
-      <div class="panel">
-        <div class="panel-hd"><div class="panel-title"><div class="dot dot-red"></div>Drawdown Chart</div><span class="badge badge-dn" id="an-dd-badge">—</span></div>
-        <div class="panel-bd"><div class="chart-wrap h280"><canvas id="an-drawdown"></canvas></div></div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- JOURNAL PAGE -->
-<div class="page" id="page-journal">
-  <div class="main">
-    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
-      <div style="font-family:var(--fn-h);font-size:16px;font-weight:800;">📋 Jurnal Trade Lengkap</div>
-      <div style="display:flex;gap:8px;">
-        <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 Export CSV</button>
-        <button class="btn btn-gold" onclick="openAddModal()">＋ Tambah Trade</button>
-      </div>
-    </div>
-    <div class="g8" id="journalSummary"></div>
-    <div class="jfilter-bar">
-      <span class="ctrl-label">Filter:</span>
-      <input type="text" class="ctrl-in" id="jSearchPair" placeholder="🔍 Pair / Catatan..." oninput="renderJournal()" style="width:160px;">
-      <select class="ctrl-sel" id="jFilterAkun" onchange="renderJournal()"><option value="">Semua Akun</option></select>
-      <select class="ctrl-sel" id="jFilterResult" onchange="renderJournal()"><option value="">Semua Hasil</option><option>WIN</option><option>LOSS</option><option>BE</option></select>
-      <select class="ctrl-sel" id="jFilterDir" onchange="renderJournal()"><option value="">BUY & SELL</option><option>BUY</option><option>SELL</option></select>
-      <select class="ctrl-sel" id="jFilterSetup" onchange="renderJournal()"><option value="">Semua Setup</option></select>
-      <select class="ctrl-sel" id="jFilterPair" onchange="renderJournal()"><option value="">Semua Pair</option></select>
-      <div class="ctrl-sep"></div>
-      <button class="drp-btn" id="jDrpBtn" onclick="openDRP('journal')">
-        <span class="drp-btn-ico">📅</span>
-        <span class="drp-btn-label" id="jDrpLabel">Semua Tanggal</span>
-        <span class="drp-btn-chev">▼</span>
+      <button class="mobile-nav-item" id="mbn-analysis" type="button" onclick="switchPage('analysis',this)"
+        aria-label="Analisis">
+        <span class="mobile-nav-icon" aria-hidden="true">📈</span>
+        <span class="mobile-nav-label">Analisis</span>
       </button>
-      <input type="hidden" id="jDateFrom">
-      <input type="hidden" id="jDateTo">
-      <button class="btn btn-ghost btn-sm" onclick="resetJFilter()">✕ Reset</button>
-      <div class="ctrl-sep"></div>
-      <label class="toggle-sw" title="Tampilkan/sembunyikan trade dari akun yang diarsipkan" style="cursor:pointer;">
-        <input type="checkbox" id="jArsipToggle" onchange="toggleArsipView(this.checked)"><span class="toggle-track"></span>
-      </label>
-      <span style="font-size:11px;color:var(--txt2);white-space:nowrap;">📦 Arsip</span>
-      <div style="margin-left:auto;font-size:11px;color:var(--txt2);">Tampil: <span id="jCount" style="color:var(--txt0);font-weight:700;">0</span></div>
-    </div>
-    <div class="panel">
-      <div style="overflow-x:auto;">
-        <table class="data-tbl">
-          <thead><tr>
-            <th style="width:32px;"><input type="checkbox" id="jSelectAll" onchange="toggleSelectAll(this)"></th>
-            <th onclick="jSort('id')"># ↓</th><th onclick="jSort('date')">Tanggal</th><th onclick="jSort('akun')">Akun</th><th onclick="jSort('pair')">Pair</th>
-            <th class="td-c" onclick="jSort('tf')">TF</th>
-            <th class="td-c" onclick="jSort('dir')">Arah</th><th class="td-c" onclick="jSort('lot')">Lot</th><th class="td-c">Entry</th><th class="td-c">SL</th><th class="td-c" onclick="jSort('tp')" title="Take Profit — dasar kalkulasi RR">TP</th><th class="td-c" onclick="jSort('exit')" title="Harga exit aktual">Exit</th>
-            <th class="td-c" onclick="jSort('pnlRp')">PnL (Rp)</th><th class="td-c" onclick="jSort('pnlUSD')">PnL (USD)</th>
-            <th class="td-c" onclick="jSort('fee')" title="Fee/Komisi">Fee (Rp)</th>
-            <th class="td-c" onclick="jSort('rr')" title="Risk/Reward">RR</th>
-            <th class="td-c" onclick="jSort('result')">Hasil</th><th onclick="jSort('setup')">Setup</th><th>Catatan</th><th class="td-c">Aksi</th>
-          </tr></thead>
-          <tbody id="journalBody"></tbody>
-        </table>
-      </div>
-      <div class="pagination">
-        <div class="pg-info">Hal <span id="jPage">1</span>/<span id="jTotalPages">1</span> &nbsp;|&nbsp;
-          <select class="ctrl-sel" style="padding:3px 6px;font-size:11px;" onchange="changeJPageSize(this.value)">
-            <option value="15">15/hal</option><option value="25">25/hal</option><option value="50">50/hal</option><option value="999">Semua</option>
-          </select>
-        </div>
-        <div class="pg-btns" id="jPagination"></div>
-      </div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center;">
-      <span style="font-size:11px;color:var(--txt2);">Dipilih: <span id="selectedCount" style="color:var(--txt0);font-weight:700;">0</span></span>
-      <button class="btn btn-danger btn-sm" id="bulkDeleteBtn" style="display:none;" onclick="bulkDelete()">🗑 Hapus Terpilih</button>
-    </div>
-  </div>
-</div>
+      <button class="mobile-nav-item" id="mbn-journal" type="button" onclick="switchPage('journal',this)"
+        aria-label="Jurnal">
+        <span class="mobile-nav-icon" aria-hidden="true">📋</span>
+        <span class="mobile-nav-label">Jurnal</span>
+      </button>
+      <button class="mobile-nav-item" id="mbn-settings" type="button" onclick="switchPage('settings',this)"
+        aria-label="Settings">
+        <span class="mobile-nav-icon" aria-hidden="true">⚙️</span>
+        <span class="mobile-nav-label">Settings</span>
+      </button>
+    </nav>
 
-<!-- SETTINGS PAGE -->
-<div class="page" id="page-settings">
-  <div class="settings-layout">
-    <div class="settings-main">
-      <!-- KURS -->
-      <div class="s-sec active" id="ssec-kurs">
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">💱</span><div class="s-card-title">Kurs IDR/USD Aktif</div>
-            <div style="margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--c-gold-d);border:1px solid rgba(245,197,24,.22);border-radius:var(--r8);padding:4px 10px;">
-              <span style="font-size:9.5px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;">Kurs Dipakai</span>
-              <span id="kursDisplaySettings" style="font-family:var(--fn-m);font-size:12px;font-weight:800;color:var(--c-gold);">Rp 17,223</span>
+    <!-- BODY WRAP -->
+    <div class="body-wrap">
+      <!-- SIDEBAR (main nav) -->
+      <div class="sidebar" id="mainSidebar">
+        <button class="sidebar-toggle" onclick="toggleSidebar()" title="Toggle menu">☰</button>
+        <div class="sidebar-nav">
+          <div class="sidebar-item active" onclick="switchPage('dashboard',this)"><span
+              class="sidebar-icon">🏠</span><span class="sidebar-label">Dashboard</span></div>
+          <div class="sidebar-item" onclick="switchPage('analysis',this)"><span class="sidebar-icon">📈</span><span
+              class="sidebar-label">Analisis</span></div>
+          <div class="sidebar-item" onclick="switchPage('journal',this)"><span class="sidebar-icon">📋</span><span
+              class="sidebar-label">Jurnal</span></div>
+          <div class="sidebar-item" onclick="switchPage('settings',this)"><span class="sidebar-icon">⚙️</span><span
+              class="sidebar-label">Settings</span></div>
+        </div>
+        <div class="sidebar-spacer"></div>
+        <div class="sidebar-version">v3.0 · Apr 2026</div>
+      </div>
+      <!-- CONTENT AREA -->
+      <div class="content-area">
+
+        <!-- DASHBOARD -->
+        <div class="page active" id="page-dashboard">
+          <div class="main">
+            <div class="g8" id="kpiGrid">
+              <div class="kpi kpi-blue">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Total Equity</div>
+                  <div class="kpi-ico">💼</div>
+                </div>
+                <div class="kpi-val" id="kEquity">—</div>
+                <div class="kpi-sub">Modal: <span id="kModal">—</span></div>
+              </div>
+              <div class="kpi kpi-green">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Net PnL</div>
+                  <div class="kpi-ico">💹</div>
+                </div>
+                <div class="kpi-val" id="kPnl">—</div>
+                <div class="kpi-sub" id="kPnlSub">—</div>
+              </div>
+              <div class="kpi kpi-gold">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Win Rate</div>
+                  <div class="kpi-ico">🎯</div>
+                </div>
+                <div class="kpi-val" id="kWR">—</div>
+                <div class="kpi-sub" id="kWRsub">—</div>
+              </div>
+              <div class="kpi kpi-purple">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Profit Factor</div>
+                  <div class="kpi-ico">⚡</div>
+                </div>
+                <div class="kpi-val" id="kPF">—</div>
+                <div class="kpi-sub">Win PnL / Loss PnL</div>
+              </div>
+              <div class="kpi kpi-cyan">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Total Trades</div>
+                  <div class="kpi-ico">🔒</div>
+                </div>
+                <div class="kpi-val" id="kTotal">—</div>
+                <div class="kpi-sub">Closed trades</div>
+              </div>
+              <div class="kpi kpi-blue">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Open Trades</div>
+                  <div class="kpi-ico">🔓</div>
+                </div>
+                <div class="kpi-val" id="kOpen">0</div>
+                <div class="kpi-sub">Posisi aktif</div>
+              </div>
+              <div class="kpi kpi-gold">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">W/L Ratio</div>
+                  <div class="kpi-ico">📐</div>
+                </div>
+                <div class="kpi-val" id="kWL">—</div>
+                <div class="kpi-sub">Avg Win / Avg Loss</div>
+              </div>
+              <div class="kpi kpi-green">
+                <div class="kpi-glow"></div>
+                <div class="kpi-hd">
+                  <div class="kpi-lbl">Return %</div>
+                  <div class="kpi-ico">📊</div>
+                </div>
+                <div class="kpi-val" id="kReturn">—</div>
+                <div class="kpi-sub">Dari modal awal</div>
+              </div>
             </div>
-          </div>
-          <div class="s-card-bd">
-            <div style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:10px 13px;font-size:11px;color:var(--txt1);margin-bottom:14px;">
-              💡 Kurs digunakan untuk konversi PnL USD → Rupiah. Rate live diambil otomatis dari <strong style="color:#60a5fa;">Google Finance</strong> — klik <strong style="color:var(--c-green2);">← Gunakan</strong> jika ada selisih, lalu <strong style="color:var(--c-gold);">Simpan</strong>.
-            </div>
-            <!-- Live Rate + Kurs Input Row -->
-            <div class="s-row" style="flex-wrap:wrap;gap:12px;">
-              <div class="s-info"><div class="s-lbl">Kurs Aktif (Rp/USD)</div><div class="s-hint">Set manual atau gunakan live rate</div></div>
-              <div class="s-ctrl" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-                <!-- Live Rate Widget -->
-                <div class="live-kurs-box" id="liveKursBox">
-                  <div>
-                    <div class="live-kurs-src"><span class="live-kurs-src-dot loading" id="liveKursDot"></span>Google Finance</div>
-                    <div class="live-kurs-val" id="liveKursVal" style="color:var(--txt2);font-size:12px;">Memuat...</div>
-                    <div id="liveKursTime" style="font-size:9px;color:var(--txt2);margin-top:1px;"></div>
+            <!-- WIN/LOSS CHART (left) + EQUITY CURVE (right) -->
+            <div class="wl-equity-grid">
+              <!-- WIN/LOSS CARD -->
+              <div class="panel" style="display:flex;flex-direction:column;">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-gold"></div>Win / Loss
+                  </div><span id="wlTotalBadge"
+                    style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);font-weight:700;">0 trades</span>
+                </div>
+                <div class="panel-bd" style="flex:1;display:flex;flex-direction:column;">
+                  <div class="wl-card">
+                    <div class="wl-ring-wrap">
+                      <svg class="wl-svg" width="260" height="260" viewBox="0 0 160 160">
+                        <defs>
+                          <linearGradient id="wlGradWin" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#34d399" />
+                            <stop offset="100%" stop-color="#22d3ee" />
+                          </linearGradient>
+                          <linearGradient id="wlGradLoss" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#f87171" />
+                            <stop offset="100%" stop-color="#ef4444" />
+                          </linearGradient>
+                          <filter id="wlGlow">
+                            <feGaussianBlur stdDeviation="3" result="blur" />
+                            <feMerge>
+                              <feMergeNode in="blur" />
+                              <feMergeNode in="SourceGraphic" />
+                            </feMerge>
+                          </filter>
+                        </defs>
+                        <!-- Track -->
+                        <circle cx="80" cy="80" r="62" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="22"
+                          stroke-linecap="round" />
+                        <!-- Loss arc (full bg red) -->
+                        <circle id="wlArcLoss" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradLoss)"
+                          stroke-width="22" stroke-linecap="round" stroke-dasharray="389.6 0" stroke-dashoffset="97.4"
+                          transform="rotate(-90 80 80)" opacity="0.35"
+                          style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);" />
+                        <!-- Win arc -->
+                        <circle id="wlArcWin" cx="80" cy="80" r="62" fill="none" stroke="url(#wlGradWin)"
+                          stroke-width="22" stroke-linecap="round" stroke-dasharray="0 389.6" stroke-dashoffset="97.4"
+                          transform="rotate(-90 80 80)" filter="url(#wlGlow)"
+                          style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);" />
+                        <!-- BE dots -->
+                        <circle id="wlArcBE" cx="80" cy="80" r="62" fill="none" stroke="#f5c518" stroke-width="10"
+                          stroke-linecap="round" stroke-dasharray="0 389.6" stroke-dashoffset="97.4"
+                          transform="rotate(-90 80 80)"
+                          style="transition:stroke-dasharray 1.4s cubic-bezier(.4,0,.2,1);" />
+                      </svg>
+                      <div class="wl-center">
+                        <div class="wl-pct" id="wlPct">0%</div>
+                        <div class="wl-pct-lbl">WIN RATE</div>
+                      </div>
+                    </div>
+                    <div class="wl-bars">
+                      <div class="wl-bar-row">
+                        <div class="wl-bar-ico">🟢</div>
+                        <div class="wl-bar-meta">
+                          <div class="wl-bar-top"><span class="wl-bar-lbl">WIN</span><span class="wl-bar-cnt v-green"
+                              id="wlWinCnt">0</span></div>
+                          <div class="wl-bar-track">
+                            <div class="wl-bar-fill" id="wlWinBar"
+                              style="width:0%;background:linear-gradient(90deg,#10b981,#34d399);box-shadow:0 0 8px rgba(16,185,129,.5);">
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wl-bar-row">
+                        <div class="wl-bar-ico">🔴</div>
+                        <div class="wl-bar-meta">
+                          <div class="wl-bar-top"><span class="wl-bar-lbl">LOSS</span><span class="wl-bar-cnt v-red"
+                              id="wlLossCnt">0</span></div>
+                          <div class="wl-bar-track">
+                            <div class="wl-bar-fill" id="wlLossBar"
+                              style="width:0%;background:linear-gradient(90deg,#ef4444,#f87171);"></div>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="wl-bar-row">
+                        <div class="wl-bar-ico">🟡</div>
+                        <div class="wl-bar-meta">
+                          <div class="wl-bar-top"><span class="wl-bar-lbl">BE</span><span class="wl-bar-cnt v-gold"
+                              id="wlBECnt">0</span></div>
+                          <div class="wl-bar-track">
+                            <div class="wl-bar-fill" id="wlBEBar"
+                              style="width:0%;background:linear-gradient(90deg,#c99b14,#f5c518);"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="wl-divider"></div>
+                    <div class="wl-stats">
+                      <div class="wl-stat">
+                        <div class="wl-stat-lbl">Avg Win</div>
+                        <div class="wl-stat-val v-green" id="wlAvgWin">—</div>
+                      </div>
+                      <div class="wl-stat">
+                        <div class="wl-stat-lbl">Avg Loss</div>
+                        <div class="wl-stat-val v-red" id="wlAvgLoss">—</div>
+                      </div>
+                      <div class="wl-stat">
+                        <div class="wl-stat-lbl">Best</div>
+                        <div class="wl-stat-val v-cyan" id="wlBest">—</div>
+                      </div>
+                      <div class="wl-stat">
+                        <div class="wl-stat-lbl">Worst</div>
+                        <div class="wl-stat-val v-red" id="wlWorst">—</div>
+                      </div>
+                    </div>
                   </div>
-                  <div class="live-kurs-sep"></div>
-                  <button class="live-kurs-refresh" id="liveKursRefreshBtn" onclick="fetchLiveKurs()" title="Refresh rate">🔄</button>
-                  <button id="gunakanKursBtn" onclick="gunakanLiveKurs()" disabled>⬅ Gunakan</button>
                 </div>
-                <!-- Manual Input -->
-                <div class="live-kurs-sep"></div>
-                <span style="font-size:12px;color:var(--txt2);">Rp</span>
-                <input type="number" class="s-in" id="kursInput" value="17223" style="width:110px;" oninput="checkKursDiff()">
-                <button class="btn btn-primary btn-sm" onclick="saveKurs()">💾 Simpan</button>
+              </div>
+              <!-- EQUITY CURVE -->
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-green"></div>Equity Curve — PnL Kumulatif
+                  </div>
+                  <div class="mode-tabs">
+                    <button class="mode-tab active" onclick="switchEquityMode('day',this)">Harian</button>
+                    <button class="mode-tab" onclick="switchEquityMode('week',this)">Mingguan</button>
+                    <button class="mode-tab" onclick="switchEquityMode('month',this)">Bulanan</button>
+                  </div>
+                </div>
+                <div class="panel-bd">
+                  <div class="chart-wrap h240"><canvas id="equityChart"></canvas></div>
+                </div>
+                <!-- GROWTH PER AKUN CARD -->
+                <div class="growth-section">
+                  <div class="growth-hd">
+                    <div class="panel-title">
+                      <div class="dot dot-blue"
+                        style="box-shadow:0 0 10px var(--c-blue),0 0 22px rgba(79,142,247,.4);animation:glowPulse 2.4s ease-in-out infinite;">
+                      </div>
+                      Pertumbuhan Per Akun
+                    </div>
+                    <span class="growth-note">Filter: Harian / Mingguan / Bulanan ↑</span>
+                  </div>
+                  <div class="growth-chart-wrap"><canvas id="growthChart"></canvas></div>
+                  <div id="growthLegend" class="growth-legend"></div>
+                </div>
               </div>
             </div>
-            <div class="s-row"><div class="s-info"><div class="s-lbl">Tanggal Update</div><div class="s-hint">Kurs berlaku mulai</div></div><div class="s-ctrl"><input type="date" class="s-in" id="kursTgl" value="2026-04-29"></div></div>
-          </div>
-        </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">📅</span><div class="s-card-title">Riwayat Kurs</div></div>
-          <div class="s-card-bd" style="padding:0;"><div id="kursHistory"></div></div>
-        </div>
-      </div>
-      <!-- PAIRS -->
-      <div class="s-sec" id="ssec-pairs">
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">🔧</span><div class="s-card-title">Manajemen Pair Trading</div>
-            <div style="margin-left:auto;"><button class="btn btn-gold btn-sm" onclick="openAddPairModal()">＋ Tambah Pair</button></div>
-          </div>
-          <div style="background:var(--c-gold-d);border:1px solid rgba(245,197,24,.2);border-radius:var(--r8);padding:10px 13px;font-size:11px;color:var(--txt1);margin:12px 16px 0;">
-            <strong style="color:var(--c-gold);">Cara Hitung PnL berdasarkan Tipe:</strong><br>
-            🔸 <b>Forex Major</b> (EUR/USD, GBP/USD, dll): PnL = (Exit−Entry) × Lot × 100.000 (pip 0.0001)<br>
-            🔸 <b>Commodity ×100</b> (XAU/USD Gold): PnL = (Exit−Entry) × Lot × 100 (pip 0.01 = $1/lot mini)<br>
-            🔸 <b>Commodity ×1000</b> (Oil, XAG): PnL = (Exit−Entry) × Lot × 1.000<br>
-            🔸 <b>JPY Pairs</b> (USD/JPY dll): PnL = (Exit−Entry) × Lot × 1.000 (pip 0.01)<br>
-            🔸 <b>Custom</b>: masukkan multiplier & pip size sendiri
-          </div>
-          <div style="overflow-x:auto;margin-top:4px;">
-            <table class="manager-table"><thead><tr><th>Pair</th><th>Tipe</th><th>Multiplier</th><th>Pip Size</th><th>Warna</th><th>Aksi</th></tr></thead>
-            <tbody id="pairManagerBody"></tbody></table>
-          </div>
-        </div>
-      </div>
-      <!-- SETUPS -->
-      <div class="s-sec" id="ssec-setups">
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">🎛</span><div class="s-card-title">Manajemen Setup Trading</div></div>
-          <div class="s-card-bd">
-            <div style="font-size:11px;color:var(--txt2);margin-bottom:12px;">Setup untuk kategorisasi jenis entry. Klik ✕ untuk hapus, atau tambah setup baru.</div>
-            <div class="setup-tags" id="setupTags"></div>
-            <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
-              <input type="text" class="s-in" id="newSetupInput" placeholder="Nama setup baru..." style="flex:1;" onkeydown="if(event.key==='Enter')addSetup()">
-              <button class="btn btn-primary btn-sm" onclick="addSetup()">＋ Tambah</button>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- AKUN -->
-      <div class="s-sec" id="ssec-akun">
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">👤</span><div class="s-card-title">Manajemen Akun Trading</div>
-            <div style="margin-left:auto;"><button class="btn btn-gold btn-sm" onclick="openAddAkunModal()">＋ Tambah Akun</button></div>
-          </div>
-          <div style="overflow-x:auto;"><table class="manager-table"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Currency</th><th>Balance</th><th>Modal (Rp)</th><th>Tipe</th><th>Status</th><th>Aksi</th></tr></thead>
-          <tbody id="akunManagerBody"></tbody></table></div>
-        </div>
-        <!-- ARSIP PANEL -->
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">🗄️</span><div class="s-card-title">Akun Diarsipkan</div></div>
-          <div class="s-card-bd" style="padding-bottom:4px;">
-            <div class="arsip-toggle-row">
-              <div class="arsip-toggle-lbl"><span>👁️</span><div><div style="font-size:12px;font-weight:700;color:var(--txt0);">Tampilkan di Statistik & Jurnal</div><div style="font-size:10px;color:var(--txt2);margin-top:1px;">Saat ON, akun arsip muncul di filter & statistik global</div></div></div>
-              <label class="toggle-sw"><input type="checkbox" id="arsipToggle" onchange="toggleArsipView(this.checked)"><span class="toggle-track"></span></label>
-            </div>
-            <div class="arsip-panel">
-              <div class="arsip-panel-hd">
-                <div class="dot dot-purple"></div>
-                <div class="arsip-panel-title">Daftar Arsip</div>
-                <span class="arsip-count" id="arsipCount">0</span>
+            <!-- REKAP PNL - di bawah equity -->
+            <div class="month-nav-wrap" id="rekapNavWrap">
+              <button class="month-nav-btn nav-left" onclick="navRekapMonth(-1)"
+                title="Bulan Sebelumnya">&#8249;</button>
+              <button class="month-nav-btn nav-right" onclick="navRekapMonth(1)"
+                title="Bulan Berikutnya">&#8250;</button>
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-cyan"></div>Rekap PnL Per Periode
+                  </div>
+                  <div style="display:flex;gap:7px;align-items:center;">
+                    <div class="mode-tabs">
+                      <button class="mode-tab active" onclick="switchRekapMode('day',this)">DAY</button>
+                      <button class="mode-tab" onclick="switchRekapMode('week',this)">WEEK</button>
+                      <button class="mode-tab" onclick="switchRekapMode('month',this)">MONTH</button>
+                    </div>
+                    <select class="ctrl-sel" id="rekapMonth" onchange="renderRekap()"
+                      style="font-size:11px;padding:5px 8px;">
+                      <option>Jan</option>
+                      <option>Feb</option>
+                      <option>Mar</option>
+                      <option>Apr</option>
+                      <option>Mei</option>
+                      <option>Jun</option>
+                      <option>Jul</option>
+                      <option>Ags</option>
+                      <option>Sep</option>
+                      <option>Okt</option>
+                      <option>Nov</option>
+                      <option>Des</option>
+                    </select>
+                    <select class="ctrl-sel" id="rekapYear" onchange="renderRekap()"
+                      style="font-size:11px;padding:5px 8px;">
+                      <option>2024</option>
+                      <option>2025</option>
+                      <option>2026</option>
+                      <option>2027</option>
+                    </select>
+                  </div>
+                </div>
+                <div id="rekapBody" style="overflow-x:auto;"></div>
               </div>
-              <div style="overflow-x:auto;"><table class="manager-table" id="arsipTable" style="display:none;"><thead><tr><th>Nama Akun</th><th>Broker</th><th>Currency</th><th>Balance</th><th>Modal (Rp)</th><th>Tipe</th><th>Aksi</th></tr></thead>
-              <tbody id="arsipManagerBody"></tbody></table></div>
-              <div class="arsip-empty" id="arsipEmpty"><div class="arsip-empty-ico">🗃️</div><div style="font-weight:600;margin-bottom:4px;">Belum Ada Akun Diarsipkan</div><div style="font-size:10px;">Klik 🗑 pada akun aktif lalu pilih "Arsipkan"</div></div>
+            </div><!-- /month-nav-wrap rekapNavWrap -->
+            <!-- STATS + TOP PAIRS + METRICS -->
+            <div style="display:grid;grid-template-columns:25% 75%;gap:14px;align-items:stretch;" id="statsGrid">
+              <div style="display:flex;flex-direction:column;height:100%;">
+                <div class="panel" style="flex:1;display:flex;flex-direction:column;">
+                  <div class="panel-hd">
+                    <div class="panel-title">
+                      <div class="dot dot-blue"></div>Statistik Trading
+                    </div>
+                  </div>
+                  <div style="flex:1;display:flex;flex-direction:column;">
+                    <div class="st-row"><span class="st-lbl">Win Trades</span><span class="v-green st-val"
+                        id="st-win">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Loss Trades</span><span class="v-red st-val"
+                        id="st-loss">—</span></div>
+                    <div class="st-row"><span class="st-lbl">BE Trades</span><span class="v-white st-val"
+                        id="st-be">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Win Rate</span><span class="v-green st-val"
+                        id="st-wr">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Loss Rate</span><span class="v-red st-val"
+                        id="st-lr">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Profit Factor</span><span class="v-gold st-val"
+                        id="st-pf">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Avg Win (Rp)</span><span class="v-green st-val"
+                        id="st-aw">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Avg Loss (Rp)</span><span class="v-red st-val"
+                        id="st-al">—</span></div>
+                    <div class="st-row"><span class="st-lbl">W/L Ratio</span><span class="v-cyan st-val"
+                        id="st-wl">—</span></div>
+                    <div class="st-row"><span class="st-lbl">Total Fee (Rp)</span><span class="v-gold st-val"
+                        id="st-fee">—</span></div>
+                    <div class="st-row st-row-last"><span class="st-lbl">Net PnL (Rp)</span><span class="v-green st-val"
+                        id="st-pnl">—</span></div>
+                  </div>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div class="panel">
+                  <div class="panel-hd">
+                    <div class="panel-title">
+                      <div class="dot dot-gold"></div>Top Pairs — Ranking by PnL
+                    </div>
+                  </div>
+                  <div style="overflow-x:auto;">
+                    <table class="data-tbl">
+                      <thead>
+                        <tr>
+                          <th class="td-c">Rank</th>
+                          <th>Pair</th>
+                          <th class="td-c">Trades</th>
+                          <th class="td-c">Win</th>
+                          <th class="td-c">Loss</th>
+                          <th class="td-r">Net PnL (Rp)</th>
+                          <th class="td-r">Win Rate</th>
+                        </tr>
+                      </thead>
+                      <tbody id="topPairsBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="panel">
+                  <div class="panel-hd">
+                    <div class="panel-title">
+                      <div class="dot dot-purple"></div>Performance Metrics
+                    </div>
+                  </div>
+                  <div class="panel-bd">
+                    <div class="prog-wrap" id="perfMetrics"></div>
+                    <div class="mini-grid" id="miniStats"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <!-- HARI GRID -->
+            <div class="panel">
+              <div class="panel-hd">
+                <div class="panel-title">
+                  <div class="dot dot-green"></div>Analisa PnL Per Hari (Rp)
+                </div>
+              </div>
+              <div style="overflow-x:auto;" id="hariGrid"></div>
             </div>
           </div>
         </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">⚠️</span><div class="s-card-title">Risk Management Rules</div></div>
-          <div class="s-card-bd">
-            <div class="s-row"><div class="s-info"><div class="s-lbl">Max Daily Loss (Rp)</div><div class="s-hint">Batas loss per hari</div></div><div class="s-ctrl"><input type="number" class="s-in" id="maxDailyLoss" value="500000" style="width:130px;"></div></div>
-            <div class="s-row"><div class="s-info"><div class="s-lbl">Max Loss per Trade (Rp)</div><div class="s-hint">Loss maksimum per trade</div></div><div class="s-ctrl"><input type="number" class="s-in" id="maxTradeLoss" value="200000" style="width:130px;"></div></div>
-            <div class="s-row"><div class="s-info"><div class="s-lbl">Max Trades per Hari</div><div class="s-hint">Batas jumlah trade/hari</div></div><div class="s-ctrl"><input type="number" class="s-in" id="maxTrades" value="10" style="width:90px;"></div></div>
-            <div style="margin-top:14px;text-align:right;"><button class="btn btn-primary btn-sm" onclick="saveRiskRules()">💾 Simpan Rules</button></div>
-          </div>
-        </div>
-      </div>
-      <!-- BACKUP -->
-      <div class="s-sec" id="ssec-backup">
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">📤</span><div class="s-card-title">Export Data</div></div>
-          <div class="s-card-bd"><div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn btn-primary" onclick="exportCSV()">📊 Export CSV</button><button class="btn btn-primary" onclick="exportJSON()">📄 Export JSON Backup</button></div></div>
-        </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">📥</span><div class="s-card-title">Import Data JSON</div></div>
-          <div class="s-card-bd">
-            <p style="font-size:11px;color:var(--txt2);margin-bottom:12px;">Restore lengkap dari file <b>.json</b> backup — termasuk kurs, pair, setup, akun, dan semua trade.</p>
-            <div style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--c-blue)'" onmouseleave="this.style.borderColor='var(--bdr)'" onclick="document.getElementById('importFile').click()">
-              <div style="font-size:28px;margin-bottom:8px;">📂</div>
-              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Klik untuk pilih file JSON backup</div>
-              <div style="font-size:10px;color:var(--txt2);">Format: forex-backup-*.json</div>
-              <input type="file" id="importFile" style="display:none;" accept=".json" onchange="importData(this)">
-            </div>
-          </div>
-        </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">📊</span><div class="s-card-title">Import Data CSV</div></div>
-          <div class="s-card-bd">
-            <p style="font-size:11px;color:var(--txt2);margin-bottom:8px;">Import trade dari file <b>.csv</b> — cocok untuk restore dari export CSV atau spreadsheet. Trade dengan ID yang sama akan diperbarui.</p>
-            <div style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:9px 12px;margin-bottom:12px;font-size:10.5px;color:var(--txt1);">
-              📋 Kolom yang diperlukan (header baris 1):<br>
-              <code style="font-family:var(--fn-m);font-size:9.5px;color:var(--c-cyan);">ID, Tanggal, Akun, Pair, Arah, Lot, Entry, SL, TP, Exit, PnL USD, PnL Rp, Fee (Rp), RR, Hasil, Setup, Catatan</code>
-            </div>
-            <div style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;" onmouseenter="this.style.borderColor='var(--c-cyan)'" onmouseleave="this.style.borderColor='var(--bdr)'" onclick="document.getElementById('importCSVFile').click()">
-              <div style="font-size:28px;margin-bottom:8px;">📄</div>
-              <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Klik untuk pilih file CSV</div>
-              <div style="font-size:10px;color:var(--txt2);">Format: jurnal-trading-*.csv</div>
-              <input type="file" id="importCSVFile" style="display:none;" accept=".csv,.txt" onchange="importCSV(this)">
-            </div>
-          </div>
-        </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">🗑️</span><div class="s-card-title" style="color:var(--c-red2);">Reset Data</div></div>
-          <div class="s-card-bd"><p style="font-size:12px;color:var(--txt1);margin-bottom:12px;">Hapus semua data — tidak dapat dibatalkan!</p><button class="btn btn-danger" onclick="resetAllData()">🗑️ Reset Semua Data</button></div>
-        </div>
-      </div>
-      <!-- ABOUT -->
-      <div class="s-sec" id="ssec-about">
-        <div class="s-card">
-          <div class="s-card-bd" style="text-align:center;padding:28px 20px;">
-            <div style="font-size:44px;margin-bottom:10px;">📊</div>
-            <div style="font-family:var(--fn-h);font-size:20px;font-weight:800;background:linear-gradient(135deg,#fff,var(--c-gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:5px;">Jurnal Trading Forex Pro</div>
-            <div style="font-size:12px;color:var(--txt2);margin-bottom:18px;">Single-file Dashboard v3.0 · Apr 2026</div>
-            <div style="font-size:12px;color:var(--txt1);max-width:420px;margin:0 auto;line-height:1.7;">Dashboard single-file HTML untuk jurnal trading forex profesional. PnL dihitung otomatis berdasarkan tipe instrumen. <strong style="color:var(--c-gold);">Data tersimpan di Google Spreadsheet (cloud)</strong> — bisa diakses dari device manapun.</div>
-          </div>
-        </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">⌨️</span><div class="s-card-title">Keyboard Shortcuts</div></div>
-          <div class="s-card-bd" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);"><span style="font-size:11px;color:var(--txt1);">Tambah Trade</span><kbd style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">N</kbd></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);"><span style="font-size:11px;color:var(--txt1);">Export CSV</span><kbd style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">E</kbd></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);"><span style="font-size:11px;color:var(--txt1);">Focus Search</span><kbd style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">F</kbd></div>
-            <div style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);"><span style="font-size:11px;color:var(--txt1);">Tutup Modal</span><kbd style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">Esc</kbd></div>
-          </div>
-        </div>
-      </div>
-      <!-- APPROVAL AKUN (khusus admin) -->
-      <div class="s-sec" id="ssec-approval">
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">🛡️</span><div class="s-card-title">Menunggu Persetujuan</div></div>
-          <div class="s-card-bd">
-            <div id="pendingUsersList" style="display:flex;flex-direction:column;gap:8px;"></div>
-          </div>
-        </div>
-        <div class="s-card">
-          <div class="s-card-hd"><span style="font-size:18px;">👥</span><div class="s-card-title">Semua User</div></div>
-          <div class="s-card-bd" style="overflow-x:auto;">
-            <table class="s-table">
-              <thead><tr><th>Email</th><th>Nama</th><th>Role</th><th>Status</th><th>Daftar</th><th>Aksi</th></tr></thead>
-              <tbody id="allUsersBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
 
-</div><!-- end .content-area -->
-</div><!-- end .body-wrap -->
+        <!-- ANALYSIS PAGE -->
+        <div class="page" id="page-analysis">
+          <div class="main">
+            <div
+              style="font-family:var(--fn-h);font-size:16px;font-weight:800;display:flex;align-items:center;gap:8px;">📈
+              Analisis Mendalam <span style="font-size:12px;font-family:var(--fn);font-weight:400;color:var(--txt2);">—
+                Deep Performance Analytics</span></div>
+            <!-- REKAP AKUN -->
+            <div class="panel">
+              <div class="panel-hd">
+                <div class="panel-title">
+                  <div class="dot dot-blue"></div>Rekap Per Akun
+                </div>
+              </div>
+              <div style="overflow-x:auto;">
+                <table class="data-tbl">
+                  <thead>
+                    <tr>
+                      <th>Nama Akun</th>
+                      <th class="td-c">Currency</th>
+                      <th class="td-c">Balance</th>
+                      <th class="td-c">Modal (Rp)</th>
+                      <th class="td-c">Net PnL</th>
+                      <th class="td-c">Return %</th>
+                      <th class="td-c">Win Rate</th>
+                      <th class="td-c">Trades</th>
+                      <th class="td-c">PF</th>
+                      <th class="td-c">Equity Aktif</th>
+                    </tr>
+                  </thead>
+                  <tbody id="akunTableBody"></tbody>
+                </table>
+              </div>
+            </div>
+            <div class="g8" id="analysisMetrics"></div>
+            <div class="g2">
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-green"></div>Cumulative Equity Curve
+                  </div><span class="badge badge-up" id="an-return">+0%</span>
+                </div>
+                <div class="panel-bd">
+                  <div class="chart-wrap h280"><canvas id="an-equity"></canvas></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-gold"></div>Win/Loss Streak Visualizer
+                  </div>
+                </div>
+                <div class="panel-bd">
+                  <div class="streak-grid" id="streakGrid"></div>
+                  <div style="display:flex;gap:12px;margin-top:10px;">
+                    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);">
+                      <div style="width:12px;height:12px;border-radius:3px;background:var(--c-green);"></div>WIN
+                    </div>
+                    <div style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--txt2);">
+                      <div style="width:12px;height:12px;border-radius:3px;background:var(--c-red);"></div>LOSS
+                    </div>
+                  </div>
+                  <div class="mini-grid" style="margin-top:12px;">
+                    <div class="mini-card">
+                      <div class="mini-lbl">Best Win Streak</div>
+                      <div class="mini-val v-green" id="an-best-streak">—</div>
+                    </div>
+                    <div class="mini-card">
+                      <div class="mini-lbl">Worst Loss Streak</div>
+                      <div class="mini-val v-red" id="an-worst-streak">—</div>
+                    </div>
+                    <div class="mini-card">
+                      <div class="mini-lbl">Expectancy/Trade</div>
+                      <div class="mini-val v-gold" id="an-expectancy">—</div>
+                    </div>
+                    <div class="mini-card">
+                      <div class="mini-lbl">Max Drawdown</div>
+                      <div class="mini-val v-red" id="an-maxdd">—</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="g2">
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-blue"></div>Distribusi PnL per Trade
+                  </div>
+                </div>
+                <div class="panel-bd">
+                  <div class="chart-wrap h200"><canvas id="an-dist"></canvas></div>
+                  <div class="dist-wrap" id="an-dist-bars" style="margin-top:12px;"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-cyan"></div>Win Rate Per Setup & PnL Per Hari
+                  </div>
+                </div>
+                <div class="panel-bd">
+                  <div
+                    style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:7px;">
+                    Win Rate Per Setup</div>
+                  <div class="dist-wrap" id="an-setup-bars"></div>
+                  <div
+                    style="font-size:10px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin:14px 0 7px;">
+                    PnL Per Hari Perdagangan</div>
+                  <div class="chart-wrap" style="height:150px;"><canvas id="an-day"></canvas></div>
+                </div>
+              </div>
+            </div>
+            <div class="g2">
+              <div class="panel" id="calPanel" style="position:relative;overflow:visible;">
+                <button class="month-nav-btn nav-left" onclick="navCalMonth(-1)" title="Bulan Sebelumnya"
+                  id="calNavLeft">&#8249;</button>
+                <button class="month-nav-btn nav-right" onclick="navCalMonth(1)" title="Bulan Berikutnya"
+                  id="calNavRight">&#8250;</button>
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-green"></div>Kalender Trading Heatmap
+                  </div>
+                  <div style="display:flex;gap:6px;">
+                    <select class="ctrl-sel" id="calMonth" onchange="renderCalendar()"
+                      style="font-size:11px;padding:4px 8px;">
+                      <option>Jan</option>
+                      <option>Feb</option>
+                      <option>Mar</option>
+                      <option>Apr</option>
+                      <option>Mei</option>
+                      <option>Jun</option>
+                      <option>Jul</option>
+                      <option>Ags</option>
+                      <option>Sep</option>
+                      <option>Okt</option>
+                      <option>Nov</option>
+                      <option>Des</option>
+                    </select>
+                    <select class="ctrl-sel" id="calYear" onchange="renderCalendar()"
+                      style="font-size:11px;padding:4px 8px;">
+                      <option>2024</option>
+                      <option>2025</option>
+                      <option>2026</option>
+                      <option>2027</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="panel-bd">
+                  <div class="cal-grid" id="calendarGrid"></div>
+                </div>
+              </div>
+              <div class="panel">
+                <div class="panel-hd">
+                  <div class="panel-title">
+                    <div class="dot dot-red"></div>Drawdown Chart
+                  </div><span class="badge badge-dn" id="an-dd-badge">—</span>
+                </div>
+                <div class="panel-bd">
+                  <div class="chart-wrap h280"><canvas id="an-drawdown"></canvas></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-<!-- FOOTER -->
-<div class="footer">
-  <span>📊 Forex Journal Pro v3.0 · ☁️ Cloud Storage</span>
-  <div class="shortcut-hints">
-    <div class="sh-item"><span class="sh-key">N</span> Trade Baru</div>
-    <div class="sh-item"><span class="sh-key">E</span> Export</div>
-    <div class="sh-item"><span class="sh-key">F</span> Search</div>
-    <div class="sh-item"><span class="sh-key">Esc</span> Tutup</div>
-  </div>
-  <span id="fTime"></span>
-</div>
-</div><!-- end .app -->
-<!-- CLOUD LOADER OVERLAY -->
-<div class="cloud-loader" id="cloudLoader">
-  <div class="cloud-loader-icon">☁️</div>
-  <div class="cloud-spinner"></div>
-  <div class="cloud-loader-txt">Memuat data dari cloud...</div>
-  <div class="cloud-loader-sub" id="cloudLoaderSub">Menghubungkan ke Google Spreadsheet</div>
-</div>
-<!-- MODALS -->
-<div class="modal-overlay" id="tradeModal">
-  <div class="modal">
-    <div class="modal-hd"><div class="modal-title" id="tradeModalTitle">➕ Tambah Trade Baru</div><div class="modal-close" onclick="closeModal('tradeModal')">✕</div></div>
-    <div class="pnl-info-box" id="pnlInfoBox">ℹ️ PnL dihitung otomatis dari tipe pair yang dipilih.</div>
-    <div class="form-grid">
-      <div class="form-field"><label class="form-lbl">Akun</label><select class="form-in" id="fm-akun"></select></div>
-      <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="datetime-local" class="form-in" id="fm-date"></div>
-      <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair" onchange="onPairChange()"></select></div>
-      <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf"><option value="1m">1m</option><option value="5m">5m</option><option value="15m">15m</option><option value="30m">30m</option><option value="1h">1h</option><option value="4h">4h</option><option value="1D">1D</option></select></div>
-      <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir" onchange="calcPnL()"><option>BUY</option><option>SELL</option></select></div>
-      <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot" step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Entry Price <span style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number" class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi" oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);" onfocus="this.style.borderColor='var(--c-blue)'" onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
-      <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in" id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">TP <span style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Exit Price <span style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001" placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number" class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()"></div>
-      <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number" class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
-      <div class="form-field"><label class="form-lbl">RR <span style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b style="color:var(--c-green2)">TP</b></span></label>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
-          <input type="hidden" id="fm-rr">
-        </div>
-      </div>
-      <div class="form-field full"><label class="form-lbl">Hasil <span style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan harga)</span></label>
-        <div class="form-in" id="fm-result-display" style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
-          <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
-          <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
-        </div>
-        <input type="hidden" id="fm-result" value="BE">
-      </div>
-      <div class="form-field full"><label class="form-lbl">Setup <span style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari satu</span></label><div class="setup-picker" id="fm-setup-picker"></div></div>
-      <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text" class="form-in" id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
-    </div>
-    <div class="pnl-preview" id="pnlPreview">
-      <div>
-        <div class="pnl-preview-lbl">Estimasi PnL (Auto)</div>
-        <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Fee: <span id="feePreview" style="color:var(--c-gold);font-family:var(--fn-m);">Rp 0</span></div>
-      </div>
-      <div style="text-align:right;">
-        <div class="pnl-preview-val" id="pnlUSDPreview" style="color:var(--txt2);">$0.00</div>
-        <div style="font-size:12px;font-family:var(--fn-m);font-weight:700;color:var(--txt2);" id="pnlRpPreview">Rp 0</div>
-        <div style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);" id="pnlNetPreview"></div>
-      </div>
-    </div>
-    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('tradeModal')">Batal</button><button class="btn btn-gold" onclick="saveTrade()">💾 Simpan Trade</button></div>
-  </div>
-</div>
-<div class="modal-overlay" id="pairModal">
-  <div class="modal sm">
-    <div class="modal-hd"><div class="modal-title" id="pairModalTitle">🔧 Tambah Pair Baru</div><div class="modal-close" onclick="closeModal('pairModal')">✕</div></div>
-    <div class="form-grid">
-      <div class="form-field"><label class="form-lbl">Nama Pair</label><input type="text" class="form-in" id="pm-name" placeholder="XAU/USD"></div>
-      <div class="form-field"><label class="form-lbl">Tipe</label>
-        <select class="form-in" id="pm-type" onchange="onPairTypeChange()">
-          <option value="forex">Forex Major (×100,000)</option>
-          <option value="commodity100">Commodity ×100 (Gold)</option>
-          <option value="commodity1000">Commodity ×1,000 (Oil)</option>
-          <option value="jpy">JPY Pair (×1,000)</option>
-          <option value="custom">Custom Multiplier</option>
-        </select>
-      </div>
-      <div class="form-field"><label class="form-lbl">Multiplier</label><input type="number" class="form-in" id="pm-mult" value="100000"></div>
-      <div class="form-field"><label class="form-lbl">Pip Size</label><input type="number" class="form-in" id="pm-pip" value="0.0001" step="0.00001"></div>
-      <div class="form-field"><label class="form-lbl">Chip Warna</label>
-        <select class="form-in" id="pm-color"><option value="chip-gold">Gold</option><option value="chip-blue">Blue</option><option value="chip-purple">Purple</option><option value="chip-cyan">Cyan</option><option value="chip-green">Green</option><option value="chip-red">Red</option><option value="chip-gray">Gray</option></select>
-      </div>
-      <div class="form-field"><label class="form-lbl">Deskripsi</label><input type="text" class="form-in" id="pm-desc" placeholder="Gold / Emas"></div>
-    </div>
-    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('pairModal')">Batal</button><button class="btn btn-gold" onclick="savePair()">💾 Simpan Pair</button></div>
-  </div>
-</div>
-<!-- DELETE LOADING OVERLAY -->
-<div class="del-loading-overlay" id="delLoadingOverlay">
-  <div class="del-loading-box">
-    <div class="del-orbit-wrap">
-      <div class="del-particles">
-        <div class="del-particle"></div><div class="del-particle"></div>
-        <div class="del-particle"></div><div class="del-particle"></div>
-        <div class="del-particle"></div><div class="del-particle"></div>
-      </div>
-      <div class="del-orbit-ring del-orbit-r1"></div>
-      <div class="del-orbit-ring del-orbit-r2"></div>
-      <div class="del-orbit-ring del-orbit-r3"></div>
-      <div class="del-orbit-core">🗑️</div>
-    </div>
-    <div class="del-loading-title" id="delLoadingTitle">Menghapus<span class="del-loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
-    <div class="del-progress-wrap"><div class="del-progress-bar" id="delProgressBar"></div></div>
-    <div class="del-progress-label" id="delProgressLabel">Memproses...</div>
-    <div class="del-loading-sub" id="delLoadingSub">Mohon tunggu, jangan tutup halaman ini</div>
-  </div>
-</div>
-<!-- AKUN DELETE CONFIRM MODAL -->
-<div class="del-modal-overlay" id="deleteAkunModal">
-  <div class="del-modal">
-    <!-- STEP 1: Pilih tindakan -->
-    <div id="delStep1">
-      <div class="del-modal-top">
-        <span class="del-modal-icon">⚠️</span>
-        <div class="del-modal-title">Apa yang ingin dilakukan?</div>
-        <div class="del-modal-sub">Pilih tindakan untuk akun berikut:</div>
-        <div class="del-modal-account">
-          <span class="del-modal-account-icon">👤</span>
-          <div>
-            <div class="del-modal-account-name" id="deleteAkunName">—</div>
-            <div class="del-modal-account-broker" id="deleteAkunBroker">—</div>
+        <!-- JOURNAL PAGE -->
+        <div class="page" id="page-journal">
+          <div class="main">
+            <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+              <div style="font-family:var(--fn-h);font-size:16px;font-weight:800;">📋 Jurnal Trade Lengkap</div>
+              <div style="display:flex;gap:8px;">
+                <button class="btn btn-ghost btn-sm" onclick="exportCSV()">📤 Export CSV</button>
+                <button class="btn btn-gold" onclick="openAddModal()">＋ Tambah Trade</button>
+              </div>
+            </div>
+            <div class="g8" id="journalSummary"></div>
+            <div class="jfilter-bar">
+              <span class="ctrl-label">Filter:</span>
+              <input type="text" class="ctrl-in" id="jSearchPair" placeholder="🔍 Pair / Catatan..."
+                oninput="renderJournal()" style="width:160px;">
+              <select class="ctrl-sel" id="jFilterAkun" onchange="renderJournal()">
+                <option value="">Semua Akun</option>
+              </select>
+              <select class="ctrl-sel" id="jFilterResult" onchange="renderJournal()">
+                <option value="">Semua Hasil</option>
+                <option>WIN</option>
+                <option>LOSS</option>
+                <option>BE</option>
+              </select>
+              <select class="ctrl-sel" id="jFilterDir" onchange="renderJournal()">
+                <option value="">BUY & SELL</option>
+                <option>BUY</option>
+                <option>SELL</option>
+              </select>
+              <select class="ctrl-sel" id="jFilterSetup" onchange="renderJournal()">
+                <option value="">Semua Setup</option>
+              </select>
+              <select class="ctrl-sel" id="jFilterPair" onchange="renderJournal()">
+                <option value="">Semua Pair</option>
+              </select>
+              <div class="ctrl-sep"></div>
+              <button class="drp-btn" id="jDrpBtn" onclick="openDRP('journal')">
+                <span class="drp-btn-ico">📅</span>
+                <span class="drp-btn-label" id="jDrpLabel">Semua Tanggal</span>
+                <span class="drp-btn-chev">▼</span>
+              </button>
+              <input type="hidden" id="jDateFrom">
+              <input type="hidden" id="jDateTo">
+              <button class="btn btn-ghost btn-sm" onclick="resetJFilter()">✕ Reset</button>
+              <div class="ctrl-sep"></div>
+              <label class="toggle-sw" title="Tampilkan/sembunyikan trade dari akun yang diarsipkan"
+                style="cursor:pointer;">
+                <input type="checkbox" id="jArsipToggle" onchange="toggleArsipView(this.checked)"><span
+                  class="toggle-track"></span>
+              </label>
+              <span style="font-size:11px;color:var(--txt2);white-space:nowrap;">📦 Arsip</span>
+              <div style="margin-left:auto;font-size:11px;color:var(--txt2);">Tampil: <span id="jCount"
+                  style="color:var(--txt0);font-weight:700;">0</span></div>
+            </div>
+            <div class="panel">
+              <div style="overflow-x:auto;">
+                <table class="data-tbl">
+                  <thead>
+                    <tr>
+                      <th style="width:32px;"><input type="checkbox" id="jSelectAll" onchange="toggleSelectAll(this)">
+                      </th>
+                      <th onclick="jSort('id')"># ↓</th>
+                      <th onclick="jSort('date')">Tanggal</th>
+                      <th onclick="jSort('akun')">Akun</th>
+                      <th onclick="jSort('pair')">Pair</th>
+                      <th class="td-c" onclick="jSort('tf')">TF</th>
+                      <th class="td-c" onclick="jSort('dir')">Arah</th>
+                      <th class="td-c" onclick="jSort('lot')">Lot</th>
+                      <th class="td-c">Entry</th>
+                      <th class="td-c">SL</th>
+                      <th class="td-c" onclick="jSort('tp')" title="Take Profit — dasar kalkulasi RR">TP</th>
+                      <th class="td-c" onclick="jSort('exit')" title="Harga exit aktual">Exit</th>
+                      <th class="td-c" onclick="jSort('pnlRp')">PnL (Rp)</th>
+                      <th class="td-c" onclick="jSort('pnlUSD')">PnL (USD)</th>
+                      <th class="td-c" onclick="jSort('fee')" title="Fee/Komisi">Fee (Rp)</th>
+                      <th class="td-c" onclick="jSort('rr')" title="Risk/Reward">RR</th>
+                      <th class="td-c" onclick="jSort('result')">Hasil</th>
+                      <th onclick="jSort('setup')">Setup</th>
+                      <th>Catatan</th>
+                      <th class="td-c">Aksi</th>
+                    </tr>
+                  </thead>
+                  <tbody id="journalBody"></tbody>
+                </table>
+              </div>
+              <div class="pagination">
+                <div class="pg-info">Hal <span id="jPage">1</span>/<span id="jTotalPages">1</span> &nbsp;|&nbsp;
+                  <select class="ctrl-sel" style="padding:3px 6px;font-size:11px;"
+                    onchange="changeJPageSize(this.value)">
+                    <option value="15">15/hal</option>
+                    <option value="25">25/hal</option>
+                    <option value="50">50/hal</option>
+                    <option value="999">Semua</option>
+                  </select>
+                </div>
+                <div class="pg-btns" id="jPagination"></div>
+              </div>
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;">
+              <span style="font-size:11px;color:var(--txt2);">Dipilih: <span id="selectedCount"
+                  style="color:var(--txt0);font-weight:700;">0</span></span>
+              <button class="btn btn-danger btn-sm" id="bulkDeleteBtn" style="display:none;" onclick="bulkDelete()">🗑
+                Hapus Terpilih</button>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="del-modal-options">
-        <div class="del-option del-option-arsip" onclick="confirmDeleteAkun('arsip')">
-          <div class="del-option-ico">🗄️</div>
-          <div class="del-option-txt">
-            <div class="del-option-title">Arsipkan Akun</div>
-            <div class="del-option-desc">Akun disembunyikan dari filter & statistik. Data jurnal tetap aman dan bisa dikembalikan kapanpun.</div>
-          </div>
-          <span class="del-option-arrow">›</span>
-        </div>
-        <div class="del-option del-option-perm" onclick="goToDelStep2()">
-          <div class="del-option-ico">🗑️</div>
-          <div class="del-option-txt">
-            <div class="del-option-title">Hapus Permanen</div>
-            <div class="del-option-desc">Akun dihapus selamanya. Akan ada konfirmasi lanjutan untuk data jurnal terkait.</div>
-          </div>
-          <span class="del-option-arrow">›</span>
-        </div>
-        <button class="del-modal-cancel" onclick="document.getElementById('deleteAkunModal').classList.remove('active')">Batal</button>
-      </div>
-    </div>
-    <!-- STEP 2: Konfirmasi trade -->
-    <div id="delStep2" style="display:none;">
-      <div class="del-modal-top" style="background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(127,29,29,.15));border-color:rgba(239,68,68,.25);">
-        <span class="del-modal-icon" style="animation:none;filter:drop-shadow(0 4px 16px rgba(239,68,68,.7));">🗑️</span>
-        <div class="del-modal-title" style="color:var(--c-red2);">Hapus Permanen</div>
-        <div class="del-modal-sub">Akun <b id="delStep2AkunName" style="color:#fff;"></b> akan dihapus selamanya.</div>
-        <div style="margin-top:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 14px;">
-          <div style="font-size:11px;font-weight:700;color:var(--c-red2);margin-bottom:4px;">⚠️ Data Jurnal Terkait</div>
-          <div style="font-size:11px;color:var(--txt1);"><span id="delStep2TradeCount" style="color:#fff;font-weight:700;font-family:var(--fn-m);">0</span> trade ditemukan dengan akun ini.</div>
-        </div>
-      </div>
-      <div class="del-modal-options">
-        <div style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:-4px;">Pilih nasib data jurnal:</div>
-        <div class="del-option del-option-perm" onclick="confirmDeleteAkun('permanent', true)" style="border-color:rgba(239,68,68,.35);">
-          <div class="del-option-ico" style="background:rgba(239,68,68,.2);">💥</div>
-          <div class="del-option-txt">
-            <div class="del-option-title">Hapus Akun + Semua Jurnalnya</div>
-            <div class="del-option-desc">Semua trade terkait akun ini ikut dihapus permanen dari cloud. Tidak dapat dikembalikan.</div>
-          </div>
-          <span class="del-option-arrow">›</span>
-        </div>
-        <div class="del-option" onclick="confirmDeleteAkun('permanent', false)" style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
-          <div class="del-option-ico" style="background:rgba(255,255,255,.07);font-size:20px;">📂</div>
-          <div class="del-option-txt">
-            <div class="del-option-title" style="color:var(--txt1);">Hapus Akun Saja</div>
-            <div class="del-option-desc">Data jurnal tetap tersimpan tapi tanpa referensi akun (orphan). Tidak muncul di statistik.</div>
-          </div>
-          <span class="del-option-arrow" style="color:var(--txt2);">›</span>
-        </div>
-        <button class="del-modal-cancel" onclick="goToDelStep1()">← Kembali</button>
-      </div>
-    </div>
-  </div>
-</div>
-<div class="modal-overlay" id="akunModal">
-  <div class="modal sm">
-    <div class="modal-hd"><div class="modal-title" id="akunModalTitle">👤 Tambah Akun</div><div class="modal-close" onclick="closeModal('akunModal')">✕</div></div>
-    <div class="form-grid">
-      <div class="form-field full"><label class="form-lbl">Nama Akun</label><input type="text" class="form-in" id="am-name" placeholder="SCALPING ONE"></div>
-      <div class="form-field"><label class="form-lbl">Broker</label><input type="text" class="form-in" id="am-broker" placeholder="XM Global"></div>
-      <div class="form-field"><label class="form-lbl">Tipe</label><select class="form-in" id="am-type"><option value="live">LIVE</option><option value="demo">DEMO</option><option value="cent">CENT</option></select></div>
-      <div class="form-field"><label class="form-lbl">Currency</label><select class="form-in" id="am-currency" onchange="calcAkunModal()"><option value="IDR">IDR (Rupiah)</option><option value="USD">USD — US$ (Dolar AS)</option><option value="USC">USC — US¢ (Sen Dolar AS)</option></select></div>
-      <div class="form-field"><label class="form-lbl" id="am-balance-lbl">Balance</label><input type="number" class="form-in" id="am-balance" value="0" step="0.01" oninput="calcAkunModal()" placeholder="Nominal sesuai currency"></div>
-      <div class="form-field full"><label class="form-lbl">Modal Ekuivalen (Rp) <span style="font-size:9px;color:var(--txt2);font-weight:400;">— otomatis dari balance × kurs</span></label><input type="number" class="form-in" id="am-modal" readonly style="opacity:.65;cursor:not-allowed;" value="0"></div>
-    </div>
-    <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('akunModal')">Batal</button><button class="btn btn-gold" onclick="saveAkun()">💾 Simpan Akun</button></div>
-  </div>
-</div>
-<div class="modal-overlay" id="detailModal">
-  <div class="modal sm">
-    <div class="modal-hd"><div class="modal-title">📄 Detail Trade</div><div class="modal-close" onclick="closeModal('detailModal')">✕</div></div>
-    <div id="detailContent"></div>
-  </div>
-</div>
 
-<!-- POPUP PERAYAAN — muncul saat admin menyetujui/mengaktifkan akun -->
-<div class="appr-overlay" id="approveCelebrateOverlay">
-  <div class="appr-box">
-    <div class="appr-particles" id="approveConfetti"></div>
-    <div class="appr-check-wrap">
-      <div class="appr-ring appr-ring-1"></div>
-      <div class="appr-ring appr-ring-2"></div>
-      <svg class="appr-check-svg" viewBox="0 0 52 52">
-        <circle class="appr-check-circle" cx="26" cy="26" r="24" fill="none"/>
-        <path class="appr-check-mark" fill="none" d="M14 27l7 7 17-17"/>
-      </svg>
-    </div>
-    <div class="appr-title" id="approveCelebrateTitle">Akun Disetujui!</div>
-    <div class="appr-account-chip" id="approveCelebrateChip">
-      <img id="approveCelebratePic" src="" alt="" style="display:none;">
-      <span id="approveCelebrateEmail"></span>
-    </div>
-    <div class="appr-sub" id="approveCelebrateSub">User sekarang bisa langsung masuk dan mulai mencatat trading.</div>
-    <button class="btn btn-gold" style="width:100%;margin-top:16px;" onclick="closeApproveCelebrate()">Tutup</button>
-  </div>
-</div>
-<!-- DATE RANGE PICKER OVERLAY -->
-<div class="drp-overlay" id="drpOverlay" onclick="closeDRP()" style="display:none;"></div>
-<div class="drp-popup" id="drpPopup">
-  <!-- Presets -->
-  <div class="drp-presets" id="drpPresets">
-    <div class="drp-preset" data-preset="today" onclick="drpSelectPreset('today')">Hari Ini</div>
-    <div class="drp-preset" data-preset="last7" onclick="drpSelectPreset('last7')">7 Hari Terakhir</div>
-    <div class="drp-preset" data-preset="last30" onclick="drpSelectPreset('last30')">30 Hari Terakhir</div>
-    <div class="drp-preset" data-preset="last3m" onclick="drpSelectPreset('last3m')">3 Bulan Terakhir</div>
-    <div class="drp-preset" data-preset="last12m" onclick="drpSelectPreset('last12m')">12 Bulan Terakhir</div>
-    <div class="drp-preset" data-preset="mtd" onclick="drpSelectPreset('mtd')">Bulan Ini</div>
-    <div class="drp-preset" data-preset="ytd" onclick="drpSelectPreset('ytd')">Tahun Ini</div>
-    <div class="drp-preset" data-preset="all" onclick="drpSelectPreset('all')">Semua Waktu</div>
-  </div>
-  <!-- Calendars + footer -->
-  <div class="drp-cals">
-    <div class="drp-cals-row">
-      <!-- Calendar left -->
-      <div class="drp-cal" id="drpCalLeft">
-        <div class="drp-cal-hd">
-          <button class="drp-cal-nav" onclick="drpNavMonth(-1)">&#8249;</button>
-          <div class="drp-cal-title" id="drpTitleLeft">—</div>
-          <div style="width:26px;"></div>
+        <!-- SETTINGS PAGE -->
+        <div class="page" id="page-settings">
+          <div class="settings-layout">
+            <div class="settings-main">
+              <!-- KURS -->
+              <div class="s-sec active" id="ssec-kurs">
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">💱</span>
+                    <div class="s-card-title">Kurs IDR/USD Aktif</div>
+                    <div
+                      style="margin-left:auto;display:flex;align-items:center;gap:6px;background:var(--c-gold-d);border:1px solid rgba(245,197,24,.22);border-radius:var(--r8);padding:4px 10px;">
+                      <span
+                        style="font-size:9.5px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.5px;">Kurs
+                        Dipakai</span>
+                      <span id="kursDisplaySettings"
+                        style="font-family:var(--fn-m);font-size:12px;font-weight:800;color:var(--c-gold);">Rp
+                        17,223</span>
+                    </div>
+                  </div>
+                  <div class="s-card-bd">
+                    <div
+                      style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:10px 13px;font-size:11px;color:var(--txt1);margin-bottom:14px;">
+                      💡 Kurs digunakan untuk konversi PnL USD → Rupiah. Rate live diambil otomatis dari <strong
+                        style="color:#60a5fa;">Google Finance</strong> — klik <strong style="color:var(--c-green2);">←
+                        Gunakan</strong> jika ada selisih, lalu <strong style="color:var(--c-gold);">Simpan</strong>.
+                    </div>
+                    <!-- Live Rate + Kurs Input Row -->
+                    <div class="s-row" style="flex-wrap:wrap;gap:12px;">
+                      <div class="s-info">
+                        <div class="s-lbl">Kurs Aktif (Rp/USD)</div>
+                        <div class="s-hint">Set manual atau gunakan live rate</div>
+                      </div>
+                      <div class="s-ctrl" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                        <!-- Live Rate Widget -->
+                        <div class="live-kurs-box" id="liveKursBox">
+                          <div>
+                            <div class="live-kurs-src"><span class="live-kurs-src-dot loading"
+                                id="liveKursDot"></span>Google Finance</div>
+                            <div class="live-kurs-val" id="liveKursVal" style="color:var(--txt2);font-size:12px;">
+                              Memuat...</div>
+                            <div id="liveKursTime" style="font-size:9px;color:var(--txt2);margin-top:1px;"></div>
+                          </div>
+                          <div class="live-kurs-sep"></div>
+                          <button class="live-kurs-refresh" id="liveKursRefreshBtn" onclick="fetchLiveKurs()"
+                            title="Refresh rate">🔄</button>
+                          <button id="gunakanKursBtn" onclick="gunakanLiveKurs()" disabled>⬅ Gunakan</button>
+                        </div>
+                        <!-- Manual Input -->
+                        <div class="live-kurs-sep"></div>
+                        <span style="font-size:12px;color:var(--txt2);">Rp</span>
+                        <input type="number" class="s-in" id="kursInput" value="17223" style="width:110px;"
+                          oninput="checkKursDiff()">
+                        <button class="btn btn-primary btn-sm" onclick="saveKurs()">💾 Simpan</button>
+                      </div>
+                    </div>
+                    <div class="s-row">
+                      <div class="s-info">
+                        <div class="s-lbl">Tanggal Update</div>
+                        <div class="s-hint">Kurs berlaku mulai</div>
+                      </div>
+                      <div class="s-ctrl"><input type="date" class="s-in" id="kursTgl" value="2026-04-29"></div>
+                    </div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">📅</span>
+                    <div class="s-card-title">Riwayat Kurs</div>
+                  </div>
+                  <div class="s-card-bd" style="padding:0;">
+                    <div id="kursHistory"></div>
+                  </div>
+                </div>
+              </div>
+              <!-- PAIRS -->
+              <div class="s-sec" id="ssec-pairs">
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">🔧</span>
+                    <div class="s-card-title">Manajemen Pair Trading</div>
+                    <div style="margin-left:auto;"><button class="btn btn-gold btn-sm" onclick="openAddPairModal()">＋
+                        Tambah Pair</button></div>
+                  </div>
+                  <div
+                    style="background:var(--c-gold-d);border:1px solid rgba(245,197,24,.2);border-radius:var(--r8);padding:10px 13px;font-size:11px;color:var(--txt1);margin:12px 16px 0;">
+                    <strong style="color:var(--c-gold);">Cara Hitung PnL berdasarkan Tipe:</strong><br>
+                    🔸 <b>Forex Major</b> (EUR/USD, GBP/USD, dll): PnL = (Exit−Entry) × Lot × 100.000 (pip 0.0001)<br>
+                    🔸 <b>Commodity ×100</b> (XAU/USD Gold): PnL = (Exit−Entry) × Lot × 100 (pip 0.01 = $1/lot mini)<br>
+                    🔸 <b>Commodity ×1000</b> (Oil, XAG): PnL = (Exit−Entry) × Lot × 1.000<br>
+                    🔸 <b>JPY Pairs</b> (USD/JPY dll): PnL = (Exit−Entry) × Lot × 1.000 (pip 0.01)<br>
+                    🔸 <b>Custom</b>: masukkan multiplier & pip size sendiri
+                  </div>
+                  <div style="overflow-x:auto;margin-top:4px;">
+                    <table class="manager-table">
+                      <thead>
+                        <tr>
+                          <th>Pair</th>
+                          <th>Tipe</th>
+                          <th>Multiplier</th>
+                          <th>Pip Size</th>
+                          <th>Warna</th>
+                          <th>Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="pairManagerBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+              <!-- SETUPS -->
+              <div class="s-sec" id="ssec-setups">
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">🎛</span>
+                    <div class="s-card-title">Manajemen Setup Trading</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <div style="font-size:11px;color:var(--txt2);margin-bottom:12px;">Setup untuk kategorisasi jenis
+                      entry. Klik ✕ untuk hapus, atau tambah setup baru.</div>
+                    <div class="setup-tags" id="setupTags"></div>
+                    <div style="display:flex;gap:8px;margin-top:14px;align-items:center;">
+                      <input type="text" class="s-in" id="newSetupInput" placeholder="Nama setup baru..."
+                        style="flex:1;" onkeydown="if(event.key==='Enter')addSetup()">
+                      <button class="btn btn-primary btn-sm" onclick="addSetup()">＋ Tambah</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- AKUN -->
+              <div class="s-sec" id="ssec-akun">
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">👤</span>
+                    <div class="s-card-title">Manajemen Akun Trading</div>
+                    <div style="margin-left:auto;"><button class="btn btn-gold btn-sm" onclick="openAddAkunModal()">＋
+                        Tambah Akun</button></div>
+                  </div>
+                  <div style="overflow-x:auto;">
+                    <table class="manager-table">
+                      <thead>
+                        <tr>
+                          <th>Nama Akun</th>
+                          <th>Broker</th>
+                          <th>Currency</th>
+                          <th>Balance</th>
+                          <th>Modal (Rp)</th>
+                          <th>Tipe</th>
+                          <th>Status</th>
+                          <th>Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="akunManagerBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <!-- ARSIP PANEL -->
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">🗄️</span>
+                    <div class="s-card-title">Akun Diarsipkan</div>
+                  </div>
+                  <div class="s-card-bd" style="padding-bottom:4px;">
+                    <div class="arsip-toggle-row">
+                      <div class="arsip-toggle-lbl"><span>👁️</span>
+                        <div>
+                          <div style="font-size:12px;font-weight:700;color:var(--txt0);">Tampilkan di Statistik & Jurnal
+                          </div>
+                          <div style="font-size:10px;color:var(--txt2);margin-top:1px;">Saat ON, akun arsip muncul di
+                            filter & statistik global</div>
+                        </div>
+                      </div>
+                      <label class="toggle-sw"><input type="checkbox" id="arsipToggle"
+                          onchange="toggleArsipView(this.checked)"><span class="toggle-track"></span></label>
+                    </div>
+                    <div class="arsip-panel">
+                      <div class="arsip-panel-hd">
+                        <div class="dot dot-purple"></div>
+                        <div class="arsip-panel-title">Daftar Arsip</div>
+                        <span class="arsip-count" id="arsipCount">0</span>
+                      </div>
+                      <div style="overflow-x:auto;">
+                        <table class="manager-table" id="arsipTable" style="display:none;">
+                          <thead>
+                            <tr>
+                              <th>Nama Akun</th>
+                              <th>Broker</th>
+                              <th>Currency</th>
+                              <th>Balance</th>
+                              <th>Modal (Rp)</th>
+                              <th>Tipe</th>
+                              <th>Aksi</th>
+                            </tr>
+                          </thead>
+                          <tbody id="arsipManagerBody"></tbody>
+                        </table>
+                      </div>
+                      <div class="arsip-empty" id="arsipEmpty">
+                        <div class="arsip-empty-ico">🗃️</div>
+                        <div style="font-weight:600;margin-bottom:4px;">Belum Ada Akun Diarsipkan</div>
+                        <div style="font-size:10px;">Klik 🗑 pada akun aktif lalu pilih "Arsipkan"</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">⚠️</span>
+                    <div class="s-card-title">Risk Management Rules</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <div class="s-row">
+                      <div class="s-info">
+                        <div class="s-lbl">Max Daily Loss (Rp)</div>
+                        <div class="s-hint">Batas loss per hari</div>
+                      </div>
+                      <div class="s-ctrl"><input type="number" class="s-in" id="maxDailyLoss" value="500000"
+                          style="width:130px;"></div>
+                    </div>
+                    <div class="s-row">
+                      <div class="s-info">
+                        <div class="s-lbl">Max Loss per Trade (Rp)</div>
+                        <div class="s-hint">Loss maksimum per trade</div>
+                      </div>
+                      <div class="s-ctrl"><input type="number" class="s-in" id="maxTradeLoss" value="200000"
+                          style="width:130px;"></div>
+                    </div>
+                    <div class="s-row">
+                      <div class="s-info">
+                        <div class="s-lbl">Max Trades per Hari</div>
+                        <div class="s-hint">Batas jumlah trade/hari</div>
+                      </div>
+                      <div class="s-ctrl"><input type="number" class="s-in" id="maxTrades" value="10"
+                          style="width:90px;"></div>
+                    </div>
+                    <div style="margin-top:14px;text-align:right;"><button class="btn btn-primary btn-sm"
+                        onclick="saveRiskRules()">💾 Simpan Rules</button></div>
+                  </div>
+                </div>
+              </div>
+              <!-- BACKUP -->
+              <div class="s-sec" id="ssec-backup">
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">📤</span>
+                    <div class="s-card-title">Export Data</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn btn-primary"
+                        onclick="exportCSV()">📊 Export CSV</button><button class="btn btn-primary"
+                        onclick="exportJSON()">📄 Export JSON Backup</button></div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">📥</span>
+                    <div class="s-card-title">Import Data JSON</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <p style="font-size:11px;color:var(--txt2);margin-bottom:12px;">Restore lengkap dari file
+                      <b>.json</b> backup — termasuk kurs, pair, setup, akun, dan semua trade.</p>
+                    <div
+                      style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;"
+                      onmouseenter="this.style.borderColor='var(--c-blue)'"
+                      onmouseleave="this.style.borderColor='var(--bdr)'"
+                      onclick="document.getElementById('importFile').click()">
+                      <div style="font-size:28px;margin-bottom:8px;">📂</div>
+                      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Klik untuk pilih file JSON backup
+                      </div>
+                      <div style="font-size:10px;color:var(--txt2);">Format: forex-backup-*.json</div>
+                      <input type="file" id="importFile" style="display:none;" accept=".json"
+                        onchange="importData(this)">
+                    </div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">📊</span>
+                    <div class="s-card-title">Import Data CSV</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <p style="font-size:11px;color:var(--txt2);margin-bottom:8px;">Import trade dari file <b>.csv</b> —
+                      cocok untuk restore dari export CSV atau spreadsheet. Trade dengan ID yang sama akan diperbarui.
+                    </p>
+                    <div
+                      style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:9px 12px;margin-bottom:12px;font-size:10.5px;color:var(--txt1);">
+                      📋 Kolom yang diperlukan (header baris 1):<br>
+                      <code
+                        style="font-family:var(--fn-m);font-size:9.5px;color:var(--c-cyan);">ID, Tanggal, Akun, Pair, Arah, Lot, Entry, SL, TP, Exit, PnL USD, PnL Rp, Fee (Rp), RR, Hasil, Setup, Catatan</code>
+                    </div>
+                    <div
+                      style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;"
+                      onmouseenter="this.style.borderColor='var(--c-cyan)'"
+                      onmouseleave="this.style.borderColor='var(--bdr)'"
+                      onclick="document.getElementById('importCSVFile').click()">
+                      <div style="font-size:28px;margin-bottom:8px;">📄</div>
+                      <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Klik untuk pilih file CSV</div>
+                      <div style="font-size:10px;color:var(--txt2);">Format: jurnal-trading-*.csv</div>
+                      <input type="file" id="importCSVFile" style="display:none;" accept=".csv,.txt"
+                        onchange="importCSV(this)">
+                    </div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">🗑️</span>
+                    <div class="s-card-title" style="color:var(--c-red2);">Reset Data</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <p style="font-size:12px;color:var(--txt1);margin-bottom:12px;">Hapus semua data — tidak dapat
+                      dibatalkan!</p><button class="btn btn-danger" onclick="resetAllData()">🗑️ Reset Semua
+                      Data</button>
+                  </div>
+                </div>
+              </div>
+              <!-- ABOUT -->
+              <div class="s-sec" id="ssec-about">
+                <div class="s-card">
+                  <div class="s-card-bd" style="text-align:center;padding:28px 20px;">
+                    <div style="font-size:44px;margin-bottom:10px;">📊</div>
+                    <div
+                      style="font-family:var(--fn-h);font-size:20px;font-weight:800;background:linear-gradient(135deg,#fff,var(--c-gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin-bottom:5px;">
+                      Jurnal Trading Forex Pro</div>
+                    <div style="font-size:12px;color:var(--txt2);margin-bottom:18px;">Single-file Dashboard v3.0 · Apr
+                      2026</div>
+                    <div style="font-size:12px;color:var(--txt1);max-width:420px;margin:0 auto;line-height:1.7;">
+                      Dashboard single-file HTML untuk jurnal trading forex profesional. PnL dihitung otomatis
+                      berdasarkan tipe instrumen. <strong style="color:var(--c-gold);">Data tersimpan di Google
+                        Spreadsheet (cloud)</strong> — bisa diakses dari device manapun.</div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">⌨️</span>
+                    <div class="s-card-title">Keyboard Shortcuts</div>
+                  </div>
+                  <div class="s-card-bd" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                    <div
+                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);">
+                      <span style="font-size:11px;color:var(--txt1);">Tambah Trade</span><kbd
+                        style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">N</kbd>
+                    </div>
+                    <div
+                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);">
+                      <span style="font-size:11px;color:var(--txt1);">Export CSV</span><kbd
+                        style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">E</kbd>
+                    </div>
+                    <div
+                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);">
+                      <span style="font-size:11px;color:var(--txt1);">Focus Search</span><kbd
+                        style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">F</kbd>
+                    </div>
+                    <div
+                      style="display:flex;justify-content:space-between;align-items:center;padding:7px 10px;background:rgba(255,255,255,.02);border-radius:var(--r8);">
+                      <span style="font-size:11px;color:var(--txt1);">Tutup Modal</span><kbd
+                        style="background:var(--bg3);border:1px solid var(--bdr);padding:2px 7px;border-radius:3px;font-family:var(--fn-m);font-size:10px;color:var(--c-gold);">Esc</kbd>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- APPROVAL AKUN (khusus admin) -->
+              <div class="s-sec" id="ssec-approval">
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">🛡️</span>
+                    <div class="s-card-title">Menunggu Persetujuan</div>
+                  </div>
+                  <div class="s-card-bd">
+                    <div id="pendingUsersList" style="display:flex;flex-direction:column;gap:8px;"></div>
+                  </div>
+                </div>
+                <div class="s-card">
+                  <div class="s-card-hd"><span style="font-size:18px;">👥</span>
+                    <div class="s-card-title">Semua User</div>
+                  </div>
+                  <div class="s-card-bd" style="overflow-x:auto;">
+                    <table class="s-table">
+                      <thead>
+                        <tr>
+                          <th>Email</th>
+                          <th>Nama</th>
+                          <th>Role</th>
+                          <th>Status</th>
+                          <th>Daftar</th>
+                          <th>Aksi</th>
+                        </tr>
+                      </thead>
+                      <tbody id="allUsersBody"></tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <div class="drp-cal-grid" id="drpGridLeft"></div>
+
+      </div><!-- end .content-area -->
+    </div><!-- end .body-wrap -->
+
+    <!-- FOOTER -->
+    <div class="footer">
+      <span>📊 Forex Journal Pro v3.0 · ☁️ Cloud Storage</span>
+      <div class="shortcut-hints">
+        <div class="sh-item"><span class="sh-key">N</span> Trade Baru</div>
+        <div class="sh-item"><span class="sh-key">E</span> Export</div>
+        <div class="sh-item"><span class="sh-key">F</span> Search</div>
+        <div class="sh-item"><span class="sh-key">Esc</span> Tutup</div>
       </div>
-      <!-- Calendar right -->
-      <div class="drp-cal" id="drpCalRight">
-        <div class="drp-cal-hd">
-          <div style="width:26px;"></div>
-          <div class="drp-cal-title" id="drpTitleRight">—</div>
-          <button class="drp-cal-nav" onclick="drpNavMonth(1)">&#8250;</button>
-        </div>
-        <div class="drp-cal-grid" id="drpGridRight"></div>
-      </div>
+      <span id="fTime"></span>
     </div>
-    <!-- Footer -->
-    <div class="drp-footer">
-      <div class="drp-range-lbl" id="drpRangeLbl">Pilih tanggal awal</div>
-      <div class="drp-footer-btns">
-        <button class="btn btn-ghost btn-sm" onclick="closeDRP()">Batal</button>
-        <button class="btn btn-primary btn-sm" onclick="drpApply()">Terapkan</button>
+  </div><!-- end .app -->
+  <!-- CLOUD LOADER OVERLAY -->
+  <div class="cloud-loader" id="cloudLoader">
+    <div class="cloud-loader-icon">☁️</div>
+    <div class="cloud-spinner"></div>
+    <div class="cloud-loader-txt">Memuat data dari cloud...</div>
+    <div class="cloud-loader-sub" id="cloudLoaderSub">Menghubungkan ke Google Spreadsheet</div>
+  </div>
+  <!-- MODALS -->
+  <div class="modal-overlay" id="tradeModal">
+    <div class="modal">
+      <div class="modal-hd">
+        <div class="modal-title" id="tradeModalTitle">➕ Tambah Trade Baru</div>
+        <div class="modal-close" onclick="closeModal('tradeModal')">✕</div>
+      </div>
+      <div class="dir-toggle-wrap">
+        <button type="button" class="dir-toggle-btn sell" id="dirBtnSell" onclick="setDirection('SELL')">SELL</button>
+        <button type="button" class="dir-toggle-btn buy active" id="dirBtnBuy"
+          onclick="setDirection('BUY')">BUY</button>
+        <input type="hidden" id="fm-dir" value="BUY">
+      </div>
+      <div class="pnl-info-box" id="pnlInfoBox">ℹ️ PnL dihitung otomatis dari tipe pair yang dipilih.</div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-lbl">Akun</label><select class="form-in" id="fm-akun"></select></div>
+        <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="datetime-local"
+            class="form-in" id="fm-date"></div>
+        <div class="form-field"><label class="form-lbl">Tanggal & Waktu</label><input type="text" class="form-in"
+            id="fm-date" placeholder="Pilih tanggal & waktu..."></div>
+        <div class="form-field"><label class="form-lbl">Pair</label><select class="form-in" id="fm-pair"
+            onchange="onPairChange()"></select></div>
+        <div class="form-field"><label class="form-lbl">Timeframe (TF)</label><select class="form-in" id="fm-tf">
+            <option value="1m">1m</option>
+            <option value="5m">5m</option>
+            <option value="15m">15m</option>
+            <option value="30m">30m</option>
+            <option value="1h">1h</option>
+            <option value="4h">4h</option>
+            <option value="1D">1D</option>
+          </select></div>
+        <div class="form-field"><label class="form-lbl">Arah</label><select class="form-in" id="fm-dir"
+            onchange="calcPnL()">
+            <option>BUY</option>
+            <option>SELL</option>
+          </select></div>
+        <div class="form-field"><label class="form-lbl">Lot Size</label><input type="number" class="form-in" id="fm-lot"
+            step="0.01" min="0.001" value="0.01" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">Entry Price <span
+              style="color:var(--c-orange);font-weight:700;font-size:9px;">★ Wajib</span></label><input type="number"
+            class="form-in" id="fm-entry" step="0.00001" placeholder="Harga masuk posisi — wajib diisi"
+            oninput="calcPnL()" style="border-color:rgba(249,115,22,.35);"
+            onfocus="this.style.borderColor='var(--c-blue)'"
+            onblur="this.style.borderColor=this.value?'rgba(249,115,22,.35)':''"></div>
+        <div class="form-field"><label class="form-lbl">Stop Loss (SL)</label><input type="number" class="form-in"
+            id="fm-sl" step="0.00001" placeholder="Opsional — untuk auto RR" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">TP <span
+              style="color:var(--c-green2);font-weight:600;font-size:9px;">- Rencana Take Profit</span></label><input
+            type="number" class="form-in" id="fm-tp" step="0.00001" placeholder="Opsional — untuk auto RR"
+            oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">Exit Price <span
+              style="color:var(--txt2);font-weight:400;font-size:9px;">(opsional) — kosongkan jika posisi masih
+              OPEN</span></label><input type="number" class="form-in" id="fm-exit" step="0.00001"
+            placeholder="Kosongkan jika posisi masih berjalan" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">Override PnL USD (opsional)</label><input type="number"
+            class="form-in" id="fm-pnl-usd" step="0.01" placeholder="Kosong = auto dari Exit" oninput="onManualPnL()">
+        </div>
+        <div class="form-field"><label class="form-lbl">Fee / Komisi (Rp) <span
+              style="color:var(--txt2);font-weight:400;font-size:9px;">— opsional</span></label><input type="number"
+            class="form-in" id="fm-fee" step="100" min="0" placeholder="0 = tanpa fee" oninput="calcPnL()"></div>
+        <div class="form-field"><label class="form-lbl">RR <span
+              style="color:var(--txt2);font-weight:400;font-size:9px;">— auto dari Entry/SL, pakai <b
+                style="color:var(--c-cyan)">Exit</b> jika terisi, kalau tidak pakai <b
+                style="color:var(--c-green2)">TP</b></span></label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="text" class="form-in" id="fm-rr-display" placeholder="—" readonly
+              style="flex:1;background:var(--bg3);color:var(--c-cyan);font-family:var(--fn-m);font-weight:700;cursor:default;">
+            <input type="hidden" id="fm-rr">
+          </div>
+        </div>
+        <div class="form-field full"><label class="form-lbl">Hasil <span
+              style="color:var(--txt2);font-weight:400;font-size:9px;">— otomatis dari EXIT (PnL / pergerakan
+              harga)</span></label>
+          <div class="form-in" id="fm-result-display"
+            style="background:var(--bg3);cursor:default;display:flex;align-items:center;gap:10px;min-height:38px;">
+            <span id="fm-result-badge" class="res-be" style="font-size:11px;padding:3px 10px;">—</span>
+            <span style="font-size:10px;color:var(--txt2);">Terisi saat EXIT / PnL diisi</span>
+          </div>
+          <input type="hidden" id="fm-result" value="BE">
+        </div>
+        <div class="form-field full"><label class="form-lbl">Setup <span
+              style="color:var(--txt2);font-size:9px;font-weight:400;">— klik untuk pilih, bisa lebih dari
+              satu</span></label>
+          <div class="setup-picker" id="fm-setup-picker"></div>
+        </div>
+        <div class="form-field full"><label class="form-lbl">Catatan / Analisis</label><input type="text"
+            class="form-in" id="fm-note" placeholder="Tuliskan analisis atau catatan trade..."></div>
+      </div>
+      <div class="pnl-preview" id="pnlPreview">
+        <div>
+          <div class="pnl-preview-lbl">Estimasi PnL (Auto)</div>
+          <div style="font-size:10px;color:var(--txt2);margin-top:3px;">Fee: <span id="feePreview"
+              style="color:var(--c-gold);font-family:var(--fn-m);">Rp 0</span></div>
+        </div>
+        <div style="text-align:right;">
+          <div class="pnl-preview-val" id="pnlUSDPreview" style="color:var(--txt2);">$0.00</div>
+          <div style="font-size:12px;font-family:var(--fn-m);font-weight:700;color:var(--txt2);" id="pnlRpPreview">Rp 0
+          </div>
+          <div style="font-size:10px;font-family:var(--fn-m);color:var(--txt2);" id="pnlNetPreview"></div>
+        </div>
+      </div>
+      <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('tradeModal')">Batal</button><button
+          class="btn btn-gold" onclick="saveTrade()">💾 Simpan Trade</button></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="pairModal">
+    <div class="modal sm">
+      <div class="modal-hd">
+        <div class="modal-title" id="pairModalTitle">🔧 Tambah Pair Baru</div>
+        <div class="modal-close" onclick="closeModal('pairModal')">✕</div>
+      </div>
+      <div class="form-grid">
+        <div class="form-field"><label class="form-lbl">Nama Pair</label><input type="text" class="form-in" id="pm-name"
+            placeholder="XAU/USD"></div>
+        <div class="form-field"><label class="form-lbl">Tipe</label>
+          <select class="form-in" id="pm-type" onchange="onPairTypeChange()">
+            <option value="forex">Forex Major (×100,000)</option>
+            <option value="commodity100">Commodity ×100 (Gold)</option>
+            <option value="commodity1000">Commodity ×1,000 (Oil)</option>
+            <option value="jpy">JPY Pair (×1,000)</option>
+            <option value="custom">Custom Multiplier</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-lbl">Multiplier</label><input type="number" class="form-in"
+            id="pm-mult" value="100000"></div>
+        <div class="form-field"><label class="form-lbl">Pip Size</label><input type="number" class="form-in" id="pm-pip"
+            value="0.0001" step="0.00001"></div>
+        <div class="form-field"><label class="form-lbl">Chip Warna</label>
+          <select class="form-in" id="pm-color">
+            <option value="chip-gold">Gold</option>
+            <option value="chip-blue">Blue</option>
+            <option value="chip-purple">Purple</option>
+            <option value="chip-cyan">Cyan</option>
+            <option value="chip-green">Green</option>
+            <option value="chip-red">Red</option>
+            <option value="chip-gray">Gray</option>
+          </select>
+        </div>
+        <div class="form-field"><label class="form-lbl">Deskripsi</label><input type="text" class="form-in" id="pm-desc"
+            placeholder="Gold / Emas"></div>
+      </div>
+      <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('pairModal')">Batal</button><button
+          class="btn btn-gold" onclick="savePair()">💾 Simpan Pair</button></div>
+    </div>
+  </div>
+  <!-- DELETE LOADING OVERLAY -->
+  <div class="del-loading-overlay" id="delLoadingOverlay">
+    <div class="del-loading-box">
+      <div class="del-orbit-wrap">
+        <div class="del-particles">
+          <div class="del-particle"></div>
+          <div class="del-particle"></div>
+          <div class="del-particle"></div>
+          <div class="del-particle"></div>
+          <div class="del-particle"></div>
+          <div class="del-particle"></div>
+        </div>
+        <div class="del-orbit-ring del-orbit-r1"></div>
+        <div class="del-orbit-ring del-orbit-r2"></div>
+        <div class="del-orbit-ring del-orbit-r3"></div>
+        <div class="del-orbit-core">🗑️</div>
+      </div>
+      <div class="del-loading-title" id="delLoadingTitle">Menghapus<span
+          class="del-loading-dots"><span>.</span><span>.</span><span>.</span></span></div>
+      <div class="del-progress-wrap">
+        <div class="del-progress-bar" id="delProgressBar"></div>
+      </div>
+      <div class="del-progress-label" id="delProgressLabel">Memproses...</div>
+      <div class="del-loading-sub" id="delLoadingSub">Mohon tunggu, jangan tutup halaman ini</div>
+    </div>
+  </div>
+  <!-- AKUN DELETE CONFIRM MODAL -->
+  <div class="del-modal-overlay" id="deleteAkunModal">
+    <div class="del-modal">
+      <!-- STEP 1: Pilih tindakan -->
+      <div id="delStep1">
+        <div class="del-modal-top">
+          <span class="del-modal-icon">⚠️</span>
+          <div class="del-modal-title">Apa yang ingin dilakukan?</div>
+          <div class="del-modal-sub">Pilih tindakan untuk akun berikut:</div>
+          <div class="del-modal-account">
+            <span class="del-modal-account-icon">👤</span>
+            <div>
+              <div class="del-modal-account-name" id="deleteAkunName">—</div>
+              <div class="del-modal-account-broker" id="deleteAkunBroker">—</div>
+            </div>
+          </div>
+        </div>
+        <div class="del-modal-options">
+          <div class="del-option del-option-arsip" onclick="confirmDeleteAkun('arsip')">
+            <div class="del-option-ico">🗄️</div>
+            <div class="del-option-txt">
+              <div class="del-option-title">Arsipkan Akun</div>
+              <div class="del-option-desc">Akun disembunyikan dari filter & statistik. Data jurnal tetap aman dan bisa
+                dikembalikan kapanpun.</div>
+            </div>
+            <span class="del-option-arrow">›</span>
+          </div>
+          <div class="del-option del-option-perm" onclick="goToDelStep2()">
+            <div class="del-option-ico">🗑️</div>
+            <div class="del-option-txt">
+              <div class="del-option-title">Hapus Permanen</div>
+              <div class="del-option-desc">Akun dihapus selamanya. Akan ada konfirmasi lanjutan untuk data jurnal
+                terkait.</div>
+            </div>
+            <span class="del-option-arrow">›</span>
+          </div>
+          <button class="del-modal-cancel"
+            onclick="document.getElementById('deleteAkunModal').classList.remove('active')">Batal</button>
+        </div>
+      </div>
+      <!-- STEP 2: Konfirmasi trade -->
+      <div id="delStep2" style="display:none;">
+        <div class="del-modal-top"
+          style="background:linear-gradient(135deg,rgba(239,68,68,.25),rgba(127,29,29,.15));border-color:rgba(239,68,68,.25);">
+          <span class="del-modal-icon"
+            style="animation:none;filter:drop-shadow(0 4px 16px rgba(239,68,68,.7));">🗑️</span>
+          <div class="del-modal-title" style="color:var(--c-red2);">Hapus Permanen</div>
+          <div class="del-modal-sub">Akun <b id="delStep2AkunName" style="color:#fff;"></b> akan dihapus selamanya.
+          </div>
+          <div
+            style="margin-top:12px;background:rgba(239,68,68,.12);border:1px solid rgba(239,68,68,.25);border-radius:10px;padding:10px 14px;">
+            <div style="font-size:11px;font-weight:700;color:var(--c-red2);margin-bottom:4px;">⚠️ Data Jurnal Terkait
+            </div>
+            <div style="font-size:11px;color:var(--txt1);"><span id="delStep2TradeCount"
+                style="color:#fff;font-weight:700;font-family:var(--fn-m);">0</span> trade ditemukan dengan akun ini.
+            </div>
+          </div>
+        </div>
+        <div class="del-modal-options">
+          <div
+            style="font-size:11px;font-weight:700;color:var(--txt2);text-transform:uppercase;letter-spacing:.7px;margin-bottom:-4px;">
+            Pilih nasib data jurnal:</div>
+          <div class="del-option del-option-perm" onclick="confirmDeleteAkun('permanent', true)"
+            style="border-color:rgba(239,68,68,.35);">
+            <div class="del-option-ico" style="background:rgba(239,68,68,.2);">💥</div>
+            <div class="del-option-txt">
+              <div class="del-option-title">Hapus Akun + Semua Jurnalnya</div>
+              <div class="del-option-desc">Semua trade terkait akun ini ikut dihapus permanen dari cloud. Tidak dapat
+                dikembalikan.</div>
+            </div>
+            <span class="del-option-arrow">›</span>
+          </div>
+          <div class="del-option" onclick="confirmDeleteAkun('permanent', false)"
+            style="background:rgba(255,255,255,.04);border-color:rgba(255,255,255,.1);">
+            <div class="del-option-ico" style="background:rgba(255,255,255,.07);font-size:20px;">📂</div>
+            <div class="del-option-txt">
+              <div class="del-option-title" style="color:var(--txt1);">Hapus Akun Saja</div>
+              <div class="del-option-desc">Data jurnal tetap tersimpan tapi tanpa referensi akun (orphan). Tidak muncul
+                di statistik.</div>
+            </div>
+            <span class="del-option-arrow" style="color:var(--txt2);">›</span>
+          </div>
+          <button class="del-modal-cancel" onclick="goToDelStep1()">← Kembali</button>
+        </div>
       </div>
     </div>
   </div>
-</div>
-<script src="js/00-firebase-config.js"></script>
-<script src="js/01-core-state.js"></script>
-<script src="js/02-calculations.js"></script>
-<script src="js/03-router-trades.js"></script>
-<script src="js/04-pairs-akun.js"></script>
-<script src="js/05-dashboard.js"></script>
-<script src="js/06-settings.js"></script>
-<script src="js/07-date-cloud-init.js"></script>
-<script src="js/08-ui-utils-boot.js"></script>
-<script src="js/09-admin-approval.js"></script>
-</body></html>
+  <div class="modal-overlay" id="akunModal">
+    <div class="modal sm">
+      <div class="modal-hd">
+        <div class="modal-title" id="akunModalTitle">👤 Tambah Akun</div>
+        <div class="modal-close" onclick="closeModal('akunModal')">✕</div>
+      </div>
+      <div class="form-grid">
+        <div class="form-field full"><label class="form-lbl">Nama Akun</label><input type="text" class="form-in"
+            id="am-name" placeholder="SCALPING ONE"></div>
+        <div class="form-field"><label class="form-lbl">Broker</label><input type="text" class="form-in" id="am-broker"
+            placeholder="XM Global"></div>
+        <div class="form-field"><label class="form-lbl">Tipe</label><select class="form-in" id="am-type">
+            <option value="live">LIVE</option>
+            <option value="demo">DEMO</option>
+            <option value="cent">CENT</option>
+          </select></div>
+        <div class="form-field"><label class="form-lbl">Currency</label><select class="form-in" id="am-currency"
+            onchange="calcAkunModal()">
+            <option value="IDR">IDR (Rupiah)</option>
+            <option value="USD">USD — US$ (Dolar AS)</option>
+            <option value="USC">USC — US¢ (Sen Dolar AS)</option>
+          </select></div>
+        <div class="form-field"><label class="form-lbl" id="am-balance-lbl">Balance</label><input type="number"
+            class="form-in" id="am-balance" value="0" step="0.01" oninput="calcAkunModal()"
+            placeholder="Nominal sesuai currency"></div>
+        <div class="form-field full"><label class="form-lbl">Modal Ekuivalen (Rp) <span
+              style="font-size:9px;color:var(--txt2);font-weight:400;">— otomatis dari balance ×
+              kurs</span></label><input type="number" class="form-in" id="am-modal" readonly
+            style="opacity:.65;cursor:not-allowed;" value="0"></div>
+      </div>
+      <div class="modal-ft"><button class="btn btn-ghost" onclick="closeModal('akunModal')">Batal</button><button
+          class="btn btn-gold" onclick="saveAkun()">💾 Simpan Akun</button></div>
+    </div>
+  </div>
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal sm">
+      <div class="modal-hd">
+        <div class="modal-title">📄 Detail Trade</div>
+        <div class="modal-close" onclick="closeModal('detailModal')">✕</div>
+      </div>
+      <div id="detailContent"></div>
+    </div>
+  </div>
+
+  <!-- POPUP PERAYAAN — muncul saat admin menyetujui/mengaktifkan akun -->
+  <div class="appr-overlay" id="approveCelebrateOverlay">
+    <div class="appr-box">
+      <div class="appr-particles" id="approveConfetti"></div>
+      <div class="appr-check-wrap">
+        <div class="appr-ring appr-ring-1"></div>
+        <div class="appr-ring appr-ring-2"></div>
+        <svg class="appr-check-svg" viewBox="0 0 52 52">
+          <circle class="appr-check-circle" cx="26" cy="26" r="24" fill="none" />
+          <path class="appr-check-mark" fill="none" d="M14 27l7 7 17-17" />
+        </svg>
+      </div>
+      <div class="appr-title" id="approveCelebrateTitle">Akun Disetujui!</div>
+      <div class="appr-account-chip" id="approveCelebrateChip">
+        <img id="approveCelebratePic" src="" alt="" style="display:none;">
+        <span id="approveCelebrateEmail"></span>
+      </div>
+      <div class="appr-sub" id="approveCelebrateSub">User sekarang bisa langsung masuk dan mulai mencatat trading.</div>
+      <button class="btn btn-gold" style="width:100%;margin-top:16px;" onclick="closeApproveCelebrate()">Tutup</button>
+    </div>
+  </div>
+  <!-- DATE RANGE PICKER OVERLAY -->
+  <div class="drp-overlay" id="drpOverlay" onclick="closeDRP()" style="display:none;"></div>
+  <div class="drp-popup" id="drpPopup">
+    <!-- Presets -->
+    <div class="drp-presets" id="drpPresets">
+      <div class="drp-preset" data-preset="today" onclick="drpSelectPreset('today')">Hari Ini</div>
+      <div class="drp-preset" data-preset="last7" onclick="drpSelectPreset('last7')">7 Hari Terakhir</div>
+      <div class="drp-preset" data-preset="last30" onclick="drpSelectPreset('last30')">30 Hari Terakhir</div>
+      <div class="drp-preset" data-preset="last3m" onclick="drpSelectPreset('last3m')">3 Bulan Terakhir</div>
+      <div class="drp-preset" data-preset="last12m" onclick="drpSelectPreset('last12m')">12 Bulan Terakhir</div>
+      <div class="drp-preset" data-preset="mtd" onclick="drpSelectPreset('mtd')">Bulan Ini</div>
+      <div class="drp-preset" data-preset="ytd" onclick="drpSelectPreset('ytd')">Tahun Ini</div>
+      <div class="drp-preset" data-preset="all" onclick="drpSelectPreset('all')">Semua Waktu</div>
+    </div>
+    <!-- Calendars + footer -->
+    <div class="drp-cals">
+      <div class="drp-cals-row">
+        <!-- Calendar left -->
+        <div class="drp-cal" id="drpCalLeft">
+          <div class="drp-cal-hd">
+            <button class="drp-cal-nav" onclick="drpNavMonth(-1)">&#8249;</button>
+            <div class="drp-cal-title" id="drpTitleLeft">—</div>
+            <div style="width:26px;"></div>
+          </div>
+          <div class="drp-cal-grid" id="drpGridLeft"></div>
+        </div>
+        <!-- Calendar right -->
+        <div class="drp-cal" id="drpCalRight">
+          <div class="drp-cal-hd">
+            <div style="width:26px;"></div>
+            <div class="drp-cal-title" id="drpTitleRight">—</div>
+            <button class="drp-cal-nav" onclick="drpNavMonth(1)">&#8250;</button>
+          </div>
+          <div class="drp-cal-grid" id="drpGridRight"></div>
+        </div>
+      </div>
+      <!-- Footer -->
+      <div class="drp-footer">
+        <div class="drp-range-lbl" id="drpRangeLbl">Pilih tanggal awal</div>
+        <div class="drp-footer-btns">
+          <button class="btn btn-ghost btn-sm" onclick="closeDRP()">Batal</button>
+          <button class="btn btn-primary btn-sm" onclick="drpApply()">Terapkan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+  <script src="js/00-firebase-config.js"></script>
+  <script src="js/01-core-state.js"></script>
+  <script src="js/02-calculations.js"></script>
+  <script src="js/03-router-trades.js"></script>
+  <script src="js/04-pairs-akun.js"></script>
+  <script src="js/05-dashboard.js"></script>
+  <script src="js/06-settings.js"></script>
+  <script src="js/07-date-cloud-init.js"></script>
+  <script src="js/08-ui-utils-boot.js"></script>
+  <script src="js/09-admin-approval.js"></script>
+</body>
+
+</html>

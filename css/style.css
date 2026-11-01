@@ -413,6 +413,31 @@ body{font-family:var(--fn);background:var(--bg0);color:var(--txt0);height:100%;o
 .pnl-preview-val{font-family:var(--fn-m);font-size:15px;font-weight:700;}
 .modal-ft{display:flex;gap:8px;justify-content:flex-end;margin-top:14px;padding-top:12px;border-top:1px solid var(--bdr);}
 .pnl-info-box{background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:9px 13px;font-size:11px;color:var(--txt1);margin-bottom:12px;}
+/* DIRECTION TOGGLE */
+.dir-toggle-wrap{display:flex;gap:0;margin-bottom:14px;border-radius:var(--r12);overflow:hidden;border:1px solid var(--bdr);background:var(--bg0);}
+.dir-toggle-btn{flex:1;padding:11px 0;font-family:var(--fn-h);font-size:13px;font-weight:800;letter-spacing:1.2px;border:none;cursor:pointer;transition:all .22s ease;background:transparent;color:var(--txt2);position:relative;}
+.dir-toggle-btn.sell{border-right:1px solid var(--bdr);}
+.dir-toggle-btn.sell.active{background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(239,68,68,.08));color:#f87171;box-shadow:inset 0 -3px 0 #ef4444,0 0 18px rgba(239,68,68,.12);}
+.dir-toggle-btn.buy.active{background:linear-gradient(135deg,rgba(16,185,129,.18),rgba(16,185,129,.08));color:#34d399;box-shadow:inset 0 -3px 0 #10b981,0 0 18px rgba(16,185,129,.12);}
+.dir-toggle-btn:hover:not(.active){background:rgba(255,255,255,.04);color:var(--txt0);}
+/* FLATPICKR DARK OVERRIDES */
+.flatpickr-calendar{background:var(--bg2)!important;border:1px solid var(--bdr)!important;border-radius:var(--r12)!important;box-shadow:var(--sh2)!important;font-family:var(--fn)!important;}
+.flatpickr-calendar .flatpickr-months,.flatpickr-calendar .flatpickr-weekdays{background:var(--bg0)!important;}
+.flatpickr-calendar .flatpickr-month{color:var(--txt0)!important;fill:var(--txt0)!important;}
+.flatpickr-calendar .flatpickr-current-month .cur-month{color:var(--txt0)!important;}
+.flatpickr-calendar .flatpickr-current-month .numInputWrapper span{border-color:var(--txt2)!important;}
+.flatpickr-calendar .flatpickr-current-month input.cur-year{color:var(--txt0)!important;}
+.flatpickr-calendar span.flatpickr-weekday{color:var(--txt2)!important;font-weight:700!important;}
+.flatpickr-calendar .flatpickr-day{color:var(--txt0)!important;border-radius:var(--r8)!important;}
+.flatpickr-calendar .flatpickr-day:hover{background:var(--bg3)!important;border-color:var(--bdr)!important;}
+.flatpickr-calendar .flatpickr-day.selected,.flatpickr-calendar .flatpickr-day.selected:hover{background:var(--c-gold)!important;color:#000!important;border-color:var(--c-gold)!important;}
+.flatpickr-calendar .flatpickr-day.today{border-color:var(--c-blue)!important;}
+.flatpickr-calendar .flatpickr-day.prevMonthDay,.flatpickr-calendar .flatpickr-day.nextMonthDay{color:var(--txt2)!important;opacity:.4;}
+.flatpickr-calendar .numInputWrapper:hover,.flatpickr-calendar .flatpickr-months .flatpickr-prev-month:hover svg,.flatpickr-calendar .flatpickr-months .flatpickr-next-month:hover svg{fill:var(--c-gold)!important;}
+.flatpickr-calendar .flatpickr-time{border-top:1px solid var(--bdr)!important;}
+.flatpickr-calendar .flatpickr-time input{color:var(--txt0)!important;font-family:var(--fn-m)!important;background:var(--bg0)!important;}
+.flatpickr-calendar .flatpickr-time .flatpickr-am-pm{color:var(--txt0)!important;background:var(--bg0)!important;}
+.flatpickr-calendar .flatpickr-time .flatpickr-time-separator{color:var(--txt2)!important;}
 /* SETTINGS */
 .settings-layout{display:flex;flex:1;}
 .settings-main{flex:1;padding:18px 20px;}
