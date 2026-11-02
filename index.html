@@ -84,7 +84,7 @@
             <span id="pendingBadge" class="badge-count" style="display:none;"></span>
           </div>
           <div class="settings-tab-sep"></div>
-          <div class="settings-tab" onclick="showSettingsSec('backup',this)">💾 Backup & Import</div>
+          <div class="settings-tab" onclick="showSettingsSec('backup',this)">💾 Backup/Restore</div>
           <div class="settings-tab" onclick="showSettingsSec('about',this)">ℹ️ Tentang</div>
         </div>
       </div>
@@ -998,7 +998,7 @@
                   </div>
                   <div class="s-card-bd">
                     <div style="display:flex;gap:10px;flex-wrap:wrap;"><button class="btn btn-primary"
-                        onclick="exportCSV()">📊 Export CSV</button><button class="btn btn-primary"
+                        onclick="exportCSV(true)">📊 Export CSV</button><button class="btn btn-primary"
                         onclick="exportJSON()">📄 Export JSON Backup</button></div>
                   </div>
                 </div>
@@ -1036,7 +1036,7 @@
                       style="background:var(--c-blue-d);border:1px solid rgba(79,142,247,.2);border-radius:var(--r8);padding:9px 12px;margin-bottom:12px;font-size:10.5px;color:var(--txt1);">
                       📋 Kolom yang diperlukan (header baris 1):<br>
                       <code
-                        style="font-family:var(--fn-m);font-size:9.5px;color:var(--c-cyan);">ID, Tanggal, Akun, Pair, Arah, Lot, Entry, SL, TP, Exit, PnL USD, PnL Rp, Fee (Rp), RR, Hasil, Setup, Catatan</code>
+                        style="font-family:var(--fn-m);font-size:9.5px;color:var(--c-cyan);">ID, Tanggal, Akun, Pair, TF, Arah, Lot, Entry, SL, TP, Exit, PnL USD, PnL Rp, Fee (Rp), RR, Hasil, Setup, Catatan</code>
                     </div>
                     <div
                       style="border:2px dashed var(--bdr);border-radius:var(--r12);padding:24px;text-align:center;cursor:pointer;transition:border-color .2s;"

@@ -123,9 +123,12 @@ async function api(action, payload = {}) {
       return { ok: true };
 
     case 'saveAllTrades': { // dipakai import CSV — tulis banyak trade sekaligus
-      const batch = firebase.firestore().batch();
-      (payload.trades || []).forEach(t => batch.set(tradesCol(uid).doc(String(t.id)), t));
-      await batch.commit();
+      const trades = payload.trades || [];
+      for (let i = 0; i < trades.length; i += 400) {
+        const batch = firebase.firestore().batch();
+        trades.slice(i, i + 400).forEach(t => batch.set(tradesCol(uid).doc(String(t.id)), t));
+        await batch.commit();
+      }
       return { ok: true };
     }
 
@@ -135,9 +138,11 @@ async function api(action, payload = {}) {
 
     case 'deleteAllTrades': {
       const snap = await tradesCol(uid).get();
-      const batch = firebase.firestore().batch();
-      snap.docs.forEach(d => batch.delete(d.ref));
-      await batch.commit();
+      for (let i = 0; i < snap.docs.length; i += 400) {
+        const batch = firebase.firestore().batch();
+        snap.docs.slice(i, i + 400).forEach(d => batch.delete(d.ref));
+        await batch.commit();
+      }
       return { ok: true };
     }
 
@@ -156,13 +161,26 @@ async function api(action, payload = {}) {
     case 'replaceAll': {
       const d = payload.data;
       const snap = await tradesCol(uid).get();
-      const batch = firebase.firestore().batch();
-      snap.docs.forEach(doc => batch.delete(doc.ref));
-      (d.trades || []).forEach(t => batch.set(tradesCol(uid).doc(String(t.id)), t));
-      await batch.commit();
-      await dataDoc(uid).set({
-        kurs: d.kurs, kursHistory: d.kursHistory || [], pairs: d.pairs, setups: d.setups, akuns: d.akuns
-      }, { merge: true });
+      for (let i = 0; i < snap.docs.length; i += 400) {
+        const batch = firebase.firestore().batch();
+        snap.docs.slice(i, i + 400).forEach(doc => batch.delete(doc.ref));
+        await batch.commit();
+      }
+      const trades = d.trades || [];
+      for (let i = 0; i < trades.length; i += 400) {
+        const batch = firebase.firestore().batch();
+        trades.slice(i, i + 400).forEach(t => batch.set(tradesCol(uid).doc(String(t.id)), t));
+        await batch.commit();
+      }
+      const settingsPayload = {
+        kurs: d.kurs,
+        kursHistory: d.kursHistory || [],
+        pairs: d.pairs,
+        setups: d.setups,
+        akuns: d.akuns
+      };
+      if (d.risk) settingsPayload.risk = d.risk;
+      await dataDoc(uid).set(settingsPayload, { merge: true });
       return { ok: true };
     }
 
